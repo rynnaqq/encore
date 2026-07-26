@@ -101,7 +101,7 @@ const PhoneVideoPlayer: React.FC = () => {
           className="w-full h-full object-cover object-center scale-105 pointer-events-none"
         >
           <source
-            src="/assets/videos/encore-preview.mp4"
+            src="assets/videos/encore-preview.mp4"
             type="video/mp4"
           />
         </video>
