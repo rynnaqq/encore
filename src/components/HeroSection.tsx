@@ -42,7 +42,7 @@ const CodeShowcaseScreen: React.FC = () => {
         {activeTab === 'preview' ? (
           <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center">
             <video 
-              src="/assets/videos/video.mp4" 
+              src="/assets/videos/encore-preview.mp4" 
               className="w-full h-full object-cover"
               autoPlay 
               loop 
