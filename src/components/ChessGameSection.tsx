@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Chess } from 'chess.js';
+import { Chess, Square } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { motion } from 'motion/react';
 import { Trophy, RefreshCw, Cpu, User } from 'lucide-react';
@@ -11,6 +11,9 @@ export const ChessGameSection: React.FC = () => {
   const [botLevel, setBotLevel] = useState(20);
   const engine = useRef<Worker | null>(null);
   const [isBotThinking, setIsBotThinking] = useState(false);
+
+  const [moveFrom, setMoveFrom] = useState<string | null>(null);
+  const [optionSquares, setOptionSquares] = useState({});
 
   useEffect(() => {
     const initEngine = () => {
@@ -98,7 +101,91 @@ export const ChessGameSection: React.FC = () => {
     }
   }, []);
 
-  const onDrop = (sourceSquare: string, targetSquare: string) => {
+  function getMoveOptions(square: Square) {
+    const moves = game.moves({
+      square,
+      verbose: true,
+    });
+    if (moves.length === 0) {
+      setOptionSquares({});
+      return false;
+    }
+
+    const newSquares: Record<string, React.CSSProperties> = {};
+    moves.map((move) => {
+      newSquares[move.to] = {
+        background:
+          game.get(move.to as Square) && game.get(move.to as Square)?.color !== game.get(square)?.color
+            ? 'radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)'
+            : 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+        borderRadius: '50%',
+      };
+      return move;
+    });
+    newSquares[square] = {
+      background: 'rgba(255, 255, 0, 0.4)',
+    };
+    setOptionSquares(newSquares);
+    return true;
+  }
+
+  function onSquareClick(square: Square) {
+    if (game.turn() !== 'w' || isBotThinking || game.isGameOver()) return;
+
+    if (!moveFrom) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      return;
+    }
+
+    if (!optionSquares[square as keyof typeof optionSquares] && moveFrom !== square) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      else {
+        setMoveFrom(null);
+        setOptionSquares({});
+      }
+      return;
+    }
+
+    try {
+      const newGame = new Chess(game.fen());
+      const move = newGame.move({
+        from: moveFrom,
+        to: square,
+        promotion: 'q', 
+      });
+
+      if (move === null) {
+        const hasMoveOptions = getMoveOptions(square);
+        if (hasMoveOptions) setMoveFrom(square);
+        else {
+          setMoveFrom(null);
+          setOptionSquares({});
+        }
+        return;
+      }
+      
+      setGame(newGame);
+      setFen(newGame.fen());
+      updateGameStatus(newGame);
+      setMoveFrom(null);
+      setOptionSquares({});
+
+      if (!newGame.isGameOver()) {
+        setTimeout(() => findBestMove(newGame), 300);
+      }
+    } catch (e) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      else {
+        setMoveFrom(null);
+        setOptionSquares({});
+      }
+    }
+  }
+
+  const onDrop = (sourceSquare: Square, targetSquare: Square) => {
     if (game.turn() !== 'w' || isBotThinking || game.isGameOver()) return false;
 
     try {
@@ -114,6 +201,8 @@ export const ChessGameSection: React.FC = () => {
       setGame(newGame);
       setFen(newGame.fen());
       updateGameStatus(newGame);
+      setMoveFrom(null);
+      setOptionSquares({});
 
       if (!newGame.isGameOver()) {
         setTimeout(() => findBestMove(newGame), 300);
@@ -130,6 +219,8 @@ export const ChessGameSection: React.FC = () => {
     setFen(newGame.fen());
     setGameStatus('Menunggu langkah pertama Anda...');
     setIsBotThinking(false);
+    setMoveFrom(null);
+    setOptionSquares({});
   };
 
   return (
@@ -140,11 +231,8 @@ export const ChessGameSection: React.FC = () => {
         
         <div className="text-center mb-8">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-            Tantang <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">Grandmaster Bot</span>
+            Tantang Aku Saja
           </h2>
-          <p className="text-slate-400 font-medium text-lg max-w-2xl mx-auto">
-            Bisakah Anda mengalahkan Stockfish Engine dengan kekuatan Elo 3000? Uji strategi catur terbaik Anda di sini! Tanpa perlu login.
-          </p>
         </div>
 
         <div className="bg-[#18181b] border-2 border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -153,10 +241,12 @@ export const ChessGameSection: React.FC = () => {
             <Chessboard 
               position={fen} 
               onPieceDrop={onDrop}
+              onSquareClick={onSquareClick}
+              customSquareStyles={optionSquares}
               boardOrientation="white"
               customDarkSquareStyle={{ backgroundColor: '#779556' }}
               customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
-              animationDuration={300}
+              animationDuration={200}
             />
           </div>
 
@@ -208,11 +298,6 @@ export const ChessGameSection: React.FC = () => {
               <RefreshCw className="w-5 h-5" />
               Main Ulang
             </button>
-
-            <div className="bg-slate-800/50 p-4 rounded-xl text-sm text-slate-400 border border-slate-700/50">
-              <strong className="text-slate-300 block mb-1">Cara Bermain:</strong>
-              Seret dan lepaskan bidak putih Anda. Bot akan langsung merespons langkah Anda. Aturan catur standar berlaku (termasuk Rokade, En Passant, dan Promosi Bidak ke Ratu).
-            </div>
 
           </div>
         </div>
