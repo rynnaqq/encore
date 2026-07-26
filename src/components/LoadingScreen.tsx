@@ -7,7 +7,7 @@ interface LoadingScreenProps {
 }
 
 const ASSETS_TO_PRELOAD = [
-  '/encore-preview.mp4',
+  '/assets/videos/encore-preview.mp4',
 ];
 
 // Tech Stack & Genshin Icon definitions
