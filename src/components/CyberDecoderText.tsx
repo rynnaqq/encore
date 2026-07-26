@@ -3,11 +3,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 interface CyberDecoderTextProps {
   text: string;
   className?: string;
-  highlightText?: string; // Text fragment to render with orange highlight
-  speed?: number; // ms per decode tick
-  repeatInterval?: number; // ms interval to re-trigger decoding (e.g. 10000 for 10s)
+  highlightText?: string;
+  speed?: number;
+  repeatInterval?: number;
   showCursor?: boolean;
-  isDarkMode?: boolean;
 }
 
 const CYBER_CHARS = '0123456789ABCDEF!@#$%^&*()_+-=[]{}|;:<>';
@@ -19,7 +18,6 @@ export const CyberDecoderText: React.FC<CyberDecoderTextProps> = ({
   speed = 40,
   repeatInterval,
   showCursor = false,
-  isDarkMode = true,
 }) => {
   const [displayText, setDisplayText] = useState(text);
   const [isDecoding, setIsDecoding] = useState(false);
@@ -122,7 +120,7 @@ export const CyberDecoderText: React.FC<CyberDecoderTextProps> = ({
     <span
       onMouseEnter={handleMouseEnter}
       className={`inline-block cursor-pointer select-none font-mono ${
-        isDecoding ? (isDarkMode ? 'text-slate-800' : 'text-slate-800') : ''
+        isDecoding ? 'text-slate-800' : ''
       } ${className}`}
       title="Hover or wait 10s to re-trigger cyber decode"
     >

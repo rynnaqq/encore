@@ -1,20 +1,10 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion } from 'motion/react';
 import { User, CheckCircle2, Code, Terminal, Cpu } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 
-interface AboutSectionProps {
-  isDarkMode: boolean;
-}
-
-export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
+export const AboutSection: React.FC = () => {
   const containerRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
-  });
-
-  const yBackground = useTransform(scrollYProgress, [0, 1], [-50, 50]);
 
   const highlights = [
     'Clean, Readable, & Scalable Codebase',
@@ -44,7 +34,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
         
         {/* Section Header */}
         <SectionHeader
-          isDarkMode={isDarkMode}
           title={
             <>
               Crafting Digital Experiences <span className="text-[#E195AB]">With Minimalist Precision</span>

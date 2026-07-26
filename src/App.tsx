@@ -5,7 +5,7 @@ import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { CalculatorSection } from './components/CalculatorSection';
-import { ChessGameSection } from './components/ChessGameSection';
+import { FishingGameSection } from './components/FishingGameSection';
 import { Footer } from './components/Footer';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
@@ -47,15 +47,15 @@ function MainLayout() {
         <Routes>
           <Route path="/" element={
             <>
-              <HeroSection isDarkMode={false} />
-              <AboutSection isDarkMode={false} />
+              <HeroSection />
+              <AboutSection />
             </>
           } />
           <Route path="/game" element={<CalculatorSection />} />
-          <Route path="/chess" element={<ChessGameSection />} />
+          <Route path="/fishing" element={<FishingGameSection />} />
         </Routes>
       </main>
-      <Footer isDarkMode={false} />
+      <Footer />
     </>
   );
 }

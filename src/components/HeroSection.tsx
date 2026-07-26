@@ -1,122 +1,75 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ArrowRight, User } from 'lucide-react';
+import { ArrowRight, User, Terminal, Code, Sparkles, CheckCircle, Cpu } from 'lucide-react';
 import { TypewriterText } from './TypewriterText';
 import { CyberDecoderText } from './CyberDecoderText';
 
-interface HeroSectionProps {
-  isDarkMode: boolean;
-}
-
-const PhoneVideoPlayer: React.FC = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasError, setHasError] = React.useState(false);
-
-  React.useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    // Force native DOM properties for muted and playsInline to bypass browser autoplay blocks
-    video.muted = true;
-    video.defaultMuted = true;
-    video.playsInline = true;
-
-    const playVideo = () => {
-      if (video && video.paused) {
-        const promise = video.play();
-        if (promise !== undefined) {
-          promise.catch(() => {
-            // Silence autoplay rejection if browser blocks initially
-          });
-        }
-      }
-    };
-
-    // Initial play attempt on mount
-    playVideo();
-
-    // Watchdog interval: check every 800ms and resume play if video gets stuck or paused while idle
-    const watchdogTimer = setInterval(() => {
-      if (video.paused && !video.ended) {
-        playVideo();
-      }
-    }, 800);
-
-    // Event listeners to handle tab visibility and background idle restoration
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        playVideo();
-      }
-    };
-
-    const handleInteraction = () => {
-      playVideo();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('scroll', handleInteraction, { passive: true });
-    window.addEventListener('mousemove', handleInteraction, { passive: true });
-    window.addEventListener('touchstart', handleInteraction, { passive: true });
-    window.addEventListener('focus', handleInteraction);
-
-    return () => {
-      clearInterval(watchdogTimer);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('scroll', handleInteraction);
-      window.removeEventListener('mousemove', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
-      window.removeEventListener('focus', handleInteraction);
-    };
-  }, []);
-
-  const handleEnded = () => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-    }
-  };
-
-  const handleStalled = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  };
+const CodeShowcaseScreen: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
 
   return (
-    <div className="relative w-full h-full bg-[#FFF5D7] overflow-hidden flex items-center justify-center">
-      {!hasError ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          onPause={() => {
-            if (videoRef.current) videoRef.current.play().catch(() => {});
-          }}
-          onEnded={handleEnded}
-          onStalled={handleStalled}
-          onWaiting={handleStalled}
-          onError={() => setHasError(true)}
-          className="w-full h-full object-cover object-center scale-105 pointer-events-none"
-        >
-          <source
-            src="/assets/videos/encore-preview.mp4"
-            type="video/mp4"
-          />
-        </video>
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-[#FFF5D7] to-[#FFCCE1] flex items-center justify-center text-[#E195AB] font-mono text-xs">
-          [ Live Preview Stream ]
+    <div className="relative w-full h-full bg-[#0f172a] text-slate-100 flex flex-col font-mono select-none overflow-hidden">
+      {/* Top Bar / Header */}
+      <div className="flex items-center justify-between px-3 py-2 bg-[#1e293b] border-b border-slate-700/60 text-[10px] sm:text-xs">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+          <span className="ml-1 text-slate-400 font-sans font-medium text-[10px] hidden sm:inline">encore-app.tsx</span>
         </div>
-      )}
+        <div className="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-lg border border-slate-700">
+          <button
+            onClick={() => setActiveTab('preview')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTab === 'preview' ? 'bg-[#E195AB] text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Preview
+          </button>
+          <button
+            onClick={() => setActiveTab('code')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTab === 'code' ? 'bg-[#E195AB] text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Code
+          </button>
+        </div>
+      </div>
+
+      {/* Screen Body */}
+      <div className="flex-1 p-3 sm:p-4 overflow-hidden relative flex flex-col justify-center">
+        {activeTab === 'preview' ? (
+          <div className="w-full h-full relative rounded-lg overflow-hidden bg-black flex items-center justify-center">
+            <video 
+              src="/assets/videos/video.mp4" 
+              className="w-full h-full object-cover"
+              autoPlay 
+              loop 
+              muted 
+              playsInline 
+            />
+            {/* Fallback text if video not found */}
+            <div className="absolute inset-0 flex items-center justify-center -z-10 text-slate-500 text-xs text-center p-4">
+              Video will appear here<br/>(public/assets/videos/video.mp4)
+            </div>
+          </div>
+        ) : (
+          <div className="text-[10px] sm:text-xs space-y-1 leading-relaxed text-slate-300">
+            <div><span className="text-pink-400">const</span> <span className="text-sky-300">developer</span> = &#123;</div>
+            <div className="pl-3"><span className="text-emerald-300">name</span>: <span className="text-amber-300">'Encore'</span>,</div>
+            <div className="pl-3"><span className="text-emerald-300">role</span>: <span className="text-amber-300">'Frontend Craftsman'</span>,</div>
+            <div className="pl-3"><span className="text-emerald-300">skills</span>: [<span className="text-amber-300">'React'</span>, <span className="text-amber-300">'TypeScript'</span>, <span className="text-amber-300">'Tailwind'</span>],</div>
+            <div className="pl-3"><span className="text-emerald-300">status</span>: <span className="text-amber-300">'Available for project'</span>,</div>
+            <div>&#125;;</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export const HeroSection: React.FC<HeroSectionProps> = ({
-  isDarkMode,
-}) => {
+export const HeroSection: React.FC = () => {
   const containerRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -187,15 +140,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.div>
             
             {/* Minimal Smartphone Frame */}
-            <div className={`relative w-full h-full rounded-2xl border p-1.5 shadow-2xl overflow-hidden flex items-center justify-center transition-colors bg-[#FFF5D7] border-[#FFCCE1] shadow-pink-200/50`}>
+            <div className="relative w-full h-full rounded-2xl border p-1.5 shadow-2xl overflow-hidden flex items-center justify-center transition-colors bg-[#FFF5D7] border-[#FFCCE1] shadow-pink-200/50">
               
               {/* Speaker / Notch Accent */}
               <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFCCE1] rounded-full z-30 hidden sm:block" />
 
               {/* Inner Screen Display */}
               <div className="relative w-full h-full rounded-xl overflow-hidden group">
-                <PhoneVideoPlayer />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                <CodeShowcaseScreen />
               </div>
             </div>
 
@@ -214,7 +166,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Main Heading */}
           <div className="space-y-2">
             <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight flex flex-col items-start gap-1">
-              <span className={'text-slate-800'}>
+              <span className="text-slate-800">
                 Hello Everyone
               </span>
               <CyberDecoderText
@@ -222,8 +174,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 highlightText="Encore"
                 speed={35}
                 repeatInterval={10000}
-                className={'text-slate-800'}
-                isDarkMode={isDarkMode}
+                className="text-slate-800"
               />
             </h1>
           </div>
@@ -233,8 +184,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             text="I craft modern, delightful web experiences. As a frontend developer, I transform ideas into beautifully responsive and efficient interfaces that users love to engage with."
             speed={35}
             pauseDuration={4500}
-            isDarkMode={isDarkMode}
-            className={`font-sans text-base sm:text-lg max-w-xl text-left leading-relaxed text-slate-600`}
+            className="font-sans text-base sm:text-lg max-w-xl text-left leading-relaxed text-slate-600"
           />
 
           {/* View Profile Action Button */}
@@ -263,3 +213,4 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     </section>
   );
 };
+

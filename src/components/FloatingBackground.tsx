@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'motion/react';
-import { Star, Circle, Triangle, Square, Hexagon } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { Star, Circle, Triangle } from 'lucide-react';
 
 export const FloatingBackground: React.FC = () => {
   const { scrollY } = useScroll();

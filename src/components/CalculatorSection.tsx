@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calculator, CheckCircle2, ShieldCheck, QrCode, ScanFace } from 'lucide-react';
+import { Calculator, CheckCircle2, QrCode, ScanFace } from 'lucide-react';
 
 export const CalculatorSection: React.FC = () => {
   const [display, setDisplay] = useState('0');
