@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface NavbarProps {
   activeSection: string;
@@ -13,10 +14,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'about', label: 'About' },
+    { id: 'home', label: 'Home', path: '/' },
+    { id: 'about', label: 'About', path: '/' },
+    { id: 'game', label: 'Game', path: '/game' },
   ];
 
   useEffect(() => {
@@ -27,12 +31,29 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollTo = (id: string) => {
-    setActiveSection(id);
+  const handleNavClick = (id: string, path: string) => {
     setHamburgerOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    if (path === '/game') {
+      navigate('/game');
+    } else {
+      if (location.pathname !== '/') {
+        navigate('/');
+        // Small delay to let the page render before scrolling
+        setTimeout(() => {
+          setActiveSection(id);
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      } else {
+        setActiveSection(id);
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
     }
   };
 
@@ -49,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {/* Brand Logo (Left) */}
             <button
-              onClick={() => scrollTo('home')}
+              onClick={() => handleNavClick('home', '/')}
               className="flex items-center gap-1.5 cursor-pointer group focus:outline-none"
               id="nav-logo-btn"
             >
@@ -109,11 +130,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Navigation Items (Without numbers) */}
               <div className="space-y-2 font-sans">
                 {navItems.map((item) => {
-                  const isActive = activeSection === item.id;
+                  const isActive = location.pathname === item.path && (item.path === '/game' || activeSection === item.id);
                   return (
                     <button
                       key={item.id}
-                      onClick={() => scrollTo(item.id)}
+                      onClick={() => handleNavClick(item.id, item.path)}
                       className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer group ${
                         isActive
                           ? 'bg-[#E195AB] border-[#E195AB] text-white font-semibold'
