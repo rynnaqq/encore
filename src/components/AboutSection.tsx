@@ -47,7 +47,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
           isDarkMode={isDarkMode}
           title={
             <>
-              Crafting Digital Experiences <span className="text-[#e8590c]">With Minimalist Precision</span>
+              Crafting Digital Experiences <span className="text-[#E195AB]">With Minimalist Precision</span>
             </>
           }
         />
@@ -58,11 +58,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className={`border rounded-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden transition-colors ${
-            isDarkMode
-              ? 'bg-[#121214]/80 backdrop-blur-xl border-[#27272a] text-zinc-100 shadow-xl'
-              : 'bg-white/80 backdrop-blur-xl border-[#e4e4e7] text-zinc-900 shadow-lg shadow-zinc-200/50'
-          }`}
+          className={`border rounded-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden transition-colors bg-white/80 backdrop-blur-xl border-[#FFCCE1] text-slate-800 shadow-lg shadow-pink-200/50`}
         >
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -73,59 +69,49 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-              className={`lg:col-span-5 border rounded-xl p-5 relative ${
-                isDarkMode ? 'bg-[#18181b] border-[#27272a]' : 'bg-[#f4f4f5] border-[#e4e4e7]'
-              }`}
+              className={`lg:col-span-5 border rounded-xl p-5 relative bg-[#FFF5D7] border-[#FFCCE1]`}
             >
-              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#27272a]/40">
-                <div className="w-9 h-9 rounded-xl bg-[#e8590c] text-white flex items-center justify-center font-bold shrink-0">
+              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#FFCCE1]">
+                <div className="w-9 h-9 rounded-xl bg-[#E195AB] text-white flex items-center justify-center font-bold shrink-0">
                   <Terminal className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-sans font-extrabold text-base">Ryan's Stack</h3>
-                  <p className="font-mono text-xs text-[#e8590c] font-semibold">Frontend Engineering</p>
+                  <p className="font-mono text-xs text-[#E195AB] font-semibold">Frontend Engineering</p>
                 </div>
               </div>
 
               <div className="space-y-2.5 font-sans">
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 4 }}
-                  className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                  isDarkMode ? 'bg-[#121214] border-[#27272a] hover:border-[#e8590c]/50 hover:bg-[#e8590c]/5' : 'bg-white border-[#e4e4e7] hover:border-[#e8590c]/30 hover:bg-[#e8590c]/5'
-                }`}>
+                  className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer bg-white border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFF5D7]`}>
                   <div className="flex items-center gap-2">
-                    <Code className="w-4 h-4 text-[#e8590c]" />
+                    <Code className="w-4 h-4 text-[#E195AB]" />
                     <span className="text-xs font-semibold">Markup & Styling</span>
                   </div>
-                  <span className="text-[10px] font-mono font-medium text-[#e8590c] bg-[#e8590c]/10 px-2 py-0.5 rounded border border-[#e8590c]/20">
+                  <span className="text-[10px] font-mono font-medium text-[#E195AB] bg-[#FFCCE1]/30 px-2 py-0.5 rounded border border-[#FFCCE1]">
                     HTML5 / CSS3 / Tailwind
                   </span>
                 </motion.div>
-
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 4 }}
-                  className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                  isDarkMode ? 'bg-[#121214] border-[#27272a] hover:border-[#e8590c]/50 hover:bg-[#e8590c]/5' : 'bg-white border-[#e4e4e7] hover:border-[#e8590c]/30 hover:bg-[#e8590c]/5'
-                }`}>
+                  className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer bg-white border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFF5D7]`}>
                   <div className="flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-[#e8590c]" />
+                    <Cpu className="w-4 h-4 text-[#E195AB]" />
                     <span className="text-xs font-semibold">Scripting & Logic</span>
                   </div>
-                  <span className="text-[10px] font-mono font-medium text-[#e8590c] bg-[#e8590c]/10 px-2 py-0.5 rounded border border-[#e8590c]/20">
+                  <span className="text-[10px] font-mono font-medium text-[#E195AB] bg-[#FFCCE1]/30 px-2 py-0.5 rounded border border-[#FFCCE1]">
                     JavaScript / TypeScript
                   </span>
                 </motion.div>
-
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 4 }}
-                  className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                  isDarkMode ? 'bg-[#121214] border-[#27272a] hover:border-[#e8590c]/50 hover:bg-[#e8590c]/5' : 'bg-white border-[#e4e4e7] hover:border-[#e8590c]/30 hover:bg-[#e8590c]/5'
-                }`}>
+                  className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer bg-white border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFF5D7]`}>
                   <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-[#e8590c]" />
+                    <User className="w-4 h-4 text-[#E195AB]" />
                     <span className="text-xs font-semibold">Frameworks</span>
                   </div>
-                  <span className="text-[10px] font-mono font-medium text-[#e8590c] bg-[#e8590c]/10 px-2 py-0.5 rounded border border-[#e8590c]/20">
+                  <span className="text-[10px] font-mono font-medium text-[#E195AB] bg-[#FFCCE1]/30 px-2 py-0.5 rounded border border-[#FFCCE1]">
                     React.js / Vite
                   </span>
                 </motion.div>
@@ -144,15 +130,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
                 Passionate Frontend Developer Focused on Clean Code & Aesthetics
               </motion.h3>
 
-              <motion.p variants={itemVariants} className={`font-sans text-xs sm:text-sm leading-relaxed ${
-                isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
-              }`}>
+              <motion.p variants={itemVariants} className={`font-sans text-xs sm:text-sm leading-relaxed text-slate-600`}>
                 Hello! I am Ryan, a dedicated web developer with a continuous drive for building pixel-perfect, responsive web applications. I turn design mockups into living, interactive web interfaces that perform seamlessly on any screen size.
               </motion.p>
 
-              <motion.p variants={itemVariants} className={`font-sans text-xs sm:text-sm leading-relaxed ${
-                isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
-              }`}>
+              <motion.p variants={itemVariants} className={`font-sans text-xs sm:text-sm leading-relaxed text-slate-600`}>
                 My approach combines clean architecture with sharp visual detail. Whether crafting fluid grid layouts, optimizing touch targets, or polishing micro-interactions, I treat every project with absolute dedication and a warm, collaborative spirit.
               </motion.p>
 
@@ -162,11 +144,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
                     key={idx}
                     variants={itemVariants}
                     whileHover={{ scale: 1.03, y: -2 }}
-                    className={`p-2.5 rounded-xl border flex items-start gap-2 font-sans text-xs font-medium cursor-default transition-colors ${
-                      isDarkMode ? 'bg-[#18181b] border-[#27272a] text-zinc-300 hover:border-[#e8590c]/40' : 'bg-[#f4f4f5] border-[#e4e4e7] text-zinc-800 hover:border-[#e8590c]/40'
-                    }`}
+                    className={`p-2.5 rounded-xl border flex items-start gap-2 font-sans text-xs font-medium cursor-default transition-colors bg-[#FFF5D7] border-[#FFCCE1] text-slate-800 hover:border-[#E195AB]`}
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#e8590c] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#E195AB] shrink-0 mt-0.5" />
                     <span>{item}</span>
                   </motion.div>
                 ))}

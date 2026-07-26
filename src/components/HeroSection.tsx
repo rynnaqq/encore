@@ -83,7 +83,7 @@ const PhoneVideoPlayer: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full bg-[#0d0d0e] overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-full bg-[#FFF5D7] overflow-hidden flex items-center justify-center">
       {!hasError ? (
         <video
           ref={videoRef}
@@ -101,12 +101,12 @@ const PhoneVideoPlayer: React.FC = () => {
           className="w-full h-full object-cover object-center scale-105 pointer-events-none"
         >
           <source
-            src="assets/videos/encore-preview.mp4"
+            src="/assets/videos/encore-preview.mp4"
             type="video/mp4"
           />
         </video>
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center text-zinc-500 font-mono text-xs">
+        <div className="w-full h-full bg-gradient-to-br from-[#FFF5D7] to-[#FFCCE1] flex items-center justify-center text-[#E195AB] font-mono text-xs">
           [ Live Preview Stream ]
         </div>
       )}
@@ -147,14 +147,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="relative w-full max-w-[560px] sm:max-w-[620px] aspect-[16/9]">
             
             {/* Minimal Smartphone Frame */}
-            <div className={`relative w-full h-full rounded-2xl border p-1.5 shadow-2xl overflow-hidden flex items-center justify-center transition-colors ${
-              isDarkMode
-                ? 'bg-[#18181b] border-[#27272a] shadow-black/60'
-                : 'bg-white border-[#e4e4e7] shadow-zinc-200'
-            }`}>
+            <div className={`relative w-full h-full rounded-2xl border p-1.5 shadow-2xl overflow-hidden flex items-center justify-center transition-colors bg-[#FFF5D7] border-[#FFCCE1] shadow-pink-200/50`}>
               
               {/* Speaker / Notch Accent */}
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-zinc-800 rounded-full z-30 hidden sm:block" />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFCCE1] rounded-full z-30 hidden sm:block" />
 
               {/* Inner Screen Display */}
               <div className="relative w-full h-full rounded-xl overflow-hidden group">
@@ -166,7 +162,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* Minimal Badge */}
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="absolute -bottom-2.5 right-4 bg-[#e8590c] text-white px-3 py-1 rounded-full font-mono font-medium text-[10px] uppercase tracking-wider shadow-md flex items-center gap-1.5 z-20 cursor-default"
+              className="absolute -bottom-2.5 right-4 bg-[#E195AB] text-white px-3 py-1 rounded-full font-mono font-medium text-[10px] uppercase tracking-wider shadow-md flex items-center gap-1.5 z-20 cursor-default"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <span>LIVE PREVIEW</span>
@@ -187,7 +183,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Main Heading */}
           <div className="space-y-2">
             <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight flex flex-col items-start gap-1">
-              <span className={isDarkMode ? 'text-zinc-100' : 'text-zinc-900'}>
+              <span className={'text-slate-800'}>
                 Hello Everyone
               </span>
               <CyberDecoderText
@@ -195,7 +191,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 highlightText="Ryan"
                 speed={35}
                 repeatInterval={10000}
-                className={isDarkMode ? 'text-zinc-100' : 'text-zinc-900'}
+                className={'text-slate-800'}
                 isDarkMode={isDarkMode}
               />
             </h1>
@@ -207,9 +203,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             speed={35}
             pauseDuration={4500}
             isDarkMode={isDarkMode}
-            className={`font-sans text-base sm:text-lg max-w-xl text-left leading-relaxed ${
-              isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
-            }`}
+            className={`font-sans text-base sm:text-lg max-w-xl text-left leading-relaxed text-slate-600`}
           />
 
           {/* View Profile Action Button */}
@@ -226,7 +220,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
               }}
               id="hero-view-profile-btn"
-              className="py-2.5 px-6 rounded-xl bg-[#e8590c] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#d94e02] transition-all cursor-pointer shadow-md group/btn"
+              className="py-2.5 px-6 rounded-xl bg-[#E195AB] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all cursor-pointer shadow-md group/btn"
             >
               <User className="w-4 h-4 text-white" />
               <span>View Profile</span>

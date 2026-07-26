@@ -110,7 +110,7 @@ export const CyberDecoderText: React.FC<CyberDecoderTextProps> = ({
     return (
       <>
         <span>{before}</span>
-        <span className="text-[#e8590c] inline-block transition-all">
+        <span className="text-[#E195AB] inline-block transition-all">
           {highlightedPart}
         </span>
         <span>{after}</span>
@@ -122,13 +122,13 @@ export const CyberDecoderText: React.FC<CyberDecoderTextProps> = ({
     <span
       onMouseEnter={handleMouseEnter}
       className={`inline-block cursor-pointer select-none font-mono ${
-        isDecoding ? (isDarkMode ? 'text-zinc-100' : 'text-zinc-900') : ''
+        isDecoding ? (isDarkMode ? 'text-slate-800' : 'text-slate-800') : ''
       } ${className}`}
       title="Hover or wait 10s to re-trigger cyber decode"
     >
       {renderFormatted(displayText || text)}
       {showCursor && isDecoding && (
-        <span className="inline-block w-2 h-[0.9em] ml-1 bg-[#e8590c] animate-pulse align-baseline rounded-sm" />
+        <span className="inline-block w-2 h-[0.9em] ml-1 bg-[#E195AB] animate-pulse align-baseline rounded-sm" />
       )}
     </span>
   );

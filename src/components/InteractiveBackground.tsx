@@ -30,7 +30,7 @@ export const InteractiveBackground: React.FC<InteractiveBackgroundProps> = ({ is
       {/* Interactive Cursor Follower */}
       <motion.div
         className={`absolute w-[300px] h-[300px] rounded-full blur-[100px] opacity-40 mix-blend-screen transition-colors duration-1000 ${
-          isDarkMode ? 'bg-[#e8590c]' : 'bg-[#ff8a4c]'
+          isDarkMode ? 'bg-[#E195AB]' : 'bg-[#ff8a4c]'
         }`}
         style={{
           x: cursorXSpring,

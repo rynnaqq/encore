@@ -265,15 +265,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinishLoading, i
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
-          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 overflow-hidden select-none transition-colors duration-500 ${
-            isDarkMode ? 'bg-[#121212] text-[#f3f4f6]' : 'bg-[#ffffff] text-[#1f2937]'
-          }`}
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 overflow-hidden select-none transition-colors duration-500 bg-[#F2F9FF] text-slate-800`}
         >
           {/* Subtle Ambient Backlight Halo */}
           <div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full blur-[140px] pointer-events-none transition-colors duration-500 ${
-              isDarkMode ? 'bg-[#e8590c]/10' : 'bg-[#e8590c]/5'
-            }`}
+            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full blur-[140px] pointer-events-none transition-colors duration-500 bg-[#FFCCE1]/50`}
           />
 
           {/* Main Genshin-Style Horizontal Icons Container */}
@@ -299,12 +295,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinishLoading, i
                       transition={{ duration: 0.2, ease: 'easeOut' }}
                       className={`w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 relative flex items-center justify-center p-1.5 sm:p-2 rounded-xl border ${
                         isLit
-                          ? isDarkMode
-                            ? 'bg-zinc-900/90 border-zinc-700'
-                            : 'bg-white border-zinc-300 shadow-sm'
-                          : isDarkMode
-                            ? 'bg-zinc-900/40 border-zinc-800'
-                            : 'bg-zinc-100/80 border-zinc-200'
+                          ? 'bg-white border-[#E195AB] shadow-sm'
+                          : 'bg-[#FFF5D7] border-[#FFCCE1]'
                       }`}
                       style={{
                         borderColor: isLit ? item.color : undefined,

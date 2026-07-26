@@ -72,7 +72,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
 
     return parts.map((part, i) =>
       part.isHighlight ? (
-        <span key={i} className={isDarkMode ? "text-zinc-100 font-semibold" : "text-zinc-900 font-semibold"}>
+        <span key={i} className={isDarkMode ? "text-slate-800 font-semibold" : "text-slate-800 font-semibold"}>
           {part.text}
         </span>
       ) : (
@@ -82,7 +82,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
   };
 
   return (
-    <div className={`relative leading-relaxed text-zinc-300 ${className}`}>
+    <div className={`relative leading-relaxed text-slate-600 ${className}`}>
       {/* Invisible full text block holding static layout height */}
       <p className="invisible select-none opacity-0 pointer-events-none" aria-hidden="true">
         {text}
@@ -92,7 +92,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
       {/* Visible typewriter overlay */}
       <p className="absolute inset-0 top-0 left-0">
         {renderFormattedText(displayedText)}
-        <span className="inline-block w-[2.5px] h-[1.2em] ml-1 bg-[#e8590c] align-middle animate-cursor-blink" />
+        <span className="inline-block w-[2.5px] h-[1.2em] ml-1 bg-[#E195AB] align-middle animate-cursor-blink" />
       </p>
     </div>
   );

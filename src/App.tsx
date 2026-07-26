@@ -8,33 +8,16 @@ import { Footer } from './components/Footer';
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeSection, setActiveSection] = useState<string>('home');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const handleFinishLoading = useCallback(() => {
     setIsLoading(false);
   }, []);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
-  };
-
-  // Sync dark mode class with root html element
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
-    }
-  }, [isDarkMode]);
 
   // Active section scroll observer
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['home', 'about'];
       const scrollPosition = window.scrollY + 200;
-
       for (const sectionId of sections) {
         const element = document.getElementById(sectionId);
         if (element) {
@@ -47,42 +30,34 @@ export default function App() {
         }
       }
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#e8590c] selection:text-white ${
-      isDarkMode
-        ? 'bg-[#0f0f11] text-zinc-100'
-        : 'bg-[#fafafa] text-zinc-900'
-    }`}>
+    <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] text-zinc-800`}>
       
       {/* Fullscreen Cybernetic Loading Screen */}
       {isLoading && (
-        <LoadingScreen onFinishLoading={handleFinishLoading} isDarkMode={isDarkMode} />
+        <LoadingScreen onFinishLoading={handleFinishLoading} isDarkMode={false} />
       )}
 
-      {/* Navigation (Hamburger menu only + Dark/Light toggle) */}
+      {/* Navigation (Hamburger menu only) */}
       <Navbar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={toggleDarkMode}
       />
 
       {/* Main Content */}
       <main>
         <HeroSection
-          isDarkMode={isDarkMode}
+          isDarkMode={false}
         />
-        <AboutSection isDarkMode={isDarkMode} />
+        <AboutSection isDarkMode={false} />
       </main>
 
       {/* Footer */}
-      <Footer isDarkMode={isDarkMode} />
-
+      <Footer isDarkMode={false} />
     </div>
   );
 }
