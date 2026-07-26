@@ -5,13 +5,11 @@ import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { CalculatorSection } from './components/CalculatorSection';
-import { LoginSection } from './components/LoginSection';
+import { ChessGameSection } from './components/ChessGameSection';
 import { Footer } from './components/Footer';
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
-function MainLayout({ isLoggedIn }: { isLoggedIn: boolean }) {
+function MainLayout() {
   const [activeSection, setActiveSection] = useState<string>('home');
   const location = useLocation();
 
@@ -53,12 +51,8 @@ function MainLayout({ isLoggedIn }: { isLoggedIn: boolean }) {
               <AboutSection isDarkMode={false} />
             </>
           } />
-          <Route path="/login" element={
-            isLoggedIn ? <Navigate to="/game" replace /> : <LoginSection />
-          } />
-          <Route path="/game" element={
-            isLoggedIn ? <CalculatorSection /> : <Navigate to="/login" replace />
-          } />
+          <Route path="/game" element={<CalculatorSection />} />
+          <Route path="/chess" element={<ChessGameSection />} />
         </Routes>
       </main>
       <Footer isDarkMode={false} />
@@ -68,20 +62,6 @@ function MainLayout({ isLoggedIn }: { isLoggedIn: boolean }) {
 
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [authInitialized, setAuthInitialized] = useState<boolean>(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-      }
-      setAuthInitialized(true);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleFinishLoading = useCallback(() => {
     setIsLoading(false);
@@ -93,11 +73,11 @@ export default function App() {
         <FloatingBackground />
         
         {/* Fullscreen Cybernetic Loading Screen */}
-        {(!authInitialized || isLoading) && (
+        {isLoading && (
           <LoadingScreen onFinishLoading={handleFinishLoading} isDarkMode={false} />
         )}
         
-        {authInitialized && <MainLayout isLoggedIn={isLoggedIn} />}
+        {!isLoading && <MainLayout />}
       </div>
     </BrowserRouter>
   );

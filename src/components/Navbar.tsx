@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ArrowUpRight, LogOut } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { auth } from '../firebase';
 
 interface NavbarProps {
   activeSection: string;
@@ -16,21 +14,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const navItems = [
     { id: 'home', label: 'Home', path: '/' },
     { id: 'about', label: 'About', path: '/' },
-    { id: 'game', label: 'Game', path: '/game' },
+    { id: 'game', label: 'Calc Game', path: '/game' },
+    { id: 'chess', label: 'Chess Game', path: '/chess' },
   ];
 
   useEffect(() => {
@@ -44,8 +35,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (id: string, path: string) => {
     setHamburgerOpen(false);
     
-    if (path === '/game') {
-      navigate('/game');
+    if (path !== '/') {
+      navigate(path);
     } else {
       if (location.pathname !== '/') {
         navigate('/');
@@ -65,12 +56,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         }
       }
     }
-  };
-
-  const handleLogout = () => {
-    signOut(auth);
-    setHamburgerOpen(false);
-    navigate('/');
   };
 
   return (
@@ -146,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Navigation Items (Without numbers) */}
               <div className="space-y-2 font-sans">
                 {navItems.map((item) => {
-                  const isActive = location.pathname === item.path && (item.path === '/game' || activeSection === item.id);
+                  const isActive = location.pathname === item.path && (item.path !== '/' || activeSection === item.id);
                   return (
                     <button
                       key={item.id}
@@ -166,18 +151,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   );
                 })}
-                
-                {user && (
-                  <button
-                    onClick={handleLogout}
-                    className={`w-full mt-4 p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer group bg-red-50 border-red-200 text-red-500 hover:text-white hover:bg-red-500 hover:border-red-500`}
-                  >
-                    <span className="text-base font-medium flex items-center gap-2">
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </span>
-                  </button>
-                )}
               </div>
             </motion.div>
           </motion.div>

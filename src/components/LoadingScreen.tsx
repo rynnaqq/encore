@@ -291,17 +291,24 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinishLoading, i
                       animate={{
                         scale: 0.92 + litRatio * 0.18,
                         opacity: 0.35 + litRatio * 0.65,
+                        y: isLit ? [0, -15, 0] : 0,
+                        rotate: isLit ? [0, 10, -10, 0] : 0
                       }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                      className={`w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 relative flex items-center justify-center p-1.5 sm:p-2 rounded-xl border ${
+                      transition={{ 
+                        duration: 0.5, 
+                        ease: 'easeOut',
+                        y: { repeat: Infinity, duration: 1, delay: index * 0.1 },
+                        rotate: { repeat: Infinity, duration: 2, delay: index * 0.1 }
+                      }}
+                      className={`w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 relative flex items-center justify-center p-1.5 sm:p-2 rounded-xl border-2 ${
                         isLit
-                          ? 'bg-white border-[#E195AB] shadow-sm'
+                          ? 'bg-white border-[#FF00E5] shadow-lg'
                           : 'bg-[#FFF5D7] border-[#FFCCE1]'
                       }`}
                       style={{
                         borderColor: isLit ? item.color : undefined,
                         boxShadow: isLit
-                          ? `0 0 12px ${item.color}${Math.round(litRatio * 60).toString(16).padStart(2, '0')}`
+                          ? `0 4px 15px ${item.color}${Math.round(litRatio * 80).toString(16).padStart(2, '0')}`
                           : undefined,
                       }}
                     >
