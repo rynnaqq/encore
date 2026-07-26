@@ -8,8 +8,10 @@ import { CalculatorSection } from './components/CalculatorSection';
 import { LoginSection } from './components/LoginSection';
 import { Footer } from './components/Footer';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 
-function MainLayout({ isLoggedIn, setIsLoggedIn }: { isLoggedIn: boolean, setIsLoggedIn: (val: boolean) => void }) {
+function MainLayout({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [activeSection, setActiveSection] = useState<string>('home');
   const location = useLocation();
 
@@ -52,7 +54,7 @@ function MainLayout({ isLoggedIn, setIsLoggedIn }: { isLoggedIn: boolean, setIsL
             </>
           } />
           <Route path="/login" element={
-            isLoggedIn ? <Navigate to="/game" replace /> : <LoginSection setIsLoggedIn={setIsLoggedIn} />
+            isLoggedIn ? <Navigate to="/game" replace /> : <LoginSection />
           } />
           <Route path="/game" element={
             isLoggedIn ? <CalculatorSection /> : <Navigate to="/login" replace />
@@ -67,6 +69,19 @@ function MainLayout({ isLoggedIn, setIsLoggedIn }: { isLoggedIn: boolean, setIsL
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [authInitialized, setAuthInitialized] = useState<boolean>(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+      setAuthInitialized(true);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleFinishLoading = useCallback(() => {
     setIsLoading(false);
@@ -78,11 +93,11 @@ export default function App() {
         <FloatingBackground />
         
         {/* Fullscreen Cybernetic Loading Screen */}
-        {isLoading && (
+        {(!authInitialized || isLoading) && (
           <LoadingScreen onFinishLoading={handleFinishLoading} isDarkMode={false} />
         )}
         
-        <MainLayout isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+        {authInitialized && <MainLayout isLoggedIn={isLoggedIn} />}
       </div>
     </BrowserRouter>
   );
