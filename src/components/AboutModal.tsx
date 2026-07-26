@@ -62,7 +62,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
             exit={{ scale: 0.3, opacity: 0, y: 40, rotate: 3 }}
             transition={{ type: 'spring', stiffness: 380, damping: 25 }}
-            className="relative w-full max-w-xl max-h-[90vh] bg-white/95 backdrop-blur-2xl border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-300/50 overflow-hidden z-10 my-auto text-slate-800 flex flex-col"
+            className="relative w-full max-w-xl max-h-[90vh] bg-white/95 backdrop-blur-2xl border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-200/50 overflow-hidden z-10 my-auto text-slate-800 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Decorative Banner */}
@@ -71,7 +71,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-                className="absolute top-2 right-12 text-white/30 pointer-events-none"
+                className="absolute top-2 right-12 text-white/40 pointer-events-none"
               >
                 <Sparkles className="w-16 h-16" />
               </motion.div>
@@ -103,13 +103,13 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.15 }}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#FFF5D7] border-4 border-white shadow-lg flex items-center justify-center text-[#E195AB] shrink-0 relative overflow-hidden"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#FFF5D7] border-4 border-white shadow-xl flex items-center justify-center text-[#E195AB] shrink-0 relative overflow-hidden"
                 >
                   {!hasImgError ? (
                     <img
                       src={imgSrc}
                       alt="Encore Profile"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-center"
                       onError={() => {
                         if (imgSrc === '/favicon.png') {
                           setImgSrc('/assets/images/favicon.png');
@@ -119,14 +119,13 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                       }}
                     />
                   ) : (
-                    <User className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <User className="w-10 h-10 sm:w-12 sm:h-12 text-[#E195AB]" />
                   )}
-                  <div className="absolute bottom-0 inset-x-0 h-1.5 bg-[#E195AB]" />
                 </motion.div>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
                     <span>Encore</span>
-                    <span className="text-[10px] sm:text-xs bg-[#E195AB] text-white font-mono px-2 py-0.5 rounded-full shadow-sm">Dev</span>
+                    <span className="text-[10px] sm:text-xs bg-[#E195AB] text-white font-mono px-2.5 py-0.5 rounded-full shadow-sm font-bold">Dev</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-700 font-mono font-medium truncate mt-0.5">
                     Frontend Developer & Craftsman
@@ -243,7 +242,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                               >
                                 <div className="flex justify-between items-center text-xs font-semibold">
                                   <span>{skill.name}</span>
-                                  <span className="font-mono text-[10px] text-[#E195AB]">{skill.level}%</span>
+                                  <span className="font-mono text-[10px] text-[#E195AB] font-bold">{skill.level}%</span>
                                 </div>
                                 <div className="w-full h-2 rounded-full bg-white border border-[#FFCCE1] overflow-hidden">
                                   <motion.div
@@ -304,7 +303,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <a
                   href="mailto:contact@encore.dev"
                   onClick={onClose}
-                  className="px-5 py-2 rounded-xl bg-[#E195AB] text-white text-xs font-bold hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-[#E195AB] text-white text-xs font-bold hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all flex items-center gap-1.5 shadow-md shadow-pink-200/50 cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   Contact Me
