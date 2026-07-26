@@ -24,28 +24,28 @@ export const SOCIAL_LINKS: SocialLink[] = [
     name: 'GitHub',
     iconName: 'Github',
     url: 'https://github.com',
-    handle: '@ryan-dev',
+    handle: '@encore-dev',
   },
   {
     id: 'instagram',
     name: 'Instagram',
     iconName: 'Instagram',
     url: 'https://instagram.com',
-    handle: '@ryan.code',
+    handle: '@encore.code',
   },
   {
     id: 'youtube',
     name: 'YouTube',
     iconName: 'Youtube',
     url: 'https://youtube.com',
-    handle: 'Ryan Code Studio',
+    handle: 'Encore Code Studio',
   },
   {
     id: 'tiktok',
     name: 'TikTok',
     iconName: 'Tiktok',
     url: 'https://tiktok.com',
-    handle: '@ryan.dev.tok',
+    handle: '@encore.dev.tok',
   },
 ];
 

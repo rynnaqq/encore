@@ -1,3 +1,4 @@
+import { FloatingBackground } from './components/FloatingBackground';
 import { useState, useEffect, useCallback } from 'react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
@@ -36,6 +37,7 @@ export default function App() {
 
   return (
     <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] text-zinc-800`}>
+      <FloatingBackground />
       
       {/* Fullscreen Cybernetic Loading Screen */}
       {isLoading && (

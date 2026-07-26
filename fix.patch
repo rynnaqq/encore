@@ -1,0 +1,8 @@
+--- src/components/HeroSection.tsx
++++ src/components/HeroSection.tsx
+@@ -198,3 +198,5 @@
+               </div>
+             </div>
++          </div>
++        </motion.div>
+ 

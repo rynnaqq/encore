@@ -54,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="nav-logo-btn"
             >
               <span className={`font-sans text-xl sm:text-2xl font-extrabold tracking-tight transition-colors text-slate-800 group-hover:text-[#E195AB]`}>
-                Ryan
+                Encore
               </span>
               <span className="text-[#E195AB] font-black text-2xl leading-none">.</span>
             </button>

@@ -146,6 +146,46 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         >
           <div className="relative w-full max-w-[560px] sm:max-w-[620px] aspect-[16/9]">
             
+            {/* Top Left Animated Smiley */}
+            <motion.div
+              animate={{
+                y: [0, -8, 0],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -top-4 -left-4 sm:-top-6 sm:-left-6 z-30"
+            >
+              <div className="bg-[#FFDD00] text-black w-10 h-10 sm:w-12 sm:h-12 rounded-[1rem] flex items-center justify-center border-[2.5px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-6">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                  <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                  <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                </svg>
+              </div>
+            </motion.div>
+
+            {/* Bottom Right Animated Pill */}
+            <motion.div
+              animate={{
+                y: [0, 8, 0],
+              }}
+              transition={{
+                duration: 3.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
+              className="absolute -bottom-3 right-2 sm:-bottom-4 sm:right-4 z-30"
+            >
+              <div className="bg-[#FF00E5] text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full border-[2.5px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3 flex items-center justify-center">
+                <span className="font-sans font-black text-[10px] sm:text-xs uppercase tracking-widest italic leading-none mt-0.5">Woah!</span>
+              </div>
+            </motion.div>
+            
             {/* Minimal Smartphone Frame */}
             <div className={`relative w-full h-full rounded-2xl border p-1.5 shadow-2xl overflow-hidden flex items-center justify-center transition-colors bg-[#FFF5D7] border-[#FFCCE1] shadow-pink-200/50`}>
               
@@ -158,15 +198,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               </div>
             </div>
-
-            {/* Minimal Badge */}
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="absolute -bottom-2.5 right-4 bg-[#E195AB] text-white px-3 py-1 rounded-full font-mono font-medium text-[10px] uppercase tracking-wider shadow-md flex items-center gap-1.5 z-20 cursor-default"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              <span>LIVE PREVIEW</span>
-            </motion.div>
 
           </div>
         </motion.div>
@@ -187,8 +218,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 Hello Everyone
               </span>
               <CyberDecoderText
-                text="I'm Ryan"
-                highlightText="Ryan"
+                text="I'm Encore"
+                highlightText="Encore"
                 speed={35}
                 repeatInterval={10000}
                 className={'text-slate-800'}
@@ -199,7 +230,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Body Paragraph with Typewriter Effect */}
           <TypewriterText
-            text="I am a web developer focused on building modern, responsive, and efficient websites with expertise in HTML, CSS, and JavaScript."
+            text="I craft modern, delightful web experiences. As a frontend developer, I transform ideas into beautifully responsive and efficient interfaces that users love to engage with."
             speed={35}
             pauseDuration={4500}
             isDarkMode={isDarkMode}
@@ -227,11 +258,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </motion.button>
           </motion.div>
-
         </motion.div>
-
       </div>
     </section>
   );
 };
-

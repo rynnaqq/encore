@@ -76,7 +76,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
                   <Terminal className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-sans font-extrabold text-base">Ryan's Stack</h3>
+                  <h3 className="font-sans font-extrabold text-base">Encore's Stack</h3>
                   <p className="font-mono text-xs text-[#E195AB] font-semibold">Frontend Engineering</p>
                 </div>
               </div>
@@ -127,15 +127,15 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isDarkMode }) => {
               className="lg:col-span-7 space-y-4"
             >
               <motion.h3 variants={itemVariants} className="font-sans text-lg sm:text-xl font-bold leading-snug">
-                Passionate Frontend Developer Focused on Clean Code & Aesthetics
+                Passionate Frontend Developer Focused on Clean Code & Engaging User Experiences
               </motion.h3>
 
               <motion.p variants={itemVariants} className={`font-sans text-xs sm:text-sm leading-relaxed text-slate-600`}>
-                Hello! I am Ryan, a dedicated web developer with a continuous drive for building pixel-perfect, responsive web applications. I turn design mockups into living, interactive web interfaces that perform seamlessly on any screen size.
+                Hello! I am Encore, a dedicated frontend developer who bridges the gap between design and engineering. I specialize in transforming static design concepts into living, breathing web applications that are as visually stunning as they are technically robust.
               </motion.p>
 
               <motion.p variants={itemVariants} className={`font-sans text-xs sm:text-sm leading-relaxed text-slate-600`}>
-                My approach combines clean architecture with sharp visual detail. Whether crafting fluid grid layouts, optimizing touch targets, or polishing micro-interactions, I treat every project with absolute dedication and a warm, collaborative spirit.
+                My approach focuses on creating accessible, pixel-perfect interfaces that perform flawlessly across all devices. From architecting scalable component systems to refining subtle micro-interactions, I obsess over the details that elevate a good product into an unforgettable digital experience.
               </motion.p>
 
               <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
