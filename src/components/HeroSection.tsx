@@ -212,7 +212,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
               className="py-2.5 px-6 rounded-xl bg-[#E195AB] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all cursor-pointer shadow-md group/btn"
             >
               <User className="w-4 h-4 text-white" />
-              <span>View Profile (Pop-Up)</span>
+              <span>View Profile</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </motion.button>
           </motion.div>
