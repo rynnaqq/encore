@@ -140,13 +140,13 @@ export const HeroSection: React.FC = () => {
             </motion.div>
             
             {/* Minimal Smartphone Frame */}
-            <div className="relative w-full h-full rounded-2xl border p-1.5 shadow-2xl overflow-hidden flex items-center justify-center transition-colors bg-[#FFF5D7] border-[#FFCCE1] shadow-pink-200/50">
+            <div className="relative w-full h-full rounded-2xl border shadow-2xl overflow-hidden flex items-center justify-center transition-colors border-[#FFCCE1] shadow-pink-200/50">
               
               {/* Speaker / Notch Accent */}
               <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFCCE1] rounded-full z-30 hidden sm:block" />
 
               {/* Inner Screen Display */}
-              <div className="relative w-full h-full rounded-xl overflow-hidden group">
+              <div className="relative w-full h-full overflow-hidden group">
                 <CodeShowcaseScreen />
               </div>
             </div>

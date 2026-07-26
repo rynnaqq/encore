@@ -46,8 +46,8 @@ export const FishingGameSection: React.FC = () => {
   const [fish, setFish] = useState<FishType | null>(null);
   const [bobberPosition, setBobberPosition] = useState(400);
   const [escapeReason, setEscapeReason] = useState<'early' | 'missed' | 'failed' | null>(null);
-
-  const [scale, setScale] = useState({ x: 1, y: 1 });
+  const [scale, setScale] = useState(1);
+  const [isPortrait, setIsPortrait] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
 
   const powerRef = useRef(0);
@@ -60,9 +60,18 @@ export const FishingGameSection: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      const sw = window.innerWidth / 800;
-      const sh = window.innerHeight / 600;
-      setScale({ x: sw, y: sh });
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPortrait(portrait);
+      
+      let sw, sh;
+      if (portrait) {
+        sw = window.innerHeight / 800;
+        sh = window.innerWidth / 600;
+      } else {
+        sw = window.innerWidth / 800;
+        sh = window.innerHeight / 600;
+      }
+      setScale(Math.min(sw, sh));
     };
     window.addEventListener('resize', handleResize);
     handleResize();
@@ -208,6 +217,17 @@ export const FishingGameSection: React.FC = () => {
         <style>
             {`
             @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+            
+            #fishing, #fishing * {
+                -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important;
+                -khtml-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                -webkit-user-drag: none !important;
+            }
+
             @keyframes shake {
                 0% { transform: rotate(-40deg); }
                 50% { transform: rotate(-35deg); }
@@ -232,7 +252,7 @@ export const FishingGameSection: React.FC = () => {
             style={{ 
                 width: 800, 
                 height: 600, 
-                transform: `scale(${scale.x}, ${scale.y})`, 
+                transform: `scale(${scale}) ${isPortrait ? 'rotate(90deg)' : ''}`, 
                 transformOrigin: 'center' 
             }}
             className="relative bg-sky-300 overflow-hidden shadow-[0_0_0_4px_#000,0_0_0_8px_#fff]"
