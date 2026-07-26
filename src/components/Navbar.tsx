@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'home', label: 'Home', path: '/' },
-    { id: 'about', label: 'About (Pop-Up)', path: '/' },
+    { id: 'about', label: 'About', path: '/' },
     { id: 'game', label: 'Calc Game', path: '/game' },
     { id: 'fishing', label: 'Fishing Game', path: '/fishing' },
   ];
