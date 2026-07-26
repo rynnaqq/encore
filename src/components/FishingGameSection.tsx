@@ -1,9 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fish, AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, ShieldAlert, Award } from 'lucide-react';
+import { Fish, AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { FishGraphic } from './FishGraphic';
 
 type GameState = 'idle' | 'preparing' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'caught' | 'escaped';
+type TimeOfDay = 'pagi' | 'senja' | 'malam';
+
+interface FloatingText {
+  id: number;
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+}
 
 interface FishType {
   id: string;
@@ -58,8 +68,20 @@ export const FishingGameSection: React.FC = () => {
   const [scale, setScale] = useState(1);
   const [score, setScore] = useState(0);
   const [caughtCount, setCaughtCount] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('pagi');
+  const [isPerfectCast, setIsPerfectCast] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [splashes, setSplashes] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
+
+  const triggerFloatingText = (text: string, x: number, y: number, color = '#facc15') => {
+    const id = Date.now() + Math.random();
+    setFloatingTexts(prev => [...prev, { id, text, x, y, color }]);
+    setTimeout(() => {
+      setFloatingTexts(prev => prev.filter(item => item.id !== id));
+    }, 1200);
+  };
 
   // Refs for animations & intervals
   const containerRef = useRef<HTMLElement>(null);
@@ -228,6 +250,10 @@ export const FishingGameSection: React.FC = () => {
 
     playSound('cast');
 
+    // Perfect cast sweet spot (80% - 95%)
+    const perfect = power >= 80 && power <= 95;
+    setIsPerfectCast(perfect);
+
     // Target position calculation: X = 350 to 730
     const targetX = 350 + (power / 100) * 380;
     targetBobberXRef.current = targetX;
@@ -235,7 +261,6 @@ export const FishingGameSection: React.FC = () => {
     setGameState('casting');
     let progress = 0;
 
-    // Use current real-time rod tip position as exact cast origin!
     const startX = rodTipPos.x || 330;
     const startY = rodTipPos.y || 310;
 
@@ -243,7 +268,6 @@ export const FishingGameSection: React.FC = () => {
       progress += 0.045;
       setCastProgress(progress);
 
-      // Arc calculation
       const currentX = startX + (targetX - startX) * progress;
       const peakY = Math.min(startY - 80, 120);
       const currentY = (1 - progress) * (1 - progress) * startY + 2 * (1 - progress) * progress * peakY + progress * progress * 380;
@@ -256,10 +280,14 @@ export const FishingGameSection: React.FC = () => {
         setBobberPos({ x: targetX, y: 380 });
         playSound('splash');
         triggerSplash(targetX, 380);
+
+        if (perfect) {
+          triggerFloatingText('PERFECT CAST! ⭐', targetX, 340, '#facc15');
+        }
+
         setGameState('waiting');
 
-        // Random bite timer
-        const waitTime = Math.random() * 3000 + 1500;
+        const waitTime = Math.random() * 2500 + 1200;
         biteTimeoutRef.current = setTimeout(() => {
           setGameState(prev => {
             if (prev === 'waiting') {
@@ -271,6 +299,7 @@ export const FishingGameSection: React.FC = () => {
                   if (curr === 'biting') {
                     playSound('escape');
                     setEscapeReason('missed');
+                    setCombo(0);
                     return 'escaped';
                   }
                   return curr;
@@ -295,6 +324,7 @@ export const FishingGameSection: React.FC = () => {
       if (escapeTimeoutRef.current) clearTimeout(escapeTimeoutRef.current);
       playSound('escape');
       setEscapeReason('early');
+      setCombo(0);
       setGameState('escaped');
     } else if (gameState === 'biting') {
       if (escapeTimeoutRef.current) clearTimeout(escapeTimeoutRef.current);
@@ -315,13 +345,19 @@ export const FishingGameSection: React.FC = () => {
       if (reelProgressRef.current >= 100) {
         reelProgressRef.current = 100;
         playSound('caught');
-        setScore(s => s + (fish?.points || 100));
+        const basePts = fish?.points || 100;
+        const comboBonus = combo * 25;
+        const perfectBonus = isPerfectCast ? 50 : 0;
+        const totalPts = basePts + comboBonus + perfectBonus;
+
+        setScore(s => s + totalPts);
         setCaughtCount(c => c + 1);
+        setCombo(c => c + 1);
+        triggerFloatingText(`+${totalPts} PTS!`, bobberPos.x, 320, '#34d399');
         setGameState('caught');
       }
       setReelProgress(reelProgressRef.current);
 
-      // Move bobber closer to pier as reeling progresses
       const targetX = targetBobberXRef.current;
       const newBobberX = targetX - (reelProgressRef.current / 100) * (targetX - 250);
       setBobberPos({ x: Math.max(250, newBobberX), y: 380 });
@@ -458,19 +494,53 @@ export const FishingGameSection: React.FC = () => {
           <span className="text-[10px] font-bold mt-0.5">BACK</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        {/* Time of Day Switcher & Stats */}
+        <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
+          {/* Time Selector */}
+          <div className="bg-amber-100 border-[4px] border-black p-1 flex items-center gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+            <button
+              onClick={() => setTimeOfDay('pagi')}
+              className={`p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
+              title="Pagi (Day)"
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-700" />
+            </button>
+            <button
+              onClick={() => setTimeOfDay('senja')}
+              className={`p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
+              title="Senja (Sunset)"
+            >
+              <Flame className="w-3.5 h-3.5 text-orange-800" />
+            </button>
+            <button
+              onClick={() => setTimeOfDay('malam')}
+              className={`p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
+              title="Malam (Night)"
+            >
+              <Moon className="w-3.5 h-3.5 text-amber-300" />
+            </button>
+          </div>
+
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="pointer-events-auto bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+            className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-red-600" />}
           </button>
 
-          <div className="bg-amber-100 text-slate-900 border-[4px] border-black px-4 py-2 flex items-center gap-3 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+          <div className="bg-amber-100 text-slate-900 border-[4px] border-black px-3.5 py-2 flex items-center gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
             <Trophy className="w-4 h-4 text-amber-600" />
             <span className="text-[10px] font-bold">PTS: <span className="text-blue-600">{score}</span></span>
             <span className="text-slate-400">|</span>
             <span className="text-[10px] font-bold">FISH: <span className="text-emerald-700">{caughtCount}</span></span>
+            {combo > 1 && (
+              <>
+                <span className="text-slate-400">|</span>
+                <span className="text-[10px] font-black text-rose-600 animate-pulse flex items-center gap-0.5">
+                  🔥 x{combo}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -488,22 +558,62 @@ export const FishingGameSection: React.FC = () => {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       >
-        {/* ================= SKY & SUN ================= */}
+        {/* ================= SKY & CELESTIAL BODY ================= */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Gradient Pixel Sky Bands */}
-          <div className="absolute top-0 inset-x-0 h-[65px] bg-[#0284c7]" />
-          <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#38bdf8]" />
-          <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#7dd3fc]" />
-          <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#bae6fd]" />
-          <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#e0f2fe]" />
+          {/* Sky Gradient Bands according to Time of Day */}
+          {timeOfDay === 'pagi' && (
+            <>
+              <div className="absolute top-0 inset-x-0 h-[65px] bg-[#0284c7]" />
+              <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#38bdf8]" />
+              <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#7dd3fc]" />
+              <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#bae6fd]" />
+              <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#e0f2fe]" />
+            </>
+          )}
 
-          {/* Glowing Retro Pixel Sun */}
+          {timeOfDay === 'senja' && (
+            <>
+              <div className="absolute top-0 inset-x-0 h-[65px] bg-[#431407]" />
+              <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#7c2d12]" />
+              <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#c2410c]" />
+              <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#f97316]" />
+              <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#fdba74]" />
+            </>
+          )}
+
+          {timeOfDay === 'malam' && (
+            <>
+              <div className="absolute top-0 inset-x-0 h-[65px] bg-[#020617]" />
+              <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#0f172a]" />
+              <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#1e1b4b]" />
+              <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#312e81]" />
+              <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#4338ca]" />
+
+              {/* Twinkling Stars */}
+              <div className="absolute top-8 left-12 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+              <div className="absolute top-16 left-64 w-2 h-2 bg-amber-200 rounded-full animate-pulse" />
+              <div className="absolute top-10 right-96 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-20 right-48 w-2 h-2 bg-amber-100 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+            </>
+          )}
+
+          {/* Sun / Moon Graphic */}
           <div className="absolute top-[30px] right-[70px]">
-            <div className="w-[52px] h-[52px] bg-[#FEF08A] border-[4px] border-[#FACC15] shadow-[0_0_24px_rgba(253,224,71,0.7)]" />
-            <div className="absolute -top-3 left-3 w-[28px] h-[6px] bg-[#FDE047]" />
-            <div className="absolute -bottom-3 left-3 w-[28px] h-[6px] bg-[#FDE047]" />
-            <div className="absolute top-3 -left-3 w-[6px] h-[28px] bg-[#FDE047]" />
-            <div className="absolute top-3 -right-3 w-[6px] h-[28px] bg-[#FDE047]" />
+            {timeOfDay === 'malam' ? (
+              <div className="relative">
+                <div className="w-[52px] h-[52px] bg-[#FEF08A] rounded-full border-[4px] border-[#FDE047] shadow-[0_0_30px_rgba(254,240,138,0.8)]" />
+                <div className="absolute top-2 left-2 w-3 h-3 bg-amber-200/50 rounded-full" />
+                <div className="absolute bottom-3 right-3 w-4 h-4 bg-amber-200/40 rounded-full" />
+              </div>
+            ) : (
+              <div className="relative">
+                <div className={`w-[52px] h-[52px] border-[4px] ${timeOfDay === 'senja' ? 'bg-[#FF7E47] border-[#EA580C] shadow-[0_0_30px_rgba(234,88,12,0.8)]' : 'bg-[#FEF08A] border-[#FACC15] shadow-[0_0_30px_rgba(253,224,71,0.8)]'}`} />
+                <div className="absolute -top-3 left-3 w-[28px] h-[6px] bg-[#FDE047]" />
+                <div className="absolute -bottom-3 left-3 w-[28px] h-[6px] bg-[#FDE047]" />
+                <div className="absolute top-3 -left-3 w-[6px] h-[28px] bg-[#FDE047]" />
+                <div className="absolute top-3 -right-3 w-[6px] h-[28px] bg-[#FDE047]" />
+              </div>
+            )}
           </div>
 
           {/* Multi-layered Drifting Parallax Pixel Clouds */}
@@ -661,6 +771,18 @@ export const FishingGameSection: React.FC = () => {
             <div className="absolute -top-[16px] left-[68px] w-[22px] h-[16px] bg-red-600 border-[2px] border-black">
               <div className="absolute top-[2px] left-[6px] w-[10px] h-[3px] bg-yellow-400" />
             </div>
+
+            {/* Glowing Pier Lantern */}
+            <div className="absolute -top-[32px] left-[180px] z-20">
+              <div className="w-[12px] h-[4px] bg-amber-900 border border-black mx-auto" />
+              <div className="w-[16px] h-[18px] bg-amber-300 border-[2px] border-black relative overflow-hidden shadow-[0_0_15px_rgba(251,191,36,0.9)] animate-pulse">
+                <div className="absolute inset-0 bg-yellow-100 opacity-80" />
+                <div className="absolute top-1 left-1.5 w-1 h-2 bg-white rounded-full" />
+              </div>
+              <div className="w-[20px] h-[4px] bg-amber-950 border border-black mx-auto" />
+              {/* Light beam glow cone */}
+              <div className="absolute top-full -left-6 w-16 h-12 bg-gradient-to-b from-amber-300/30 to-transparent pointer-events-none rounded-b-full" />
+            </div>
           </div>
 
           {/* Fisherman Character */}
@@ -782,6 +904,23 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute -top-5 right-[-10px] w-[5px] h-[5px] bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
             </div>
           ))}
+
+          {/* Floating Points & Text Pops */}
+          <AnimatePresence>
+            {floatingTexts.map(ft => (
+              <motion.div
+                key={ft.id}
+                initial={{ opacity: 0, y: 0, scale: 0.6 }}
+                animate={{ opacity: 1, y: -40, scale: 1.1 }}
+                exit={{ opacity: 0, y: -70 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="absolute pointer-events-none z-40 text-xs font-black drop-shadow-[2px_2px_0_#000] border border-black bg-black/80 px-2.5 py-1 rounded-sm"
+                style={{ left: ft.x, top: ft.y, color: ft.color, transform: 'translate(-50%, -50%)' }}
+              >
+                {ft.text}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
         {/* ================= INTERACTIVE OVERLAYS & MODALS ================= */}
@@ -844,6 +983,10 @@ export const FishingGameSection: React.FC = () => {
                 <span className="text-red-600 font-extrabold">{Math.round(power)}%</span>
               </div>
               <div className="w-full h-[26px] bg-slate-900 border-[3px] border-black p-1 relative overflow-hidden">
+                {/* Perfect Cast Sweet Spot Marker (80% - 95%) */}
+                <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-300/30 border-x border-yellow-400 z-10 flex items-center justify-center">
+                  <span className="text-[8px] font-black text-yellow-300 tracking-tighter">PERFECT</span>
+                </div>
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-red-600 transition-all duration-75 ease-linear"
                   style={{ width: `${power}%` }}
@@ -897,10 +1040,14 @@ export const FishingGameSection: React.FC = () => {
 
                   <div className="flex justify-center my-4">
                     <div
-                      className="w-[120px] h-[120px] border-[4px] border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative"
-                      style={{ backgroundColor: fish.secondaryColor }}
+                      className="w-[130px] h-[130px] border-[4px] border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative bg-gradient-to-b from-sky-100 to-amber-100 overflow-hidden"
                     >
-                      <Fish className="w-[80px] h-[80px] drop-shadow-[2px_2px_0_rgba(0,0,0,0.8)]" style={{ color: fish.color }} fill={fish.color} />
+                      <motion.div
+                        animate={{ y: [-3, 3, -3], rotate: [-2, 2, -2] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <FishGraphic id={fish.id} size={110} />
+                      </motion.div>
                     </div>
                   </div>
 
