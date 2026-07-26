@@ -47,7 +47,6 @@ export const FishingGameSection: React.FC = () => {
   const [bobberPosition, setBobberPosition] = useState(400);
   const [escapeReason, setEscapeReason] = useState<'early' | 'missed' | 'failed' | null>(null);
   const [scale, setScale] = useState(1);
-  const [isPortrait, setIsPortrait] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
 
   const powerRef = useRef(0);
@@ -60,17 +59,11 @@ export const FishingGameSection: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      const portrait = window.innerHeight > window.innerWidth;
-      setIsPortrait(portrait);
-      
-      let sw, sh;
-      if (portrait) {
-        sw = window.innerHeight / 800;
-        sh = window.innerWidth / 600;
-      } else {
-        sw = window.innerWidth / 800;
-        sh = window.innerHeight / 600;
-      }
+      const padding = 12;
+      const availableWidth = Math.max(280, window.innerWidth - padding);
+      const availableHeight = Math.max(200, window.innerHeight - padding);
+      const sw = availableWidth / 800;
+      const sh = availableHeight / 600;
       setScale(Math.min(sw, sh));
     };
     window.addEventListener('resize', handleResize);
@@ -252,10 +245,10 @@ export const FishingGameSection: React.FC = () => {
             style={{ 
                 width: 800, 
                 height: 600, 
-                transform: `scale(${scale}) ${isPortrait ? 'rotate(90deg)' : ''}`, 
+                transform: `scale(${scale})`, 
                 transformOrigin: 'center' 
             }}
-            className="relative bg-sky-300 overflow-hidden shadow-[0_0_0_4px_#000,0_0_0_8px_#fff]"
+            className="relative bg-sky-300 overflow-hidden shadow-[0_0_0_4px_#000,0_0_0_8px_#fff] shrink-0"
             onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
         >

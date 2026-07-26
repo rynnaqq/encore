@@ -38,11 +38,11 @@ const CodeShowcaseScreen: React.FC = () => {
       </div>
 
       {/* Screen Body */}
-      <div className="flex-1 p-3 sm:p-4 overflow-hidden relative flex flex-col justify-center">
+      <div className={`flex-1 overflow-hidden relative flex flex-col justify-center ${activeTab === 'preview' ? 'p-0' : 'p-3 sm:p-4'}`}>
         {activeTab === 'preview' ? (
-          <div className="w-full h-full relative rounded-lg overflow-hidden bg-black flex items-center justify-center">
+          <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center">
             <video 
-              src="/assets/videos/encore-preview.mp4" 
+              src="/assets/videos/video.mp4" 
               className="w-full h-full object-cover"
               autoPlay 
               loop 
