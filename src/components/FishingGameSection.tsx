@@ -63,6 +63,10 @@ export const FishingGameSection: React.FC = () => {
 
   // Refs for animations & intervals
   const containerRef = useRef<HTMLElement>(null);
+  const gameCanvasRef = useRef<HTMLDivElement>(null);
+  const rodTipRef = useRef<HTMLDivElement>(null);
+  const [rodTipPos, setRodTipPos] = useState({ x: 330, y: 310 });
+
   const powerRef = useRef(0);
   const powerDirRef = useRef(1);
   const reqRef = useRef<number>(0);
@@ -71,6 +75,28 @@ export const FishingGameSection: React.FC = () => {
 
   const biteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const escapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync real-time 2D position of the rod tip with the 800x600 canvas coordinate space
+  useEffect(() => {
+    let animId: number;
+    const updateRodTipPos = () => {
+      if (rodTipRef.current && gameCanvasRef.current) {
+        const tipRect = rodTipRef.current.getBoundingClientRect();
+        const canvasRect = gameCanvasRef.current.getBoundingClientRect();
+        if (canvasRect.width > 0) {
+          const currentScale = canvasRect.width / 800;
+          const tipCenterX = (tipRect.left + tipRect.right) / 2;
+          const tipCenterY = (tipRect.top + tipRect.bottom) / 2;
+          const x = (tipCenterX - canvasRect.left) / currentScale;
+          const y = (tipCenterY - canvasRect.top) / currentScale;
+          setRodTipPos({ x, y });
+        }
+      }
+      animId = requestAnimationFrame(updateRodTipPos);
+    };
+    animId = requestAnimationFrame(updateRodTipPos);
+    return () => cancelAnimationFrame(animId);
+  }, []);
 
   // Audio synthesis for retro sound effects
   const playSound = (type: 'cast' | 'splash' | 'bite' | 'tap' | 'caught' | 'escape') => {
@@ -209,15 +235,17 @@ export const FishingGameSection: React.FC = () => {
     setGameState('casting');
     let progress = 0;
 
+    // Use current real-time rod tip position as exact cast origin!
+    const startX = rodTipPos.x || 330;
+    const startY = rodTipPos.y || 310;
+
     const animateCast = () => {
       progress += 0.045;
       setCastProgress(progress);
 
       // Arc calculation
-      const startX = 230;
-      const startY = 240;
       const currentX = startX + (targetX - startX) * progress;
-      const peakY = 140;
+      const peakY = Math.min(startY - 80, 120);
       const currentY = (1 - progress) * (1 - progress) * startY + 2 * (1 - progress) * progress * peakY + progress * progress * 380;
 
       setBobberPos({ x: currentX, y: currentY });
@@ -292,6 +320,11 @@ export const FishingGameSection: React.FC = () => {
         setGameState('caught');
       }
       setReelProgress(reelProgressRef.current);
+
+      // Move bobber closer to pier as reeling progresses
+      const targetX = targetBobberXRef.current;
+      const newBobberX = targetX - (reelProgressRef.current / 100) * (targetX - 250);
+      setBobberPos({ x: Math.max(250, newBobberX), y: 380 });
     }
   };
 
@@ -314,6 +347,10 @@ export const FishingGameSection: React.FC = () => {
           setGameState('escaped');
         }
         setReelProgress(reelProgressRef.current);
+
+        const targetX = targetBobberXRef.current;
+        const newBobberX = targetX - (reelProgressRef.current / 100) * (targetX - 250);
+        setBobberPos({ x: Math.max(250, newBobberX), y: 380 });
       }, 40);
     }
     return () => {
@@ -329,13 +366,6 @@ export const FishingGameSection: React.FC = () => {
   else if (gameState === 'biting') rodAngleDeg = -5;
   else if (gameState === 'reeling') rodAngleDeg = -30;
   else rodAngleDeg = -22;
-
-  const PIVOT_X = 135;
-  const PIVOT_Y = 325;
-  const ROD_LEN = 195;
-  const rad = (rodAngleDeg - 10) * (Math.PI / 180);
-  const ROD_TIP_X = PIVOT_X + ROD_LEN * Math.cos(rad);
-  const ROD_TIP_Y = PIVOT_Y + ROD_LEN * Math.sin(rad);
 
   return (
     <section
@@ -447,6 +477,7 @@ export const FishingGameSection: React.FC = () => {
 
       {/* Main 800x600 Scaled Retro Game Canvas */}
       <div
+        ref={gameCanvasRef}
         style={{
           width: 800,
           height: 600,
@@ -674,19 +705,28 @@ export const FishingGameSection: React.FC = () => {
 
               {/* Flexible Curved Rod */}
               <div className="absolute top-[-3px] left-[42px] w-[165px] h-[4px] bg-slate-900 border-t border-slate-600" />
-              <div className="absolute top-[-3px] left-[205px] w-[10px] h-[4px] bg-red-600" />
+              <div className="absolute top-[-3px] left-[205px] w-[10px] h-[4px] bg-red-600">
+                <div ref={rodTipRef} className="absolute top-[2px] right-0 w-[1px] h-[1px] opacity-0 pointer-events-none" />
+              </div>
             </div>
           </div>
 
           {/* ================= FISHING LINE ================= */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
-            <svg width="800" height="600" className="absolute inset-0 pointer-events-none" shapeRendering="crispEdges">
+            <svg width="800" height="600" className="absolute inset-0 pointer-events-none z-15" shapeRendering="geometricPrecision">
               <path
-                d={`M ${ROD_TIP_X} ${ROD_TIP_Y} Q ${(ROD_TIP_X + bobberPos.x) / 2} ${gameState === 'reeling' ? bobberPos.y - 30 : bobberPos.y + 15} ${bobberPos.x} ${bobberPos.y}`}
+                d={
+                  gameState === 'reeling'
+                    ? `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.min(rodTipPos.y, bobberPos.y) - 20} ${bobberPos.x} ${bobberPos.y}`
+                    : gameState === 'casting'
+                    ? `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.min(rodTipPos.y, bobberPos.y) - 35} ${bobberPos.x} ${bobberPos.y}`
+                    : `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.max(rodTipPos.y, bobberPos.y) + 25} ${bobberPos.x} ${bobberPos.y}`
+                }
                 fill="none"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeDasharray={gameState === 'reeling' ? '4 4' : 'none'}
+                stroke="#ffffff"
+                strokeWidth="2"
+                strokeDasharray={gameState === 'reeling' ? '4 3' : 'none'}
+                className={gameState === 'biting' ? 'animate-pulse' : ''}
               />
             </svg>
           )}

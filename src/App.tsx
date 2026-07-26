@@ -4,6 +4,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
+import { AboutModal } from './components/AboutModal';
 import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
 import { Footer } from './components/Footer';
@@ -11,7 +12,16 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
 function MainLayout() {
   const [activeSection, setActiveSection] = useState<string>('home');
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const location = useLocation();
+
+  const handleOpenAboutModal = () => {
+    setIsAboutModalOpen(true);
+  };
+
+  const handleCloseAboutModal = () => {
+    setIsAboutModalOpen(false);
+  };
 
   // Active section scroll observer
   useEffect(() => {
@@ -42,19 +52,27 @@ function MainLayout() {
       <Navbar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
+        onOpenAboutModal={handleOpenAboutModal}
       />
       <main>
         <Routes>
           <Route path="/" element={
             <>
-              <HeroSection />
-              <AboutSection />
+              <HeroSection onOpenAboutModal={handleOpenAboutModal} />
+              <AboutSection onOpenModal={handleOpenAboutModal} />
             </>
           } />
           <Route path="/game" element={<CalculatorSection />} />
           <Route path="/fishing" element={<FishingGameSection />} />
         </Routes>
       </main>
+
+      {/* Pop-Up Animated About Modal */}
+      <AboutModal
+        isOpen={isAboutModalOpen}
+        onClose={handleCloseAboutModal}
+      />
+
       <Footer />
     </>
   );

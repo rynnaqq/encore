@@ -6,11 +6,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 interface NavbarProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
+  onOpenAboutModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
   setActiveSection,
+  onOpenAboutModal,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
@@ -19,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'home', label: 'Home', path: '/' },
-    { id: 'about', label: 'About', path: '/' },
+    { id: 'about', label: 'About (Pop-Up)', path: '/' },
     { id: 'game', label: 'Calc Game', path: '/game' },
     { id: 'fishing', label: 'Fishing Game', path: '/fishing' },
   ];
@@ -35,6 +37,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (id: string, path: string) => {
     setHamburgerOpen(false);
     
+    if (id === 'about' && onOpenAboutModal) {
+      onOpenAboutModal();
+      return;
+    }
+
     if (path !== '/') {
       navigate(path);
     } else {

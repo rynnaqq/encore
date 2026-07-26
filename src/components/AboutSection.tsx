@@ -3,7 +3,11 @@ import { motion } from 'motion/react';
 import { User, CheckCircle2, Code, Terminal, Cpu } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 
-export const AboutSection: React.FC = () => {
+interface AboutSectionProps {
+  onOpenModal?: () => void;
+}
+
+export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenModal }) => {
   const containerRef = useRef<HTMLElement>(null);
 
   const highlights = [
@@ -14,39 +18,57 @@ export const AboutSection: React.FC = () => {
   ];
 
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, scale: 0.85 },
     show: {
       opacity: 1,
+      scale: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.08,
+        delayChildren: 0.15,
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    hidden: { opacity: 0, scale: 0.7, y: 12 },
+    show: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0, 
+      transition: { 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 20 
+      } 
+    }
   };
 
   return (
     <section id="about" ref={containerRef} className="py-16 sm:py-20 relative overflow-hidden">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Section Header */}
-        <SectionHeader
-          title={
-            <>
-              Crafting Digital Experiences <span className="text-[#E195AB]">With Minimalist Precision</span>
-            </>
-          }
-        />
-
-        {/* Content Box */}
+        {/* Section Header with Spring Pop-Up */}
         <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.98 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.8, y: 15 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+        >
+          <SectionHeader
+            title={
+              <>
+                Crafting Digital Experiences <span className="text-[#E195AB]">With Minimalist Precision</span>
+              </>
+            }
+          />
+        </motion.div>
+
+        {/* Content Box with Bouncy Pop-Up Scale-In Animation */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85, y: 30 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ type: 'spring', stiffness: 350, damping: 24 }}
           className={`border rounded-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden transition-colors bg-white/80 backdrop-blur-xl border-[#FFCCE1] text-slate-800 shadow-lg shadow-pink-200/50`}
         >
 
@@ -54,10 +76,10 @@ export const AboutSection: React.FC = () => {
             
             {/* Left Column: Tech Stack Badges Card */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.1 }}
               className={`lg:col-span-5 border rounded-xl p-5 relative bg-[#FFF5D7] border-[#FFCCE1]`}
             >
               <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#FFCCE1]">
@@ -73,6 +95,7 @@ export const AboutSection: React.FC = () => {
               <div className="space-y-2.5 font-sans">
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 4 }}
+                  onClick={onOpenModal}
                   className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer bg-white border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFF5D7]`}>
                   <div className="flex items-center gap-2">
                     <Code className="w-4 h-4 text-[#E195AB]" />
@@ -84,6 +107,7 @@ export const AboutSection: React.FC = () => {
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 4 }}
+                  onClick={onOpenModal}
                   className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer bg-white border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFF5D7]`}>
                   <div className="flex items-center gap-2">
                     <Cpu className="w-4 h-4 text-[#E195AB]" />
@@ -95,6 +119,7 @@ export const AboutSection: React.FC = () => {
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 4 }}
+                  onClick={onOpenModal}
                   className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer bg-white border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFF5D7]`}>
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-[#E195AB]" />
@@ -133,7 +158,8 @@ export const AboutSection: React.FC = () => {
                     key={idx}
                     variants={itemVariants}
                     whileHover={{ scale: 1.03, y: -2 }}
-                    className={`p-2.5 rounded-xl border flex items-start gap-2 font-sans text-xs font-medium cursor-default transition-colors bg-[#FFF5D7] border-[#FFCCE1] text-slate-800 hover:border-[#E195AB]`}
+                    onClick={onOpenModal}
+                    className={`p-2.5 rounded-xl border flex items-start gap-2 font-sans text-xs font-medium cursor-pointer transition-colors bg-[#FFF5D7] border-[#FFCCE1] text-slate-800 hover:border-[#E195AB]`}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#E195AB] shrink-0 mt-0.5" />
                     <span>{item}</span>

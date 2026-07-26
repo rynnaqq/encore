@@ -69,7 +69,11 @@ const CodeShowcaseScreen: React.FC = () => {
   );
 };
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  onOpenAboutModal?: () => void;
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) => {
   const containerRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -198,13 +202,17 @@ export const HeroSection: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                if (onOpenAboutModal) {
+                  onOpenAboutModal();
+                } else {
+                  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                }
               }}
               id="hero-view-profile-btn"
               className="py-2.5 px-6 rounded-xl bg-[#E195AB] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all cursor-pointer shadow-md group/btn"
             >
               <User className="w-4 h-4 text-white" />
-              <span>View Profile</span>
+              <span>View Profile (Pop-Up)</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </motion.button>
           </motion.div>
