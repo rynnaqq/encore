@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calculator, CreditCard, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Calculator, CheckCircle2, ShieldCheck, QrCode, ScanFace } from 'lucide-react';
 
 export const CalculatorSection: React.FC = () => {
   const [display, setDisplay] = useState('0');
@@ -44,11 +44,11 @@ export const CalculatorSection: React.FC = () => {
       const operatorsMatch = fullEq.match(/[+\-*/]/g);
       const numOperators = operatorsMatch ? operatorsMatch.length : 0;
       
-      let calculatedPrice = 0.50; // Base price
+      let calculatedPrice = 2000; // Base price Rp 2.000
       if (numOperators >= 3) {
-        calculatedPrice = 2.50; // Hard
+        calculatedPrice = 15000; // Hard Rp 15.000
       } else if (numOperators >= 1) {
-        calculatedPrice = 1.00; // Medium
+        calculatedPrice = 5000; // Medium Rp 5.000
       }
       
       setPrice(calculatedPrice);
@@ -64,7 +64,7 @@ export const CalculatorSection: React.FC = () => {
 
   const handlePayment = () => {
     setIsProcessing(true);
-    // Mock processing delay
+    // Mock processing delay for QRIS scan
     setTimeout(() => {
       setIsProcessing(false);
       setPaymentSuccess(true);
@@ -77,7 +77,7 @@ export const CalculatorSection: React.FC = () => {
         }
         setShowPayment(false);
       }, 1500);
-    }, 1500);
+    }, 2000);
   };
 
   const clear = () => {
@@ -177,37 +177,67 @@ export const CalculatorSection: React.FC = () => {
                   initial={{ scale: 0.9, y: 10 }}
                   animate={{ scale: 1, y: 0 }}
                   exit={{ scale: 0.9, y: 10 }}
-                  className="bg-white p-6 rounded-3xl shadow-2xl border-2 border-black text-center w-full max-w-[90%]"
+                  className="bg-white p-6 rounded-3xl shadow-2xl border-2 border-black text-center w-full max-w-[95%] sm:max-w-md"
                 >
                   {paymentSuccess ? (
                     <div className="flex flex-col items-center py-4">
                       <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
-                      <h3 className="text-xl font-bold text-slate-800">Payment Successful!</h3>
-                      <p className="text-slate-500 text-sm mt-2">Revealing answer...</p>
+                      <h3 className="text-xl font-bold text-slate-800">Pembayaran Berhasil!</h3>
+                      <p className="text-slate-500 text-sm mt-2">Menampilkan hasil...</p>
                     </div>
                   ) : (
                     <>
-                      <div className="mx-auto w-12 h-12 bg-[#FFCCE1] rounded-full flex items-center justify-center mb-4 text-[#E195AB]">
-                        <ShieldCheck className="w-6 h-6" />
+                      <div className="mx-auto w-auto inline-block mb-2">
+                        <div className="bg-red-600 text-white font-black italic tracking-tighter text-2xl px-5 py-1 rounded-xl shadow-md border-2 border-black">
+                          QRIS
+                        </div>
                       </div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-2 leading-tight">Pay to see result</h3>
-                      <p className="text-slate-500 text-sm mb-4 leading-relaxed">
-                        Complexity fee based on the equation's difficulty.
+                      <h3 className="text-xl font-bold text-slate-800 mb-1 leading-tight">Scan untuk melihat hasil</h3>
+                      <p className="text-slate-500 text-xs mb-4 leading-relaxed px-2">
+                        Biaya dihitung berdasarkan tingkat kesulitan soal. Scan menggunakan e-wallet atau m-banking Anda.
                       </p>
-                      <div className="text-4xl font-black text-[#FF00E5] mb-6">
-                        ${price.toFixed(2)}
+                      
+                      <div className="bg-white border-4 border-slate-800 p-4 rounded-3xl mb-4 inline-block shadow-sm relative overflow-hidden w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
+                        <QrCode className="w-full h-full text-slate-800" strokeWidth={1.5} />
+                        {isProcessing && (
+                          <motion.div
+                            initial={{ top: '-50%', opacity: 0 }}
+                            animate={{ top: ['-10%', '110%', '-10%'], opacity: [0, 1, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                            className="absolute left-0 right-0 h-1/2 pointer-events-none"
+                            style={{
+                              background: 'linear-gradient(to bottom, rgba(239, 68, 68, 0) 0%, rgba(239, 68, 68, 0.2) 90%, rgba(239, 68, 68, 0.8) 100%)',
+                              borderBottom: '3px solid #ef4444',
+                              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.6)'
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="text-3xl font-black text-[#FF00E5] mb-6">
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)}
                       </div>
                       
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={handlePayment}
                           disabled={isProcessing}
-                          className="w-full bg-[#FF00E5] text-white font-bold py-3 px-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                          className="w-full bg-[#FF00E5] text-white font-bold py-3 px-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden relative"
                         >
-                          {isProcessing ? 'Processing...' : (
+                          {isProcessing ? (
+                            <motion.div 
+                              className="flex items-center gap-2"
+                              initial={{ opacity: 0.5 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ repeat: Infinity, duration: 0.8, direction: "alternate" }}
+                            >
+                              <div className="w-2 h-2 rounded-full bg-white animate-ping"></div>
+                              <span>Memverifikasi...</span>
+                            </motion.div>
+                          ) : (
                             <>
-                              <CreditCard className="w-5 h-5" />
-                              <span>Pay Now</span>
+                              <ScanFace className="w-5 h-5" />
+                              <span>Simulasi Scan QRIS</span>
                             </>
                           )}
                         </button>
@@ -216,7 +246,7 @@ export const CalculatorSection: React.FC = () => {
                           disabled={isProcessing}
                           className="w-full text-slate-500 font-bold py-3 hover:text-slate-800 transition-colors text-sm"
                         >
-                          Cancel
+                          Batal
                         </button>
                       </div>
                     </>
