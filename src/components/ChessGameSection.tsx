@@ -452,6 +452,11 @@ export const ChessGameSection: React.FC = () => {
 
     newSocket.on('error_message', (msg: string) => {
       alert(msg);
+      if (window.location.search.includes('room=')) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('room');
+        window.history.replaceState({}, '', url.pathname);
+      }
     });
 
     return () => {
@@ -1281,10 +1286,7 @@ export const ChessGameSection: React.FC = () => {
               if (socket && isConnected) {
                 socket.emit('join_room', { roomId: code, player: playerProfile });
               } else {
-                const supaCreds = getSupabaseCredentials();
-                if (supaCreds.isConfigured) {
-                  handleJoinSupabaseRoom(code);
-                }
+                alert('Kode room tidak ditemukan');
               }
             }}
             onQuickMatch={() => {

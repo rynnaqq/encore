@@ -178,15 +178,6 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
     };
   }, [socket]);
 
-  // Handle URL room code auto join on initial load
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const roomParam = params.get('room');
-    if (roomParam && isConnected && !activeRoom) {
-      onJoinRoom(roomParam);
-    }
-  }, [isConnected, activeRoom, onJoinRoom]);
-
   const handleSaveProfile = () => {
     onUpdateProfile({
       ...playerProfile,
@@ -354,6 +345,12 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   placeholder="e.g. 782910"
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value.replace(/\D/g, ''))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && joinCodeInput.length === 6) {
+                      onJoinRoom(joinCodeInput);
+                      setJoinCodeInput('');
+                    }
+                  }}
                   className="flex-1 px-3.5 py-2 rounded-xl bg-[#FFF5D7]/60 border border-[#FFCCE1] text-xs font-mono font-bold text-slate-800 tracking-widest uppercase focus:outline-none focus:border-[#E195AB]"
                 />
                 <button

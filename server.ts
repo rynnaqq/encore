@@ -284,8 +284,8 @@ async function startServer() {
     socket.on('join_room', (payload: { roomId: string; player?: PlayerInfo }) => {
       const cleanRoomId = payload?.roomId ? String(payload.roomId).trim() : '';
       const room = rooms.get(cleanRoomId);
-      if (!room) {
-        socket.emit('error_message', `Room code "${cleanRoomId}" not found. Please verify the 6-digit room code.`);
+      if (!room || room.isGameOver) {
+        socket.emit('error_message', 'Kode room tidak ditemukan');
         return;
       }
 
