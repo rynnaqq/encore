@@ -185,7 +185,8 @@ export const ChessGameSection: React.FC = () => {
     };
   });
 
-  const handleUpdateProfile = useCallback((p: PlayerInfo) => {
+  const handleUpdateProfile = useCallback((name: string, country: string) => {
+    const p: PlayerInfo = { ...playerProfile, name, country };
     setPlayerProfile(p);
     try {
       localStorage.setItem('chess_player_profile', JSON.stringify(p));
@@ -193,7 +194,7 @@ export const ChessGameSection: React.FC = () => {
     if (socket && isConnected) {
       socket.emit('update_profile', p);
     }
-  }, [socket, isConnected]);
+  }, [playerProfile, socket, isConnected]);
 
   // Supabase Realtime Handler Ref
   const supabaseHandlerRef = useRef<SupabaseRoomHandler | null>(null);

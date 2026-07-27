@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Hash, Trophy, Copy, Check, User, Activity, AlertCircle, Database, Cloud } from 'lucide-react';
+import { Users, Plus, Hash, Trophy, Copy, Check, User, Activity, RefreshCw, AlertCircle, Database, Cloud } from 'lucide-react';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { subscribeToGlobalLobby } from "../lib/supabaseChess";
 import { createPortal } from 'react-dom';
@@ -93,6 +93,13 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [customName, setCustomName] = useState(playerProfile.name);
   const [customCountry, setCustomCountry] = useState(playerProfile.country);
+
+  useEffect(() => {
+    if (showProfileModal) {
+      setCustomName(playerProfile.name);
+      setCustomCountry(playerProfile.country);
+    }
+  }, [showProfileModal, playerProfile]);
   const [joinCode, setJoinCode] = useState('');
   const [copiedCodeOnly, setCopiedCodeOnly] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
@@ -124,10 +131,16 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
       const interval = setInterval(() => {
         if (socket.connected) socket.emit('get_lobby_rooms');
       }, 10000);
+
+      const handleManualRefresh = () => {
+        if (socket.connected) socket.emit('get_lobby_rooms');
+      };
+      window.addEventListener('manual_refresh_rooms', handleManualRefresh);
       return () => {
         socket.off('lobby_rooms_list', handleLobbyRooms);
         socket.off('lobby_room_updated', handleLobbyUpdate);
         clearInterval(interval);
+        window.removeEventListener('manual_refresh_rooms', handleManualRefresh);
       };
     }
   }, [socket, supabaseCreds.isConfigured]);
@@ -260,10 +273,24 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
           </div>
 
           <div className="bg-white/80 p-5 rounded-3xl border border-[#FFCCE1]">
-             <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
-                <span className="flex items-center gap-2"><Activity className="w-4 h-4 text-[#E195AB]" /> Public Rooms</span>
-                <span className="text-xs font-mono bg-[#FFF5D7] px-2 py-1 rounded-full">{roomsList.length} Active</span>
-             </h3>
+             <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#E195AB]" /> Public Rooms
+                  <span className="text-xs font-mono bg-[#FFF5D7] px-2 py-1 rounded-full">{roomsList.length} Active</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Trigger manual refresh
+                    const event = new CustomEvent('manual_refresh_rooms');
+                    window.dispatchEvent(event);
+                  }}
+                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-600"
+                  title="Refresh Rooms"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+             </div>
              <div className="space-y-2 h-64 overflow-y-auto pr-1">
                 {roomsList.length === 0 ? (
                   <div className="text-center py-8 text-slate-400 text-xs font-medium">No public rooms available</div>
