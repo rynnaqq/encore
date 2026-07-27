@@ -204,34 +204,7 @@ export const ChessGameSection: React.FC = () => {
   // Game over modal
   const [gameResult, setGameResult] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (gameResult) {
-      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      const timer = setTimeout(() => {
-        alert(gameResult);
-        
-        // Auto exit and finish
-        if (gameMode === 'online') {
-          if (supabaseHandlerRef.current) {
-            supabaseHandlerRef.current.leaveRoom();
-            supabaseHandlerRef.current = null;
-          }
-          if (socket && activeRoom) {
-            socket.emit('leave_room', { roomId: activeRoom.roomId });
-          }
-          setActiveRoom(null);
-          setYourSide(null);
-        }
-        resetGame();
-        setGameResult(null);
-      }, 750);
-      
-      return () => clearTimeout(timer);
-    } else if (activeRoom?.drawOffer && activeRoom.drawOffer !== yourSide) {
-      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [gameResult, activeRoom?.drawOffer, yourSide, gameMode, socket, activeRoom?.roomId, resetGame]);
+
 
   // Audio effect triggers using Web Audio API for zero external dependency lag
   const playAudioEffect = useCallback((type: 'move' | 'capture' | 'check' | 'gameover') => {
@@ -936,6 +909,35 @@ export const ChessGameSection: React.FC = () => {
     setBlackTime(timeControl);
     setIsTimerActive(false);
   }, [timeControl]);
+
+  useEffect(() => {
+    if (gameResult) {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      const timer = setTimeout(() => {
+        alert(gameResult);
+        
+        // Auto exit and finish
+        if (gameMode === 'online') {
+          if (supabaseHandlerRef.current) {
+            supabaseHandlerRef.current.leaveRoom();
+            supabaseHandlerRef.current = null;
+          }
+          if (socket && activeRoom) {
+            socket.emit('leave_room', { roomId: activeRoom.roomId });
+          }
+          setActiveRoom(null);
+          setYourSide(null);
+        }
+        resetGame();
+        setGameResult(null);
+      }, 750);
+      
+      return () => clearTimeout(timer);
+    } else if (activeRoom?.drawOffer && activeRoom.drawOffer !== yourSide) {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [gameResult, activeRoom?.drawOffer, yourSide, gameMode, socket, activeRoom?.roomId, resetGame]);
 
   // Automatically reset chess board to starting position when exiting activeRoom or changing mode
   useEffect(() => {
