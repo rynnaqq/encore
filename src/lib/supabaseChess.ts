@@ -26,6 +26,7 @@ export function subscribeSupabaseChessRoom({
   onChatMessage,
   onYourSideAssigned,
   onError,
+  isJoining = false,
 }: {
   roomId: string;
   playerProfile: PlayerInfo;
@@ -33,6 +34,7 @@ export function subscribeSupabaseChessRoom({
   onChatMessage: (msg: ChatMessage) => void;
   onYourSideAssigned: (side: 'w' | 'b' | 'spectator') => void;
   onError: (msg: string) => void;
+  isJoining?: boolean;
 }): SupabaseRoomHandler | null {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -325,13 +327,32 @@ export function subscribeSupabaseChessRoom({
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await channel.track({
-          user: {
-            ...playerProfile,
-            id: myPlayerId,
-            joinedAt: Date.now(),
-          },
-        });
+        const trackUser = async () => {
+          await channel.track({
+            user: {
+              ...playerProfile,
+              id: myPlayerId,
+              joinedAt: Date.now(),
+            },
+          });
+        };
+
+        if (isJoining) {
+          // Wait briefly for initial presence sync from server
+          setTimeout(() => {
+            const state = channel.presenceState();
+            const hasOtherUsers = Object.values(state).some(presences => presences.length > 0);
+            
+            if (!hasOtherUsers) {
+              channel.unsubscribe();
+              onError('Kode room tidak ditemukan');
+            } else {
+              trackUser();
+            }
+          }, 800);
+        } else {
+          trackUser();
+        }
       } else if (status === 'CHANNEL_ERROR') {
         onError('Connection error subscribing to Supabase Realtime.');
       }

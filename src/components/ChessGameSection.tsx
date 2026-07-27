@@ -270,7 +270,7 @@ export const ChessGameSection: React.FC = () => {
 
   // Join or host room via Supabase Realtime
   const handleJoinSupabaseRoom = useCallback(
-    (code: string) => {
+    (code: string, isJoining: boolean = false) => {
       const supaCreds = getSupabaseCredentials();
       if (!supaCreds.isConfigured) return;
 
@@ -290,8 +290,14 @@ export const ChessGameSection: React.FC = () => {
           else if (side === 'w') setIsFlipped(false);
         },
         onError: (err) => {
-          console.warn('Supabase Realtime notice:', err);
+          alert(err);
+          if (window.location.search.includes('room=')) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('room');
+            window.history.replaceState({}, '', url.pathname);
+          }
         },
+        isJoining,
       });
 
       if (handler) {
@@ -1286,7 +1292,12 @@ export const ChessGameSection: React.FC = () => {
               if (socket && isConnected) {
                 socket.emit('join_room', { roomId: code, player: playerProfile });
               } else {
-                alert('Kode room tidak ditemukan');
+                const supaCreds = getSupabaseCredentials();
+                if (supaCreds.isConfigured) {
+                  handleJoinSupabaseRoom(code, true);
+                } else {
+                  alert('Kode room tidak ditemukan');
+                }
               }
             }}
             onQuickMatch={() => {
