@@ -133,6 +133,14 @@ function MainLayout() {
     setIsAboutModalOpen(false);
   };
 
+  // Redirect to chess section if room code is in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has('room') && location.pathname !== '/chess') {
+      window.location.href = `/chess${location.search}`;
+    }
+  }, [location]);
+
   // Active section scroll observer
   useEffect(() => {
     if (location.pathname !== '/') return;

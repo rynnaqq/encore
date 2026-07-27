@@ -21,6 +21,7 @@ import {
   Smile,
   Shield,
   ArrowRight,
+  Settings,
 } from 'lucide-react';
 import { COUNTRIES, CountryOption } from '../data/countries';
 
@@ -181,12 +182,21 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
     setShowCreateModal(false);
   };
 
+  const [copiedCodeOnly, setCopiedCodeOnly] = useState(false);
+
   const copyRoomLink = () => {
     if (!activeRoom) return;
     const url = `${window.location.origin}${window.location.pathname}?room=${activeRoom.roomId}`;
     navigator.clipboard.writeText(url);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const copyRoomCode = () => {
+    if (!activeRoom) return;
+    navigator.clipboard.writeText(activeRoom.roomId);
+    setCopiedCodeOnly(true);
+    setTimeout(() => setCopiedCodeOnly(false), 2000);
   };
 
   const quickEmojis = ['👋', '👍', '🔥', '👏', '🧠', '👑', '😭', '🎯', '🤔', '☕'];
@@ -272,22 +282,37 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Plus className="w-5 h-5 text-[#E195AB]" />
-                  <h3 className="font-bold text-slate-800 text-sm">Host a Custom Game</h3>
+                  <h3 className="font-bold text-slate-800 text-sm">Host a Game with Friend</h3>
                 </div>
                 <span className="text-[10px] font-mono font-bold text-[#E195AB] bg-[#FFCCE1]/40 px-2 py-0.5 rounded-full">
-                  Instant Link
+                  Instant Room
                 </span>
               </div>
               <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                Create a custom chess room with your choice of timer and side, then send the 6-digit room code or link to any opponent in the world.
+                Create a multiplayer room and send the 6-digit room code or share link directly to your friend to play in real-time.
               </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="w-full py-2.5 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Create New Room</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() =>
+                    onCreateRoom({
+                      roomName: `${playerProfile.name}'s Match`,
+                      timeControl: 300,
+                      preferredSide: 'random',
+                    })
+                  }
+                  className="py-2.5 px-3 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-white" />
+                  <span>1-Click Host</span>
+                </button>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="py-2.5 px-3 rounded-xl bg-[#FFF5D7] hover:bg-[#FFCCE1] border border-[#FFCCE1] text-[#E195AB] font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Settings className="w-3.5 h-3.5 text-[#E195AB]" />
+                  <span>Custom Settings</span>
+                </button>
+              </div>
             </div>
 
             {/* Join Code Card */}
@@ -431,18 +456,26 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
         <div className="mt-4 space-y-4">
           {/* Room Control Bar */}
           <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border-2 border-[#FFCCE1] shadow-md flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               <div className="px-3 py-1.5 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1] text-xs font-mono font-bold text-slate-800 flex items-center gap-2">
-                <span className="text-slate-500">Room Code:</span>
-                <span className="text-[#E195AB] text-sm tracking-wider">{activeRoom.roomId}</span>
+                <span className="text-slate-500 font-sans font-medium">Room Code:</span>
+                <span className="text-[#E195AB] text-base font-extrabold tracking-widest">{activeRoom.roomId}</span>
               </div>
 
               <button
                 onClick={copyRoomLink}
-                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
-                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-                <span>{copiedCode ? 'Link Copied!' : 'Share Room Link'}</span>
+                {copiedCode ? <Check className="w-3.5 h-3.5 text-white" /> : <Share2 className="w-3.5 h-3.5" />}
+                <span>{copiedCode ? 'Direct Link Copied!' : 'Copy Share Link'}</span>
+              </button>
+
+              <button
+                onClick={copyRoomCode}
+                className="px-3 py-1.5 rounded-xl bg-[#FFF5D7] hover:bg-[#FFCCE1] text-[#E195AB] border border-[#FFCCE1] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                {copiedCodeOnly ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedCodeOnly ? 'Code Copied!' : 'Copy Code Only'}</span>
               </button>
             </div>
 
@@ -454,7 +487,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   <div className="text-[11px] leading-tight">
                     {activeRoom.whitePlayer?.name || 'Waiting for player...'}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono">White</div>
+                  <div className="text-[10px] text-[#E195AB] font-mono font-bold">White ♔</div>
                 </div>
               </div>
 
@@ -466,11 +499,39 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   <div className="text-[11px] leading-tight">
                     {activeRoom.blackPlayer?.name || 'Waiting for player...'}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono">Black</div>
+                  <div className="text-[10px] text-slate-500 font-mono font-bold">Black ♚</div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Room Match Connection Banner */}
+          {!activeRoom.whitePlayer || !activeRoom.blackPlayer ? (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-[#FFF5D7] border border-amber-300 text-amber-900 text-xs font-medium flex flex-wrap items-center justify-between gap-3 shadow-sm animate-pulse">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">⏳</span>
+                <div>
+                  <div className="font-bold text-amber-950 text-xs">Waiting for your friend or opponent to join...</div>
+                  <div className="text-[11px] text-amber-800">
+                    Send them <strong>Room Code: {activeRoom.roomId}</strong> or click <strong>Copy Share Link</strong> above!
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={copyRoomLink}
+                className="px-3 py-1.5 rounded-xl bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs transition-colors cursor-pointer shadow-xs"
+              >
+                Copy Link
+              </button>
+            </div>
+          ) : (
+            <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-sm">
+              <span className="text-lg">🎮</span>
+              <span>
+                Opponent Connected! Match is live — <strong>{activeRoom.whitePlayer.name}</strong> (White) vs <strong>{activeRoom.blackPlayer.name}</strong> (Black).
+              </span>
+            </div>
+          )}
 
           {/* Real-time Global Chat & Quick Emoji Drawer */}
           <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-[#FFCCE1] shadow-sm flex flex-col gap-3">

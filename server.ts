@@ -275,22 +275,31 @@ async function startServer() {
 
     // Join Room
     socket.on('join_room', (payload: { roomId: string; player?: PlayerInfo }) => {
-      const room = rooms.get(payload?.roomId);
+      const cleanRoomId = payload?.roomId ? String(payload.roomId).trim() : '';
+      const room = rooms.get(cleanRoomId);
       if (!room) {
-        socket.emit('error_message', 'Room not found. Please check the code.');
+        socket.emit('error_message', `Room code "${cleanRoomId}" not found. Please verify the 6-digit room code.`);
         return;
       }
 
       const safePlayer = getSafePlayer(payload?.player);
       playerProfile = safePlayer;
-      currentRoomId = payload.roomId;
-      socket.join(payload.roomId);
+      currentRoomId = cleanRoomId;
+      socket.join(cleanRoomId);
 
       let role: 'player' | 'spectator' = 'spectator';
       let sideAssigned: 'w' | 'b' | 'spectator' = 'spectator';
 
-      // Assign seat if available
-      if (!room.whitePlayer) {
+      // Reconnect/re-assign existing seat if same player or socket reconnecting
+      if (room.whitePlayer && (room.whitePlayer.id === socket.id || room.whitePlayer.name === safePlayer.name)) {
+        room.whitePlayer.id = socket.id;
+        role = 'player';
+        sideAssigned = 'w';
+      } else if (room.blackPlayer && (room.blackPlayer.id === socket.id || room.blackPlayer.name === safePlayer.name)) {
+        room.blackPlayer.id = socket.id;
+        role = 'player';
+        sideAssigned = 'b';
+      } else if (!room.whitePlayer) {
         room.whitePlayer = { ...safePlayer, id: socket.id };
         role = 'player';
         sideAssigned = 'w';
@@ -300,7 +309,12 @@ async function startServer() {
         sideAssigned = 'b';
       } else {
         // Spectator
-        room.spectators.push({ ...safePlayer, id: socket.id });
+        const existingIndex = room.spectators.findIndex((s) => s.id === socket.id || s.name === safePlayer.name);
+        if (existingIndex !== -1) {
+          room.spectators[existingIndex] = { ...safePlayer, id: socket.id };
+        } else {
+          room.spectators.push({ ...safePlayer, id: socket.id });
+        }
         role = 'spectator';
         sideAssigned = 'spectator';
       }

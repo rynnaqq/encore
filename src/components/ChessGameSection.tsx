@@ -218,6 +218,15 @@ export const ChessGameSection: React.FC = () => {
     }
   }, [soundEnabled]);
 
+  // Auto-detect room query param on load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if (roomParam) {
+      setGameMode('online');
+    }
+  }, []);
+
   // Handle board orientation automatically when changing side
   useEffect(() => {
     if (gameMode === 'ai') {
@@ -244,6 +253,13 @@ export const ChessGameSection: React.FC = () => {
     newSocket.on('connect', () => {
       setIsConnected(true);
       newSocket.emit('update_profile', playerProfile);
+
+      // Auto join if room query param exists
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get('room');
+      if (roomParam && !activeRoom) {
+        newSocket.emit('join_room', { roomId: roomParam, player: playerProfile });
+      }
     });
 
     newSocket.on('disconnect', () => {
