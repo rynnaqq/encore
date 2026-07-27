@@ -178,10 +178,32 @@ export function subscribeSupabaseChessRoom({
     onRoomUpdate({ ...currentRoomState });
   };
 
+  let isCheckingJoin = isJoining;
+
   // Channel Listeners
   channel
     .on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
+      
+      if (isCheckingJoin) {
+        isCheckingJoin = false;
+        const hasOtherUsers = Object.values(state).some(presences => presences.length > 0);
+        
+        if (!hasOtherUsers) {
+          channel.unsubscribe();
+          onError('Kode room tidak ditemukan');
+          return;
+        } else {
+          channel.track({
+            user: {
+              ...playerProfile,
+              id: myPlayerId,
+              joinedAt: Date.now(),
+            },
+          }).catch(console.error);
+        }
+      }
+
       updatePlayersFromPresence(state);
     })
     .on('presence', { event: 'join' }, ({ newPresences }) => {
@@ -327,7 +349,7 @@ export function subscribeSupabaseChessRoom({
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        const trackUser = async () => {
+        if (!isJoining) {
           await channel.track({
             user: {
               ...playerProfile,
@@ -335,23 +357,6 @@ export function subscribeSupabaseChessRoom({
               joinedAt: Date.now(),
             },
           });
-        };
-
-        if (isJoining) {
-          // Wait briefly for initial presence sync from server
-          setTimeout(() => {
-            const state = channel.presenceState();
-            const hasOtherUsers = Object.values(state).some(presences => presences.length > 0);
-            
-            if (!hasOtherUsers) {
-              channel.unsubscribe();
-              onError('Kode room tidak ditemukan');
-            } else {
-              trackUser();
-            }
-          }, 800);
-        } else {
-          trackUser();
         }
       } else if (status === 'CHANNEL_ERROR') {
         onError('Connection error subscribing to Supabase Realtime.');
