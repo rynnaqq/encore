@@ -91,31 +91,22 @@ export function subscribeSupabaseChessRoom({
     // Sort by join timestamp
     presentUsers.sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
 
-    let white: PlayerInfo | null = currentRoomState.whitePlayer;
-    let black: PlayerInfo | null = currentRoomState.blackPlayer;
-    const spectators: PlayerInfo[] = [];
+    const prevWhite = currentRoomState.whitePlayer;
+    const prevBlack = currentRoomState.blackPlayer;
 
-    presentUsers.forEach((u) => {
-      if (!white && u.id !== black?.id) {
-        white = u;
-      } else if (!black && u.id !== white?.id) {
-        black = u;
-      } else if (u.id !== white?.id && u.id !== black?.id) {
-        spectators.push(u);
-      }
-    });
+    const whiteStillPresent = prevWhite ? presentUsers.some((u) => u.id === prevWhite.id) : false;
+    const blackStillPresent = prevBlack ? presentUsers.some((u) => u.id === prevBlack.id) : false;
 
-    currentRoomState.whitePlayer = white;
-    currentRoomState.blackPlayer = black;
-    currentRoomState.spectators = spectators;
+    let white: PlayerInfo | null = whiteStillPresent ? prevWhite : null;
+    let black: PlayerInfo | null = blackStillPresent ? prevBlack : null;
 
     // Check if player disconnected during active game
     if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
-      if (white && !presentUsers.some((u) => u.id === white?.id)) {
+      if (prevWhite && !whiteStillPresent) {
         currentRoomState.isGameOver = true;
         currentRoomState.winner = 'b';
-        const leaverName = white.name;
-        const winnerName = black?.name || 'Black Player';
+        const leaverName = prevWhite.name;
+        const winnerName = prevBlack?.name || 'Black Player';
         const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
         currentRoomState.gameResult = resultText;
         currentRoomState.messages.push({
@@ -125,11 +116,11 @@ export function subscribeSupabaseChessRoom({
           timestamp: Date.now(),
           isSystem: true,
         });
-      } else if (black && !presentUsers.some((u) => u.id === black?.id)) {
+      } else if (prevBlack && !blackStillPresent) {
         currentRoomState.isGameOver = true;
         currentRoomState.winner = 'w';
-        const leaverName = black.name;
-        const winnerName = white?.name || 'White Player';
+        const leaverName = prevBlack.name;
+        const winnerName = prevWhite?.name || 'White Player';
         const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
         currentRoomState.gameResult = resultText;
         currentRoomState.messages.push({
@@ -141,6 +132,26 @@ export function subscribeSupabaseChessRoom({
         });
       }
     }
+
+    const spectators: PlayerInfo[] = [];
+
+    presentUsers.forEach((u) => {
+      if (white && u.id === white.id) {
+        // Already white
+      } else if (black && u.id === black.id) {
+        // Already black
+      } else if (!white) {
+        white = u;
+      } else if (!black) {
+        black = u;
+      } else {
+        spectators.push(u);
+      }
+    });
+
+    currentRoomState.whitePlayer = white;
+    currentRoomState.blackPlayer = black;
+    currentRoomState.spectators = spectators;
 
     // Determine my side
     if (white && white.id === myPlayerId) {

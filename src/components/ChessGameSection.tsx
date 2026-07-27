@@ -355,6 +355,11 @@ export const ChessGameSection: React.FC = () => {
       setBlackTime(data.room.blackTime);
       if (data.room.gameResult) setGameResult(data.room.gameResult);
 
+      const supaCreds = getSupabaseCredentials();
+      if (supaCreds.isConfigured && !supabaseHandlerRef.current) {
+        handleJoinSupabaseRoom(data.room.roomId);
+      }
+
       const historyItems: MoveHistoryItem[] = data.room.moveHistory.map((m) => ({
         san: m.san,
         from: m.from as Square,
@@ -425,6 +430,13 @@ export const ChessGameSection: React.FC = () => {
     });
 
     newSocket.on('error_message', (msg: string) => {
+      if (supabaseHandlerRef.current) {
+        supabaseHandlerRef.current.leaveRoom();
+        supabaseHandlerRef.current = null;
+      }
+      setActiveRoom(null);
+      setYourSide(null);
+      resetGame();
       alert(msg);
     });
 
@@ -1235,32 +1247,34 @@ export const ChessGameSection: React.FC = () => {
             playerProfile={playerProfile}
             onUpdateProfile={handleUpdateProfile}
             onCreateRoom={(opts) => {
+              const code = generateRoomCode();
               const supaCreds = getSupabaseCredentials();
               if (supaCreds.isConfigured) {
-                const code = generateRoomCode();
                 handleJoinSupabaseRoom(code);
               }
               if (socket) {
-                socket.emit('create_room', { player: playerProfile, ...opts });
+                socket.emit('create_room', { roomId: code, player: playerProfile, ...opts });
               }
             }}
             onJoinRoom={(code) => {
-              const supaCreds = getSupabaseCredentials();
-              if (supaCreds.isConfigured) {
-                handleJoinSupabaseRoom(code);
-              }
-              if (socket) {
+              if (socket && isConnected) {
                 socket.emit('join_room', { roomId: code, player: playerProfile });
+              } else {
+                const supaCreds = getSupabaseCredentials();
+                if (supaCreds.isConfigured) {
+                  handleJoinSupabaseRoom(code);
+                }
               }
             }}
             onQuickMatch={() => {
-              const supaCreds = getSupabaseCredentials();
-              if (supaCreds.isConfigured) {
-                const code = '123456';
-                handleJoinSupabaseRoom(code);
-              }
-              if (socket) {
+              if (socket && isConnected) {
                 socket.emit('quick_match', { player: playerProfile });
+              } else {
+                const supaCreds = getSupabaseCredentials();
+                if (supaCreds.isConfigured) {
+                  const code = '123456';
+                  handleJoinSupabaseRoom(code);
+                }
               }
             }}
             onLeaveRoom={() => {
@@ -1273,6 +1287,7 @@ export const ChessGameSection: React.FC = () => {
               }
               setActiveRoom(null);
               setYourSide(null);
+              resetGame();
             }}
             onSendChat={(text) => {
               if (supabaseHandlerRef.current) {

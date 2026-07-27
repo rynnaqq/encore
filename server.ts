@@ -213,6 +213,7 @@ async function startServer() {
     socket.on(
       'create_room',
       (payload: {
+        roomId?: string;
         player?: PlayerInfo;
         roomName?: string;
         timeControl?: number;
@@ -221,7 +222,10 @@ async function startServer() {
         const safePlayer = getSafePlayer(payload?.player);
         playerProfile = safePlayer;
 
-        const roomId = generateRoomId();
+        const roomId =
+          payload?.roomId && /^\d{6}$/.test(String(payload.roomId).trim())
+            ? String(payload.roomId).trim()
+            : generateRoomId();
         const preferred = payload?.preferredSide || 'random';
         let assignedSide: 'w' | 'b' = 'w';
         if (preferred === 'b') assignedSide = 'b';
