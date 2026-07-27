@@ -913,31 +913,10 @@ export const ChessGameSection: React.FC = () => {
   useEffect(() => {
     if (gameResult) {
       sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      const timer = setTimeout(() => {
-        alert(gameResult);
-        
-        // Auto exit and finish
-        if (gameMode === 'online') {
-          if (supabaseHandlerRef.current) {
-            supabaseHandlerRef.current.leaveRoom();
-            supabaseHandlerRef.current = null;
-          }
-          if (socket && activeRoom) {
-            socket.emit('leave_room', { roomId: activeRoom.roomId });
-          }
-          setActiveRoom(null);
-          setYourSide(null);
-        }
-        resetGame();
-        setGameResult(null);
-      }, 750);
-      
-      return () => clearTimeout(timer);
     } else if (activeRoom?.drawOffer && activeRoom.drawOffer !== yourSide) {
       sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [gameResult, activeRoom?.drawOffer, yourSide, gameMode, socket, activeRoom?.roomId, resetGame]);
+  }, [gameResult, activeRoom?.drawOffer, yourSide]);
 
   // Automatically reset chess board to starting position when exiting activeRoom or changing mode
   useEffect(() => {
@@ -1860,6 +1839,78 @@ export const ChessGameSection: React.FC = () => {
                       className="py-3 rounded-2xl bg-[#E195AB] text-white font-bold text-sm hover:bg-[#d88299] transition-all shadow-md cursor-pointer"
                     >
                       Terima Remis
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
+        {/* Game Result Modal */}
+        {typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {gameResult && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
+                >
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center text-[#E195AB]">
+                    <Trophy className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-sans font-extrabold text-2xl text-slate-800">
+                      Game Over!
+                    </h3>
+                    <p className="text-base font-bold text-[#E195AB] leading-relaxed">
+                      {gameResult}
+                    </p>
+                  </div>
+                  <div className="pt-3 flex flex-col gap-3">
+                    <button
+                      onClick={() => {
+                        resetGame();
+                        if (gameMode === 'online') {
+                          if (supabaseHandlerRef.current) {
+                            supabaseHandlerRef.current.requestRematch();
+                          }
+                          if (socket && activeRoom) {
+                            socket.emit('request_rematch', { roomId: activeRoom.roomId });
+                          }
+                        }
+                      }}
+                      className="w-full py-3 rounded-2xl bg-[#E195AB] text-white font-bold text-sm hover:bg-[#d88299] transition-all shadow-md cursor-pointer"
+                    >
+                      Play Again / Rematch
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (gameMode === 'online') {
+                          if (supabaseHandlerRef.current) {
+                            supabaseHandlerRef.current.leaveRoom();
+                            supabaseHandlerRef.current = null;
+                          }
+                          if (socket && activeRoom) {
+                            socket.emit('leave_room', { roomId: activeRoom.roomId });
+                          }
+                          setActiveRoom(null);
+                          setYourSide(null);
+                        }
+                        resetGame();
+                        setGameResult(null);
+                      }}
+                      className="w-full py-3 rounded-2xl bg-white text-slate-700 border-2 border-slate-200 font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
+                    >
+                      Keluar ke Lobby
                     </button>
                   </div>
                 </motion.div>

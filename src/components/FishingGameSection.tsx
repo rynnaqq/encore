@@ -406,7 +406,7 @@ export const FishingGameSection: React.FC = () => {
   return (
     <section
       id="fishing"
-      className="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center select-none touch-none font-mono"
+      className="relative w-full h-[100dvh] z-[100] bg-slate-950 flex items-center justify-center select-none touch-none font-mono overflow-hidden"
       style={{
         fontFamily: '"Press Start 2P", monospace',
         imageRendering: 'pixelated',
