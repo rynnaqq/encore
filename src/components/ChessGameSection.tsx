@@ -1083,9 +1083,9 @@ export const ChessGameSection: React.FC = () => {
             yourSide={yourSide}
             playerProfile={playerProfile}
             onUpdateProfile={handleUpdateProfile}
-            onCreateRoom={(opts) => socket?.emit('create_room', opts)}
-            onJoinRoom={(code) => socket?.emit('join_room', { roomId: code })}
-            onQuickMatch={() => socket?.emit('quick_match')}
+            onCreateRoom={(opts) => socket?.emit('create_room', { player: playerProfile, ...opts })}
+            onJoinRoom={(code) => socket?.emit('join_room', { roomId: code, player: playerProfile })}
+            onQuickMatch={() => socket?.emit('quick_match', { player: playerProfile })}
             onLeaveRoom={() => {
               if (activeRoom) {
                 socket?.emit('leave_room', { roomId: activeRoom.roomId });

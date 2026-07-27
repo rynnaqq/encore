@@ -162,6 +162,36 @@ async function startServer() {
     let currentRoomId: string | null = null;
     let playerProfile: PlayerInfo | null = null;
 
+    // Helper to get valid player profile
+    const getSafePlayer = (p?: Partial<PlayerInfo>): PlayerInfo => {
+      return {
+        id: socket.id,
+        name: p?.name || playerProfile?.name || `Grandmaster #${Math.floor(1000 + Math.random() * 9000)}`,
+        country: p?.country || playerProfile?.country || 'US',
+        flag: p?.flag || playerProfile?.flag || '🇺🇸',
+        rating: p?.rating || playerProfile?.rating || 1200,
+      };
+    };
+
+    // Update profile listener
+    socket.on('update_profile', (profile: PlayerInfo) => {
+      if (profile && profile.name) {
+        playerProfile = profile;
+        if (currentRoomId) {
+          const room = rooms.get(currentRoomId);
+          if (room) {
+            if (room.whitePlayer?.id === socket.id) {
+              room.whitePlayer = { ...profile, id: socket.id };
+            } else if (room.blackPlayer?.id === socket.id) {
+              room.blackPlayer = { ...profile, id: socket.id };
+            }
+            io.to(currentRoomId).emit('room_updated', sanitizeRoomForClient(room));
+            io.emit('lobby_room_updated');
+          }
+        }
+      }
+    });
+
     // Send active rooms list on connection request
     socket.on('get_lobby_rooms', () => {
       const lobbyRooms = Array.from(rooms.values()).map((r) => ({
@@ -182,31 +212,33 @@ async function startServer() {
     socket.on(
       'create_room',
       (payload: {
-        player: PlayerInfo;
+        player?: PlayerInfo;
         roomName?: string;
         timeControl?: number;
         preferredSide?: 'w' | 'b' | 'random';
       }) => {
+        const safePlayer = getSafePlayer(payload?.player);
+        playerProfile = safePlayer;
+
         const roomId = generateRoomId();
-        const preferred = payload.preferredSide || 'random';
+        const preferred = payload?.preferredSide || 'random';
         let assignedSide: 'w' | 'b' = 'w';
         if (preferred === 'b') assignedSide = 'b';
         else if (preferred === 'random') assignedSide = Math.random() < 0.5 ? 'w' : 'b';
 
-        playerProfile = payload.player;
-
         const initialChess = new Chess();
+        const timeControl = payload?.timeControl ?? 300;
         const newRoom: RoomState = {
           roomId,
-          roomName: payload.roomName || `Match #${roomId}`,
-          timeControl: payload.timeControl ?? 300,
-          whitePlayer: assignedSide === 'w' ? { ...payload.player, id: socket.id } : null,
-          blackPlayer: assignedSide === 'b' ? { ...payload.player, id: socket.id } : null,
+          roomName: payload?.roomName || `${safePlayer.name}'s Match`,
+          timeControl,
+          whitePlayer: assignedSide === 'w' ? { ...safePlayer, id: socket.id } : null,
+          blackPlayer: assignedSide === 'b' ? { ...safePlayer, id: socket.id } : null,
           spectators: [],
           fen: initialChess.fen(),
           moveHistory: [],
-          whiteTime: payload.timeControl ?? 300,
-          blackTime: payload.timeControl ?? 300,
+          whiteTime: timeControl,
+          blackTime: timeControl,
           lastMoveTimestamp: null,
           turn: 'w',
           isStarted: false,
@@ -242,14 +274,15 @@ async function startServer() {
     );
 
     // Join Room
-    socket.on('join_room', (payload: { roomId: string; player: PlayerInfo }) => {
-      const room = rooms.get(payload.roomId);
+    socket.on('join_room', (payload: { roomId: string; player?: PlayerInfo }) => {
+      const room = rooms.get(payload?.roomId);
       if (!room) {
         socket.emit('error_message', 'Room not found. Please check the code.');
         return;
       }
 
-      playerProfile = payload.player;
+      const safePlayer = getSafePlayer(payload?.player);
+      playerProfile = safePlayer;
       currentRoomId = payload.roomId;
       socket.join(payload.roomId);
 
@@ -258,16 +291,16 @@ async function startServer() {
 
       // Assign seat if available
       if (!room.whitePlayer) {
-        room.whitePlayer = { ...payload.player, id: socket.id };
+        room.whitePlayer = { ...safePlayer, id: socket.id };
         role = 'player';
         sideAssigned = 'w';
       } else if (!room.blackPlayer) {
-        room.blackPlayer = { ...payload.player, id: socket.id };
+        room.blackPlayer = { ...safePlayer, id: socket.id };
         role = 'player';
         sideAssigned = 'b';
       } else {
         // Spectator
-        room.spectators.push({ ...payload.player, id: socket.id });
+        room.spectators.push({ ...safePlayer, id: socket.id });
         role = 'spectator';
         sideAssigned = 'spectator';
       }
@@ -287,7 +320,7 @@ async function startServer() {
         room.messages.push({
           id: `sys-${Date.now()}`,
           senderName: 'System',
-          text: `👋 ${payload.player.name} (${payload.player.flag}) joined as ${role}.`,
+          text: `👋 ${safePlayer.name} (${safePlayer.flag}) joined as ${role}.`,
           timestamp: Date.now(),
           isSystem: true,
         });
@@ -301,6 +334,97 @@ async function startServer() {
 
       io.to(payload.roomId).emit('room_updated', sanitizeRoomForClient(room));
       io.emit('lobby_room_updated');
+    });
+
+    // Quick Match
+    socket.on('quick_match', (payload?: { player?: PlayerInfo }) => {
+      const safePlayer = getSafePlayer(payload?.player);
+      playerProfile = safePlayer;
+
+      const openRoom = Array.from(rooms.values()).find(
+        (r) => (!r.whitePlayer || !r.blackPlayer) && !r.isStarted && !r.isGameOver
+      );
+
+      if (openRoom) {
+        currentRoomId = openRoom.roomId;
+        socket.join(openRoom.roomId);
+
+        let sideAssigned: 'w' | 'b' = 'w';
+        if (!openRoom.whitePlayer) {
+          openRoom.whitePlayer = { ...safePlayer, id: socket.id };
+          sideAssigned = 'w';
+        } else {
+          openRoom.blackPlayer = { ...safePlayer, id: socket.id };
+          sideAssigned = 'b';
+        }
+
+        if (openRoom.whitePlayer && openRoom.blackPlayer) {
+          openRoom.isStarted = true;
+          openRoom.lastMoveTimestamp = Date.now();
+          openRoom.messages.push({
+            id: `sys-${Date.now()}`,
+            senderName: 'System',
+            text: `⚡ Quick Match found! ${openRoom.whitePlayer.name} (${openRoom.whitePlayer.flag}) vs ${openRoom.blackPlayer.name} (${openRoom.blackPlayer.flag}). Game started!`,
+            timestamp: Date.now(),
+            isSystem: true,
+          });
+        }
+
+        socket.emit('room_joined', {
+          room: sanitizeRoomForClient(openRoom),
+          yourSide: sideAssigned,
+          role: 'player',
+        });
+
+        io.to(openRoom.roomId).emit('room_updated', sanitizeRoomForClient(openRoom));
+        io.emit('lobby_room_updated');
+      } else {
+        const roomId = generateRoomId();
+        const initialChess = new Chess();
+        const timeControl = 300;
+        const newRoom: RoomState = {
+          roomId,
+          roomName: `Quick Match #${roomId}`,
+          timeControl,
+          whitePlayer: { ...safePlayer, id: socket.id },
+          blackPlayer: null,
+          spectators: [],
+          fen: initialChess.fen(),
+          moveHistory: [],
+          whiteTime: timeControl,
+          blackTime: timeControl,
+          lastMoveTimestamp: null,
+          turn: 'w',
+          isStarted: false,
+          isGameOver: false,
+          gameResult: null,
+          winner: null,
+          drawOffer: null,
+          rematchRequests: new Set(),
+          messages: [
+            {
+              id: `sys-${Date.now()}`,
+              senderName: 'System',
+              text: `Quick match hosted! Waiting for an opponent to join...`,
+              timestamp: Date.now(),
+              isSystem: true,
+            },
+          ],
+          createdAt: Date.now(),
+        };
+
+        rooms.set(roomId, newRoom);
+        currentRoomId = roomId;
+        socket.join(roomId);
+
+        socket.emit('room_joined', {
+          room: sanitizeRoomForClient(newRoom),
+          yourSide: 'w',
+          role: 'player',
+        });
+
+        io.emit('lobby_room_updated');
+      }
     });
 
     // Make Move
