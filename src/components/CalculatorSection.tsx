@@ -109,10 +109,10 @@ export const CalculatorSection: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFCCE1] text-[#E195AB] font-mono text-sm font-bold tracking-wide mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFCCE1] text-[#E195AB] font-mono text-sm font-bold tracking-wide mb-4 shadow-sm">
             <Calculator className="w-4 h-4" />
             <span>PREMIUM CALCULATOR</span>
           </div>
@@ -120,10 +120,10 @@ export const CalculatorSection: React.FC = () => {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="w-full max-w-sm relative"
+          initial={{ opacity: 0, scale: 0.96, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-sm relative gpu-smooth"
         >
           <div className="bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] shadow-2xl border-2 border-[#FFCCE1]">
             {/* Display */}
@@ -131,36 +131,42 @@ export const CalculatorSection: React.FC = () => {
               <div className="text-[#E195AB] text-sm h-6 font-mono tracking-wider overflow-hidden">
                 {equation}
               </div>
-              <div className="text-4xl sm:text-5xl font-bold font-mono text-slate-800 truncate tracking-tight mt-1">
+              <motion.div 
+                key={display}
+                initial={{ opacity: 0.8, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.15 }}
+                className="text-4xl sm:text-5xl font-bold font-mono text-slate-800 truncate tracking-tight mt-1"
+              >
                 {display}
-              </div>
+              </motion.div>
             </div>
 
             {/* Keypad */}
             <div className="grid grid-cols-4 gap-3">
-              <button onClick={clear} className={actBtnClass}>AC</button>
-              <button onClick={toggleSign} className={actBtnClass}>+/-</button>
-              <button onClick={handlePercent} className={actBtnClass}>%</button>
-              <button onClick={() => handleOperator('/')} className={opBtnClass}>÷</button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={clear} className={actBtnClass}>AC</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={toggleSign} className={actBtnClass}>+/-</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={handlePercent} className={actBtnClass}>%</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleOperator('/')} className={opBtnClass}>÷</motion.button>
 
-              <button onClick={() => handleNumber('7')} className={numBtnClass}>7</button>
-              <button onClick={() => handleNumber('8')} className={numBtnClass}>8</button>
-              <button onClick={() => handleNumber('9')} className={numBtnClass}>9</button>
-              <button onClick={() => handleOperator('*')} className={opBtnClass}>×</button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('7')} className={numBtnClass}>7</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('8')} className={numBtnClass}>8</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('9')} className={numBtnClass}>9</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleOperator('*')} className={opBtnClass}>×</motion.button>
 
-              <button onClick={() => handleNumber('4')} className={numBtnClass}>4</button>
-              <button onClick={() => handleNumber('5')} className={numBtnClass}>5</button>
-              <button onClick={() => handleNumber('6')} className={numBtnClass}>6</button>
-              <button onClick={() => handleOperator('-')} className={opBtnClass}>-</button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('4')} className={numBtnClass}>4</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('5')} className={numBtnClass}>5</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('6')} className={numBtnClass}>6</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleOperator('-')} className={opBtnClass}>-</motion.button>
 
-              <button onClick={() => handleNumber('1')} className={numBtnClass}>1</button>
-              <button onClick={() => handleNumber('2')} className={numBtnClass}>2</button>
-              <button onClick={() => handleNumber('3')} className={numBtnClass}>3</button>
-              <button onClick={() => handleOperator('+')} className={opBtnClass}>+</button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('1')} className={numBtnClass}>1</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('2')} className={numBtnClass}>2</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('3')} className={numBtnClass}>3</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleOperator('+')} className={opBtnClass}>+</motion.button>
 
-              <button onClick={() => handleNumber('0')} className={`${numBtnClass} col-span-2 !aspect-auto`}>0</button>
-              <button onClick={() => handleNumber('.')} className={numBtnClass}>.</button>
-              <button onClick={initiateCalculation} className={opBtnClass}>=</button>
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('0')} className={`${numBtnClass} col-span-2 !aspect-auto`}>0</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => handleNumber('.')} className={numBtnClass}>.</motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={initiateCalculation} className={opBtnClass}>=</motion.button>
             </div>
           </div>
           

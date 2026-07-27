@@ -51,18 +51,18 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/70 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md cursor-pointer"
           />
 
           {/* Pop-Up Modal Container */}
           <motion.div
-            initial={{ scale: 0.3, opacity: 0, y: 50, rotate: -3 }}
-            animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
-            exit={{ scale: 0.3, opacity: 0, y: 40, rotate: 3 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 25 }}
-            className="relative w-full max-w-xl max-h-[90vh] bg-white/95 backdrop-blur-2xl border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-200/50 overflow-hidden z-10 my-auto text-slate-800 flex flex-col"
+            initial={{ scale: 0.92, opacity: 0, y: 24 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full max-w-xl max-h-[90vh] bg-white/95 backdrop-blur-2xl border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-200/50 overflow-hidden z-10 my-auto text-slate-800 flex flex-col gpu-smooth"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Decorative Banner */}
@@ -100,9 +100,9 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               {/* Avatar & Profile Title Header */}
               <div className="flex items-center gap-3 sm:gap-4 relative z-10">
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.15 }}
+                  initial={{ scale: 0.88, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
                   className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#FFF5D7] border-4 border-white shadow-xl flex items-center justify-center text-[#E195AB] shrink-0 relative overflow-hidden"
                 >
                   {!hasImgError ? (
@@ -173,10 +173,10 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 {activeTab === 'overview' && (
                   <motion.div
                     key="overview"
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 15 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     className="space-y-4"
                   >
                     <div className="p-4 rounded-2xl bg-[#FFF5D7] border border-[#FFCCE1] space-y-2.5">
@@ -219,10 +219,10 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 {activeTab === 'skills' && (
                   <motion.div
                     key="skills"
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 15 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     className="space-y-5"
                   >
                     {skillCategories.map((cat, idx) => {
@@ -264,10 +264,10 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 {activeTab === 'highlights' && (
                   <motion.div
                     key="highlights"
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 15 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     className="space-y-3"
                   >
                     {highlights.map((item, idx) => (
@@ -294,20 +294,24 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <div className="p-4 bg-slate-50 border-t border-[#FFCCE1]/60 flex items-center justify-between gap-3">
               <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">Designed by Encore</span>
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={onClose}
                   className="px-4 py-2 rounded-xl border border-[#FFCCE1] text-slate-700 text-xs font-semibold hover:bg-white transition-colors cursor-pointer"
                 >
                   Close
-                </button>
-                <a
+                </motion.button>
+                <motion.a
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
                   href="mailto:contact@encore.dev"
                   onClick={onClose}
                   className="px-5 py-2 rounded-xl bg-[#E195AB] text-white text-xs font-bold hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all flex items-center gap-1.5 shadow-md shadow-pink-200/50 cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   Contact Me
-                </a>
+                </motion.a>
               </div>
             </div>
           </motion.div>

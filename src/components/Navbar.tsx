@@ -137,11 +137,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Navigation Items (Without numbers) */}
               <div className="space-y-2 font-sans">
-                {navItems.map((item) => {
+                {navItems.map((item, idx) => {
                   const isActive = location.pathname === item.path && (item.path !== '/' || activeSection === item.id);
                   return (
-                    <button
+                    <motion.button
                       key={item.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                      whileHover={{ scale: 1.02, x: 2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => handleNavClick(item.id, item.path)}
                       className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer group ${
                         isActive
@@ -155,7 +160,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <ArrowUpRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
                         isActive ? 'text-white' : 'text-[#E195AB]'
                       }`} />
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>

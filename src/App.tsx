@@ -9,6 +9,100 @@ import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
 import { Footer } from './components/Footer';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [pathname]);
+
+  return null;
+}
+
+const pageVariants = {
+  initial: { opacity: 0, y: 16, scale: 0.99 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.45,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -16,
+    scale: 0.99,
+    transition: {
+      duration: 0.3,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+function AnimatedRoutes({
+  handleOpenAboutModal,
+}: {
+  handleOpenAboutModal: () => void;
+}) {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location}>
+        <Route
+          path="/"
+          element={
+            <motion.div
+              key="route-home"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <HeroSection onOpenAboutModal={handleOpenAboutModal} />
+              <AboutSection onOpenModal={handleOpenAboutModal} />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/game"
+          element={
+            <motion.div
+              key="route-game"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <CalculatorSection />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/fishing"
+          element={
+            <motion.div
+              key="route-fishing"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <FishingGameSection />
+            </motion.div>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 function MainLayout() {
   const [activeSection, setActiveSection] = useState<string>('home');
@@ -49,22 +143,14 @@ function MainLayout() {
 
   return (
     <>
+      <ScrollToTop />
       <Navbar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         onOpenAboutModal={handleOpenAboutModal}
       />
       <main>
-        <Routes>
-          <Route path="/" element={
-            <>
-              <HeroSection onOpenAboutModal={handleOpenAboutModal} />
-              <AboutSection onOpenModal={handleOpenAboutModal} />
-            </>
-          } />
-          <Route path="/game" element={<CalculatorSection />} />
-          <Route path="/fishing" element={<FishingGameSection />} />
-        </Routes>
+        <AnimatedRoutes handleOpenAboutModal={handleOpenAboutModal} />
       </main>
 
       {/* Pop-Up Animated About Modal */}
@@ -92,7 +178,7 @@ export default function App() {
         
         {/* Fullscreen Cybernetic Loading Screen */}
         {isLoading && (
-          <LoadingScreen onFinishLoading={handleFinishLoading} isDarkMode={false} />
+          <LoadingScreen onFinishLoading={handleFinishLoading} />
         )}
         
         {!isLoading && <MainLayout />}
@@ -100,3 +186,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @layer utilities {
   .font-sans {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -7,6 +11,13 @@
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
+}
+
+/* Hardware accelerated transform utility */
+.gpu-smooth {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* Hide scrollbars globally */
@@ -33,3 +44,4 @@ html, body, * {
 .animate-cursor-blink {
   animation: cursorBlink 0.8s step-end infinite;
 }
+
