@@ -24,6 +24,7 @@ export interface ChatMessage {
 }
 
 export interface LobbyRoomSummary {
+  isPublic?: boolean;
   roomId: string;
   roomName: string;
   timeControl: number;
@@ -36,6 +37,7 @@ export interface LobbyRoomSummary {
 }
 
 export interface RoomState {
+  isPublic?: boolean;
   roomId: string;
   roomName: string;
   timeControl: number;
@@ -266,7 +268,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                 {roomsList.length === 0 ? (
                   <div className="text-center py-8 text-slate-400 text-xs font-medium">No public rooms available</div>
                 ) : (
-                  roomsList.map(r => (
+                  roomsList.filter(r => r.isPublic !== false).map(r => (
                     <div key={r.roomId} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm hover:border-[#FFCCE1] transition-all">
                       <div>
                         <div className="font-bold text-xs text-slate-800">{r.roomName || 'Unnamed Room'}</div>

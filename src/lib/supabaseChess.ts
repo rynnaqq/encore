@@ -22,6 +22,7 @@ export function generateRoomCode(): string {
 export function subscribeSupabaseChessRoom({
   roomId,
   playerProfile,
+  opts,
   onRoomUpdate,
   onChatMessage,
   onYourSideAssigned,
@@ -30,6 +31,7 @@ export function subscribeSupabaseChessRoom({
 }: {
   roomId: string;
   playerProfile: PlayerInfo;
+  opts?: { roomName: string; timeControl: number; isPublic: boolean };
   onRoomUpdate: (room: RoomState) => void;
   onChatMessage: (msg: ChatMessage) => void;
   onYourSideAssigned: (side: 'w' | 'b' | 'spectator') => void;
@@ -53,8 +55,9 @@ export function subscribeSupabaseChessRoom({
 
   let currentRoomState: RoomState = {
     roomId,
-    roomName: `Match #${roomId}`,
-    timeControl: 300,
+    roomName: opts?.roomName || `Match #${roomId}`,
+    timeControl: opts?.timeControl || 10,
+    isPublic: opts?.isPublic !== false,
     whitePlayer: null,
     blackPlayer: null,
     spectators: [],
@@ -473,7 +476,7 @@ export function subscribeToGlobalLobby(onRoomsUpdate: (rooms: LobbyRoomSummary[]
       Object.keys(state).forEach((key) => {
         const presences = state[key];
         presences.forEach((p: any) => {
-          if (p.roomSummary && p.roomSummary.roomId) {
+          if (p.roomSummary && p.roomSummary.roomId && p.roomSummary.isPublic !== false) {
             roomsMap.set(p.roomSummary.roomId, p.roomSummary);
           }
         });

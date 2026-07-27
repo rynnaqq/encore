@@ -150,6 +150,7 @@ export const ChessGameSection: React.FC = () => {
         roomId: activeRoom.roomId,
         roomName: activeRoom.roomName,
         timeControl: activeRoom.timeControl,
+        isPublic: activeRoom.isPublic !== false,
         playersCount: (activeRoom.whitePlayer ? 1 : 0) + (activeRoom.blackPlayer ? 1 : 0),
         spectatorsCount: activeRoom.spectators?.length || 0,
         isStarted: activeRoom.isStarted,
@@ -292,7 +293,7 @@ export const ChessGameSection: React.FC = () => {
 
   // Join or host room via Supabase Realtime
   const handleJoinSupabaseRoom = useCallback(
-    (code: string, isJoining: boolean = false) => {
+    (code: string, isJoining: boolean = false, opts?: { roomName: string; timeControl: number; isPublic: boolean }) => {
       const supaCreds = getSupabaseCredentials();
       if (!supaCreds.isConfigured) return;
 
@@ -304,6 +305,7 @@ export const ChessGameSection: React.FC = () => {
       const handler = subscribeSupabaseChessRoom({
         roomId: code,
         playerProfile,
+        opts,
         onRoomUpdate: handleSupabaseRoomUpdate,
         onChatMessage: handleSupabaseChatMessage,
         onYourSideAssigned: (side) => {
@@ -1304,7 +1306,7 @@ export const ChessGameSection: React.FC = () => {
               const code = generateRoomCode();
               const supaCreds = getSupabaseCredentials();
               if (supaCreds.isConfigured) {
-                handleJoinSupabaseRoom(code);
+                handleJoinSupabaseRoom(code, false, opts);
               }
               if (socket) {
                 socket.emit('create_room', { roomId: code, player: playerProfile, ...opts });
