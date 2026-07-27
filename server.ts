@@ -164,9 +164,10 @@ async function startServer() {
 
     // Helper to get valid player profile
     const getSafePlayer = (p?: Partial<PlayerInfo>): PlayerInfo => {
+      const pId = p?.id || playerProfile?.id || `usr_${socket.id}`;
       return {
-        id: socket.id,
-        name: p?.name || playerProfile?.name || `Grandmaster #${Math.floor(1000 + Math.random() * 9000)}`,
+        id: pId,
+        name: p?.name || playerProfile?.name || 'Player 1',
         country: p?.country || playerProfile?.country || 'US',
         flag: p?.flag || playerProfile?.flag || '🇺🇸',
         rating: p?.rating || playerProfile?.rating || 1200,
@@ -180,10 +181,10 @@ async function startServer() {
         if (currentRoomId) {
           const room = rooms.get(currentRoomId);
           if (room) {
-            if (room.whitePlayer?.id === socket.id) {
-              room.whitePlayer = { ...profile, id: socket.id };
-            } else if (room.blackPlayer?.id === socket.id) {
-              room.blackPlayer = { ...profile, id: socket.id };
+            if (room.whitePlayer?.id === profile.id || room.whitePlayer?.id === socket.id) {
+              room.whitePlayer = { ...profile };
+            } else if (room.blackPlayer?.id === profile.id || room.blackPlayer?.id === socket.id) {
+              room.blackPlayer = { ...profile };
             }
             io.to(currentRoomId).emit('room_updated', sanitizeRoomForClient(room));
             io.emit('lobby_room_updated');
@@ -232,8 +233,8 @@ async function startServer() {
           roomId,
           roomName: payload?.roomName || `${safePlayer.name}'s Match`,
           timeControl,
-          whitePlayer: assignedSide === 'w' ? { ...safePlayer, id: socket.id } : null,
-          blackPlayer: assignedSide === 'b' ? { ...safePlayer, id: socket.id } : null,
+          whitePlayer: assignedSide === 'w' ? { ...safePlayer } : null,
+          blackPlayer: assignedSide === 'b' ? { ...safePlayer } : null,
           spectators: [],
           fen: initialChess.fen(),
           moveHistory: [],
@@ -290,30 +291,32 @@ async function startServer() {
       let role: 'player' | 'spectator' = 'spectator';
       let sideAssigned: 'w' | 'b' | 'spectator' = 'spectator';
 
-      // Reconnect/re-assign existing seat if same player or socket reconnecting
-      if (room.whitePlayer && (room.whitePlayer.id === socket.id || room.whitePlayer.name === safePlayer.name)) {
-        room.whitePlayer.id = socket.id;
+      const playerId = safePlayer.id;
+
+      // Reconnect/re-assign existing seat if same player ID or socket ID
+      if (room.whitePlayer && (room.whitePlayer.id === playerId || room.whitePlayer.id === socket.id)) {
+        room.whitePlayer = { ...safePlayer };
         role = 'player';
         sideAssigned = 'w';
-      } else if (room.blackPlayer && (room.blackPlayer.id === socket.id || room.blackPlayer.name === safePlayer.name)) {
-        room.blackPlayer.id = socket.id;
+      } else if (room.blackPlayer && (room.blackPlayer.id === playerId || room.blackPlayer.id === socket.id)) {
+        room.blackPlayer = { ...safePlayer };
         role = 'player';
         sideAssigned = 'b';
       } else if (!room.whitePlayer) {
-        room.whitePlayer = { ...safePlayer, id: socket.id };
+        room.whitePlayer = { ...safePlayer };
         role = 'player';
         sideAssigned = 'w';
       } else if (!room.blackPlayer) {
-        room.blackPlayer = { ...safePlayer, id: socket.id };
+        room.blackPlayer = { ...safePlayer };
         role = 'player';
         sideAssigned = 'b';
       } else {
         // Spectator
-        const existingIndex = room.spectators.findIndex((s) => s.id === socket.id || s.name === safePlayer.name);
+        const existingIndex = room.spectators.findIndex((s) => s.id === playerId || s.id === socket.id);
         if (existingIndex !== -1) {
-          room.spectators[existingIndex] = { ...safePlayer, id: socket.id };
+          room.spectators[existingIndex] = { ...safePlayer };
         } else {
-          room.spectators.push({ ...safePlayer, id: socket.id });
+          room.spectators.push({ ...safePlayer });
         }
         role = 'spectator';
         sideAssigned = 'spectator';
@@ -356,7 +359,12 @@ async function startServer() {
       playerProfile = safePlayer;
 
       const openRoom = Array.from(rooms.values()).find(
-        (r) => (!r.whitePlayer || !r.blackPlayer) && !r.isStarted && !r.isGameOver
+        (r) =>
+          (!r.whitePlayer || !r.blackPlayer) &&
+          !r.isStarted &&
+          !r.isGameOver &&
+          r.whitePlayer?.id !== safePlayer.id &&
+          r.blackPlayer?.id !== safePlayer.id
       );
 
       if (openRoom) {
@@ -365,10 +373,10 @@ async function startServer() {
 
         let sideAssigned: 'w' | 'b' = 'w';
         if (!openRoom.whitePlayer) {
-          openRoom.whitePlayer = { ...safePlayer, id: socket.id };
+          openRoom.whitePlayer = { ...safePlayer };
           sideAssigned = 'w';
         } else {
-          openRoom.blackPlayer = { ...safePlayer, id: socket.id };
+          openRoom.blackPlayer = { ...safePlayer };
           sideAssigned = 'b';
         }
 
@@ -454,8 +462,8 @@ async function startServer() {
         }
 
         // Validate player turn
-        const isWhite = room.whitePlayer?.id === socket.id;
-        const isBlack = room.blackPlayer?.id === socket.id;
+        const isWhite = room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id);
+        const isBlack = room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id);
 
         if ((room.turn === 'w' && !isWhite) || (room.turn === 'b' && !isBlack)) {
           socket.emit('error_message', 'Not your turn!');
@@ -708,8 +716,8 @@ async function startServer() {
       const room = rooms.get(currentRoomId);
       if (!room) return;
 
-      const isWhite = room.whitePlayer?.id === socket.id;
-      const isBlack = room.blackPlayer?.id === socket.id;
+      const isWhite = room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id);
+      const isBlack = room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id);
 
       if (isWhite) {
         const leaverName = room.whitePlayer?.name || 'Player 1';
@@ -736,19 +744,19 @@ async function startServer() {
         if (room.isStarted && !room.isGameOver) {
           room.isGameOver = true;
           room.winner = 'w';
-          const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+          const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
           room.gameResult = resultText;
           room.messages.push({
             id: `sys-${Date.now()}`,
             senderName: 'System',
-            text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+            text: `🏆 ${leaverName} left the room. Congratulations to ${winnerName}, you win!`,
             timestamp: Date.now(),
             isSystem: true,
           });
           io.to(currentRoomId).emit('game_over', { room: sanitizeRoomForClient(room), gameResult: resultText });
         }
       } else {
-        room.spectators = room.spectators.filter((s) => s.id !== socket.id);
+        room.spectators = room.spectators.filter((s) => s.id !== socket.id && s.id !== playerProfile?.id);
       }
 
       // Cleanup empty room after 10 mins or if no players left

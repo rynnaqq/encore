@@ -40,10 +40,11 @@ export function subscribeSupabaseChessRoom({
     return null;
   }
 
+  const myPlayerId = playerProfile.id || `usr_${Math.random().toString(36).substring(2, 9)}`;
   const channelName = `chess-room-${roomId.trim()}`;
   const channel = supabase.channel(channelName, {
     config: {
-      presence: { key: playerProfile.id || playerProfile.name },
+      presence: { key: myPlayerId },
       broadcast: { self: true },
     },
   });
@@ -110,31 +111,31 @@ export function subscribeSupabaseChessRoom({
 
     // Check if player disconnected during active game
     if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
-      if (white && !presentUsers.some((u) => u.id === white?.id || u.name === white?.name)) {
+      if (white && !presentUsers.some((u) => u.id === white?.id)) {
         currentRoomState.isGameOver = true;
         currentRoomState.winner = 'b';
         const leaverName = white.name;
-        const winnerName = black?.name || 'Pemain Hitam';
-        const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+        const winnerName = black?.name || 'Black Player';
+        const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
         currentRoomState.gameResult = resultText;
         currentRoomState.messages.push({
           id: `sys-${Date.now()}`,
           senderName: 'System',
-          text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+          text: `🏆 ${leaverName} left the room. Congratulations to ${winnerName}, you win!`,
           timestamp: Date.now(),
           isSystem: true,
         });
-      } else if (black && !presentUsers.some((u) => u.id === black?.id || u.name === black?.name)) {
+      } else if (black && !presentUsers.some((u) => u.id === black?.id)) {
         currentRoomState.isGameOver = true;
         currentRoomState.winner = 'w';
         const leaverName = black.name;
-        const winnerName = white?.name || 'Pemain Putih';
-        const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+        const winnerName = white?.name || 'White Player';
+        const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
         currentRoomState.gameResult = resultText;
         currentRoomState.messages.push({
           id: `sys-${Date.now()}`,
           senderName: 'System',
-          text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+          text: `🏆 ${leaverName} left the room. Congratulations to ${winnerName}, you win!`,
           timestamp: Date.now(),
           isSystem: true,
         });
@@ -142,10 +143,9 @@ export function subscribeSupabaseChessRoom({
     }
 
     // Determine my side
-    const myId = playerProfile.id || playerProfile.name;
-    if (white && (white.id === myId || white.name === playerProfile.name)) {
+    if (white && white.id === myPlayerId) {
       onYourSideAssigned('w');
-    } else if (black && (black.id === myId || black.name === playerProfile.name)) {
+    } else if (black && black.id === myPlayerId) {
       onYourSideAssigned('b');
     } else {
       onYourSideAssigned('spectator');
@@ -317,7 +317,7 @@ export function subscribeSupabaseChessRoom({
         await channel.track({
           user: {
             ...playerProfile,
-            id: playerProfile.id || playerProfile.name,
+            id: myPlayerId,
             joinedAt: Date.now(),
           },
         });
