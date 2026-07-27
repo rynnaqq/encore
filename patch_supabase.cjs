@@ -1,4 +1,8 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+const fs = require('fs');
+const file = 'src/lib/supabaseClient.ts';
+let content = fs.readFileSync(file, 'utf8');
+
+const replacement = `import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Get default credentials from environment variables
 export function getSupabaseCredentials() {
@@ -34,3 +38,6 @@ export function getSupabaseClient(): SupabaseClient | null {
 
   return supabaseInstance;
 }
+`;
+
+fs.writeFileSync(file, replacement);

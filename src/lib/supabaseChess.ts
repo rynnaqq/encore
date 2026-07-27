@@ -68,7 +68,7 @@ export function subscribeSupabaseChessRoom({
     gameResult: null,
     winner: null,
     drawOffer: null,
-    rematchRequests: [],
+    rematchRequests: {},
     messages: [
       {
         id: `sys-${Date.now()}`,
