@@ -24,6 +24,7 @@ interface ChatMessage {
 }
 
 interface RoomState {
+  isPublic?: boolean;
   roomId: string;
   roomName: string;
   timeControl: number; // in seconds
@@ -196,7 +197,7 @@ async function startServer() {
     // Send active rooms list on connection request
     socket.on('get_lobby_rooms', () => {
       const lobbyRooms = Array.from(rooms.values())
-        .filter((r) => !r.isGameOver)
+        .filter((r) => !r.isGameOver && r.isPublic !== false)
         .map((r) => ({
           roomId: r.roomId,
           roomName: r.roomName,
@@ -220,6 +221,7 @@ async function startServer() {
         roomName?: string;
         timeControl?: number;
         preferredSide?: 'w' | 'b' | 'random';
+        isPublic?: boolean;
       }) => {
         const safePlayer = getSafePlayer(payload?.player);
         playerProfile = safePlayer;

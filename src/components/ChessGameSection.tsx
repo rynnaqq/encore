@@ -285,6 +285,12 @@ export const ChessGameSection: React.FC = () => {
       color: m.color,
     }));
     setMoveHistory(historyItems);
+    if (historyItems.length > 0) {
+      const last = historyItems[historyItems.length - 1];
+      setLastMove({ from: last.from, to: last.to });
+    } else {
+      setLastMove(null);
+    }
   }, [playAudioEffect]);
 
   const handleSupabaseChatMessage = useCallback((msg: ChatMessage) => {
@@ -409,6 +415,12 @@ export const ChessGameSection: React.FC = () => {
         color: m.color,
       }));
       setMoveHistory(historyItems);
+      if (historyItems.length > 0) {
+        const last = historyItems[historyItems.length - 1];
+        setLastMove({ from: last.from, to: last.to });
+      } else {
+        setLastMove(null);
+      }
     });
 
     newSocket.on('room_updated', (room: RoomState) => {
@@ -427,6 +439,12 @@ export const ChessGameSection: React.FC = () => {
         color: m.color,
       }));
       setMoveHistory(historyItems);
+      if (historyItems.length > 0) {
+        const last = historyItems[historyItems.length - 1];
+        setLastMove({ from: last.from, to: last.to });
+      } else {
+        setLastMove(null);
+      }
     });
 
     newSocket.on('move_made', (data: { room: RoomState; lastMove: { from: Square; to: Square; san: string } }) => {

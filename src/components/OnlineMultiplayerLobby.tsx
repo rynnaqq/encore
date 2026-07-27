@@ -123,7 +123,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
       socket.on('lobby_room_updated', handleLobbyUpdate);
       const interval = setInterval(() => {
         if (socket.connected) socket.emit('get_lobby_rooms');
-      }, 3000);
+      }, 10000);
       return () => {
         socket.off('lobby_rooms_list', handleLobbyRooms);
         socket.off('lobby_room_updated', handleLobbyUpdate);
