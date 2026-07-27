@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { COUNTRIES, CountryOption } from '../data/countries';
 import { getSupabaseCredentials, saveSupabaseCredentials } from '../lib/supabaseClient';
+import { subscribeToGlobalLobby } from "../lib/supabaseChess";
 
 export interface PlayerInfo {
   id?: string;
@@ -75,7 +76,7 @@ export interface RoomState {
   messages: ChatMessage[];
 }
 
-interface LobbyRoomSummary {
+export interface LobbyRoomSummary {
   roomId: string;
   roomName: string;
   timeControl: number;
@@ -148,35 +149,49 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
     setShowSupabaseModal(false);
   };
 
-  // Fetch lobby rooms when socket connects / refreshes
+  // Fetch lobby rooms when socket connects / refreshes or Supabase is used
   useEffect(() => {
-    if (!socket) return;
+    const supaCreds = getSupabaseCredentials();
+    
+    if (supaCreds.isConfigured) {
+      const channel = subscribeToGlobalLobby((list) => {
+        setRoomsList(list);
+      });
+      return () => {
+        if (channel) {
+          channel.untrack();
+          channel.unsubscribe();
+        }
+      };
+    } else {
+      if (!socket) return;
 
-    socket.emit('get_lobby_rooms');
-
-    const handleLobbyRooms = (list: LobbyRoomSummary[]) => {
-      setRoomsList(list);
-    };
-
-    const handleLobbyUpdate = () => {
       socket.emit('get_lobby_rooms');
-    };
 
-    socket.on('lobby_rooms_list', handleLobbyRooms);
-    socket.on('lobby_room_updated', handleLobbyUpdate);
+      const handleLobbyRooms = (list: LobbyRoomSummary[]) => {
+        setRoomsList(list);
+      };
 
-    const interval = setInterval(() => {
-      if (socket.connected) {
+      const handleLobbyUpdate = () => {
         socket.emit('get_lobby_rooms');
-      }
-    }, 3000);
+      };
 
-    return () => {
-      socket.off('lobby_rooms_list', handleLobbyRooms);
-      socket.off('lobby_room_updated', handleLobbyUpdate);
-      clearInterval(interval);
-    };
-  }, [socket]);
+      socket.on('lobby_rooms_list', handleLobbyRooms);
+      socket.on('lobby_room_updated', handleLobbyUpdate);
+
+      const interval = setInterval(() => {
+        if (socket.connected) {
+          socket.emit('get_lobby_rooms');
+        }
+      }, 3000);
+
+      return () => {
+        socket.off('lobby_rooms_list', handleLobbyRooms);
+        socket.off('lobby_room_updated', handleLobbyUpdate);
+        clearInterval(interval);
+      };
+    }
+  }, [socket, supabaseCreds.isConfigured]);
 
   const handleSaveProfile = () => {
     onUpdateProfile({
@@ -864,7 +879,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Anon Key</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Publishable Key</label>
                     <input
                       type="text"
                       placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -879,7 +894,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                     <p>In your Vercel Dashboard → Project Settings → Environment Variables, add:</p>
                     <div className="font-mono text-[10px] bg-slate-200/70 p-2 rounded-xl space-y-0.5">
                       <div>VITE_SUPABASE_URL = https://your-project.supabase.co</div>
-                      <div>VITE_SUPABASE_ANON_KEY = your-anon-key</div>
+                      <div>VITE_SUPABASE_PUBLISHABLE_KEY = your-publishable-key</div>
                     </div>
                   </div>
 

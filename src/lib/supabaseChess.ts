@@ -1,6 +1,6 @@
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabaseClient';
-import { PlayerInfo, RoomState, ChatMessage } from '../components/OnlineMultiplayerLobby';
+import { PlayerInfo, RoomState, ChatMessage, LobbyRoomSummary } from '../components/OnlineMultiplayerLobby';
 
 export interface SupabaseRoomHandler {
   channel: RealtimeChannel;
@@ -38,7 +38,7 @@ export function subscribeSupabaseChessRoom({
 }): SupabaseRoomHandler | null {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    onError('Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to environment variables.');
+    onError('Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to environment variables.');
     return null;
   }
 
@@ -452,4 +452,67 @@ export function subscribeSupabaseChessRoom({
   };
 
   return handler;
+}
+
+
+export function subscribeToGlobalLobby(onRoomsUpdate: (rooms: LobbyRoomSummary[]) => void): RealtimeChannel | null {
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
+
+  const channel = supabase.channel('global-lobby', {
+    config: {
+      presence: { key: 'lobby' },
+    },
+  });
+
+  channel
+    .on('presence', { event: 'sync' }, () => {
+      const state = channel.presenceState();
+      const roomsMap = new Map<string, LobbyRoomSummary>();
+      
+      Object.keys(state).forEach((key) => {
+        const presences = state[key];
+        presences.forEach((p: any) => {
+          if (p.roomSummary && p.roomSummary.roomId) {
+            roomsMap.set(p.roomSummary.roomId, p.roomSummary);
+          }
+        });
+      });
+
+      onRoomsUpdate(Array.from(roomsMap.values()));
+    })
+    .subscribe();
+
+  return channel;
+}
+
+let globalLobbyChannel: RealtimeChannel | null = null;
+
+export function publishRoomToGlobalLobby(roomSummary: LobbyRoomSummary | null) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  if (roomSummary === null) {
+    if (globalLobbyChannel) {
+      globalLobbyChannel.untrack();
+      globalLobbyChannel.unsubscribe();
+      globalLobbyChannel = null;
+    }
+    return;
+  }
+
+  if (!globalLobbyChannel) {
+    globalLobbyChannel = supabase.channel('global-lobby', {
+      config: {
+        presence: { key: 'host-' + roomSummary.roomId },
+      },
+    });
+    globalLobbyChannel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await globalLobbyChannel?.track({ roomSummary });
+      }
+    });
+  } else {
+    globalLobbyChannel.track({ roomSummary }).catch(console.error);
+  }
 }

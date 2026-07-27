@@ -4,10 +4,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 export function getSupabaseCredentials() {
   const metaEnv = (import.meta as unknown as { env?: Record<string, string> }).env || {};
   const envUrl = metaEnv.VITE_SUPABASE_URL || '';
-  const envKey = metaEnv.VITE_SUPABASE_ANON_KEY || '';
+  const envKey = metaEnv.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 
   const localUrl = typeof localStorage !== 'undefined' ? localStorage.getItem('supabase_url') : null;
-  const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem('supabase_anon_key') : null;
+  const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem('supabase_publishable_key') : null;
 
   const url = localUrl || envUrl;
   const key = localKey || envKey;
@@ -45,8 +45,8 @@ export function saveSupabaseCredentials(url: string, key: string) {
     if (url) localStorage.setItem('supabase_url', url);
     else localStorage.removeItem('supabase_url');
 
-    if (key) localStorage.setItem('supabase_anon_key', key);
-    else localStorage.removeItem('supabase_anon_key');
+    if (key) localStorage.setItem('supabase_publishable_key', key);
+    else localStorage.removeItem('supabase_publishable_key');
   }
   supabaseInstance = null; // reset instance
 }

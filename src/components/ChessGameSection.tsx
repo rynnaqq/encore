@@ -33,7 +33,7 @@ import {
 import { PieceSVG } from './ChessPieceSet';
 import { OnlineMultiplayerLobby, RoomState, PlayerInfo, ChatMessage } from './OnlineMultiplayerLobby';
 import { COUNTRIES } from '../data/countries';
-import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode } from '../lib/supabaseChess';
+import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode, publishRoomToGlobalLobby } from '../lib/supabaseChess';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 
 type GameMode = 'ai' | 'pass' | 'online';
@@ -140,6 +140,28 @@ export const ChessGameSection: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [activeRoom, setActiveRoom] = useState<RoomState | null>(null);
+  // Publish active room to global lobby for Supabase Serverless
+  useEffect(() => {
+    const supaCreds = getSupabaseCredentials();
+    if (!supaCreds.isConfigured) return;
+
+    if (activeRoom && !activeRoom.isGameOver) {
+      publishRoomToGlobalLobby({
+        roomId: activeRoom.roomId,
+        roomName: activeRoom.roomName,
+        timeControl: activeRoom.timeControl,
+        playersCount: (activeRoom.whitePlayer ? 1 : 0) + (activeRoom.blackPlayer ? 1 : 0),
+        spectatorsCount: activeRoom.spectators?.length || 0,
+        isStarted: activeRoom.isStarted,
+        isGameOver: activeRoom.isGameOver,
+        whitePlayer: activeRoom.whitePlayer ? { name: activeRoom.whitePlayer.name, country: activeRoom.whitePlayer.country, flag: activeRoom.whitePlayer.flag } : null,
+        blackPlayer: activeRoom.blackPlayer ? { name: activeRoom.blackPlayer.name, country: activeRoom.blackPlayer.country, flag: activeRoom.blackPlayer.flag } : null,
+      });
+    } else {
+      publishRoomToGlobalLobby(null);
+    }
+  }, [activeRoom]);
+
   const [yourSide, setYourSide] = useState<'w' | 'b' | 'spectator' | null>(null);
 
   // Stored Player Profile
