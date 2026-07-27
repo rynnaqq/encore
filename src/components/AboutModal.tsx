@@ -51,18 +51,18 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: 'linear' }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm cursor-pointer transform-gpu"
           />
 
           {/* Pop-Up Modal Container */}
           <motion.div
-            initial={{ scale: 0.92, opacity: 0, y: 24 }}
+            initial={{ scale: 0.96, opacity: 0, y: 16 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.94, opacity: 0, y: 16 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-xl max-h-[90vh] bg-white/95 backdrop-blur-2xl border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-200/50 overflow-hidden z-10 my-auto text-slate-800 flex flex-col gpu-smooth"
+            exit={{ scale: 0.96, opacity: 0, y: 12 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-xl max-h-[90vh] bg-white border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-200/40 overflow-hidden z-10 my-auto text-slate-800 flex flex-col gpu-smooth transform-gpu"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Decorative Banner */}
@@ -155,7 +155,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                       <motion.div
                         layoutId="activeAboutPopUpTab"
                         className="absolute inset-0 bg-[#E195AB] rounded-xl shadow-md shadow-pink-300/40"
-                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                       />
                     )}
                     <span className="relative z-10 flex items-center gap-1.5">

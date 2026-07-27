@@ -29,15 +29,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenModal }) => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, scale: 0.92, y: 16 },
+    hidden: { opacity: 0, y: 12 },
     show: { 
       opacity: 1, 
-      scale: 1, 
       y: 0, 
       transition: { 
-        type: 'spring',
-        stiffness: 280,
-        damping: 22,
+        duration: 0.35,
+        ease: [0.16, 1, 0.3, 1]
       } 
     }
   };
@@ -46,12 +44,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenModal }) => {
     <section id="about" ref={containerRef} className="py-16 sm:py-20 relative overflow-hidden">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Section Header with Pop-Up Spring */}
+        {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
           <SectionHeader
             title={
@@ -64,22 +62,22 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenModal }) => {
 
         {/* Main Content Card Pop-Up */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 30 }}
+          initial={{ opacity: 0, scale: 0.97, y: 16 }}
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
-          transition={{ type: 'spring', stiffness: 240, damping: 22, mass: 0.9 }}
-          className={`border rounded-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden transition-colors bg-white/80 backdrop-blur-xl border-[#FFCCE1] text-slate-800 shadow-lg shadow-pink-200/50 gpu-smooth`}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className={`border rounded-2xl p-6 sm:p-8 lg:p-10 relative overflow-hidden bg-white border-[#FFCCE1] text-slate-800 shadow-xl shadow-pink-200/40 gpu-smooth transform-gpu`}
         >
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             {/* Left Column: Tech Stack Badges Card Pop-Up */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.15 }}
-              className={`lg:col-span-5 border rounded-xl p-5 relative bg-[#FFF5D7] border-[#FFCCE1] shadow-sm`}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+              className={`lg:col-span-5 border rounded-xl p-5 relative bg-[#FFF5D7] border-[#FFCCE1] shadow-sm transform-gpu`}
             >
               <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#FFCCE1]">
                 <div className="w-9 h-9 rounded-xl bg-[#E195AB] text-white flex items-center justify-center font-bold shrink-0 shadow-md shadow-pink-300/40">

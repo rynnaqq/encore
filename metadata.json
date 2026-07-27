@@ -1,6 +1,6 @@
 {
   "name": "Ryan Portfolio",
-  "description": "Pixel-perfect modern developer portfolio for Ryan featuring electric red accent and dark charcoal visual system.",
+  "description": "Modern developer portfolio featuring interactive tools, fishing game, and full-featured Grandmaster Chess game with real-time global online multiplayer across 30+ countries, VS Bot AI, and local Pass & Play.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

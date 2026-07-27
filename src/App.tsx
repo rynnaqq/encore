@@ -7,6 +7,7 @@ import { AboutSection } from './components/AboutSection';
 import { AboutModal } from './components/AboutModal';
 import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
+import { ChessGameSection } from './components/ChessGameSection';
 import { Footer } from './components/Footer';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -96,6 +97,21 @@ function AnimatedRoutes({
               className="gpu-smooth"
             >
               <FishingGameSection />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/chess"
+          element={
+            <motion.div
+              key="route-chess"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <ChessGameSection />
             </motion.div>
           }
         />
