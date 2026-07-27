@@ -185,65 +185,6 @@ export const ChessGameSection: React.FC = () => {
     }
   }, [gameResult, activeRoom?.drawOffer, yourSide]);
 
-  // Helper to sync room updates from Supabase Realtime
-  const handleSupabaseRoomUpdate = useCallback((room: RoomState) => {
-    setActiveRoom(room);
-    const newChess = new Chess(room.fen);
-    setGame(newChess);
-    setWhiteTime(room.whiteTime);
-    setBlackTime(room.blackTime);
-    if (room.gameResult) setGameResult(room.gameResult);
-
-    const historyItems: MoveHistoryItem[] = room.moveHistory.map((m) => ({
-      san: m.san,
-      from: m.from as Square,
-      to: m.to as Square,
-      piece: 'p',
-      color: m.color,
-    }));
-    setMoveHistory(historyItems);
-  }, []);
-
-  const handleSupabaseChatMessage = useCallback((msg: ChatMessage) => {
-    // Message already appended to activeRoom.messages in supabaseChess handler
-  }, []);
-
-  // Join or host room via Supabase Realtime
-  const handleJoinSupabaseRoom = useCallback(
-    (code: string) => {
-      const supaCreds = getSupabaseCredentials();
-      if (!supaCreds.isConfigured) return;
-
-      if (supabaseHandlerRef.current) {
-        supabaseHandlerRef.current.leaveRoom();
-        supabaseHandlerRef.current = null;
-      }
-
-      const handler = subscribeSupabaseChessRoom({
-        roomId: code,
-        playerProfile,
-        onRoomUpdate: handleSupabaseRoomUpdate,
-        onChatMessage: handleSupabaseChatMessage,
-        onYourSideAssigned: (side) => {
-          setYourSide(side);
-          if (side === 'b') setIsFlipped(true);
-          else if (side === 'w') setIsFlipped(false);
-        },
-        onError: (err) => {
-          console.warn('Supabase Realtime notice:', err);
-        },
-      });
-
-      if (handler) {
-        supabaseHandlerRef.current = handler;
-      }
-    },
-    [playerProfile, handleSupabaseRoomUpdate, handleSupabaseChatMessage]
-  );
-
-  // Promotion state
-  const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
-
   // Audio effect triggers using Web Audio API for zero external dependency lag
   const playAudioEffect = useCallback((type: 'move' | 'capture' | 'check' | 'gameover') => {
     if (!soundEnabled) return;
@@ -292,6 +233,76 @@ export const ChessGameSection: React.FC = () => {
       // Audio context ignored if user hasn't interacted
     }
   }, [soundEnabled]);
+
+  // Helper to sync room updates from Supabase Realtime
+  const handleSupabaseRoomUpdate = useCallback((room: RoomState) => {
+    if (room.isGameOver && room.gameResult) {
+      playAudioEffect('gameover');
+      alert(room.gameResult);
+      if (supabaseHandlerRef.current) {
+        supabaseHandlerRef.current.leaveRoom();
+        supabaseHandlerRef.current = null;
+      }
+      setActiveRoom(null);
+      setYourSide(null);
+      return;
+    }
+    setActiveRoom(room);
+    const newChess = new Chess(room.fen);
+    setGame(newChess);
+    setWhiteTime(room.whiteTime);
+    setBlackTime(room.blackTime);
+    if (room.gameResult) setGameResult(room.gameResult);
+
+    const historyItems: MoveHistoryItem[] = room.moveHistory.map((m) => ({
+      san: m.san,
+      from: m.from as Square,
+      to: m.to as Square,
+      piece: 'p',
+      color: m.color,
+    }));
+    setMoveHistory(historyItems);
+  }, [playAudioEffect]);
+
+  const handleSupabaseChatMessage = useCallback((msg: ChatMessage) => {
+    // Message already appended to activeRoom.messages in supabaseChess handler
+  }, []);
+
+  // Join or host room via Supabase Realtime
+  const handleJoinSupabaseRoom = useCallback(
+    (code: string) => {
+      const supaCreds = getSupabaseCredentials();
+      if (!supaCreds.isConfigured) return;
+
+      if (supabaseHandlerRef.current) {
+        supabaseHandlerRef.current.leaveRoom();
+        supabaseHandlerRef.current = null;
+      }
+
+      const handler = subscribeSupabaseChessRoom({
+        roomId: code,
+        playerProfile,
+        onRoomUpdate: handleSupabaseRoomUpdate,
+        onChatMessage: handleSupabaseChatMessage,
+        onYourSideAssigned: (side) => {
+          setYourSide(side);
+          if (side === 'b') setIsFlipped(true);
+          else if (side === 'w') setIsFlipped(false);
+        },
+        onError: (err) => {
+          console.warn('Supabase Realtime notice:', err);
+        },
+      });
+
+      if (handler) {
+        supabaseHandlerRef.current = handler;
+      }
+    },
+    [playerProfile, handleSupabaseRoomUpdate, handleSupabaseChatMessage]
+  );
+
+  // Promotion state
+  const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
 
   // Auto-detect room query param on load
   useEffect(() => {
@@ -423,20 +434,23 @@ export const ChessGameSection: React.FC = () => {
       setBlackTime(data.blackTime);
     });
 
-    newSocket.on('game_over', (data: { room: RoomState; gameResult: string }) => {
-      setActiveRoom(data.room);
-      setGameResult(data.gameResult);
+    newSocket.on('game_over', (data: { room: RoomState; gameResult?: string }) => {
       playAudioEffect('gameover');
-    });
+      const resultMsg = data.gameResult || data.room?.gameResult || 'Game Over!';
+      alert(resultMsg);
 
-    newSocket.on('error_message', (msg: string) => {
       if (supabaseHandlerRef.current) {
         supabaseHandlerRef.current.leaveRoom();
         supabaseHandlerRef.current = null;
       }
+      if (data.room?.roomId) {
+        newSocket.emit('leave_room', { roomId: data.room.roomId });
+      }
       setActiveRoom(null);
       setYourSide(null);
-      resetGame();
+    });
+
+    newSocket.on('error_message', (msg: string) => {
       alert(msg);
     });
 
@@ -830,7 +844,7 @@ export const ChessGameSection: React.FC = () => {
   };
 
   // Reset Game
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     const newGame = new Chess();
     setGame(newGame);
     setSelectedSquare(null);
@@ -843,7 +857,14 @@ export const ChessGameSection: React.FC = () => {
     setWhiteTime(timeControl);
     setBlackTime(timeControl);
     setIsTimerActive(false);
-  };
+  }, [timeControl]);
+
+  // Automatically reset chess board to starting position when exiting activeRoom or changing mode
+  useEffect(() => {
+    if (!activeRoom || gameMode !== 'online') {
+      resetGame();
+    }
+  }, [activeRoom, gameMode, resetGame]);
 
   // Undo Move
   const undoMove = () => {

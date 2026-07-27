@@ -129,7 +129,7 @@ async function startServer() {
               timestamp: Date.now(),
               isSystem: true,
             });
-            io.to(roomId).emit('game_over', sanitizeRoomForClient(room));
+            io.to(roomId).emit('game_over', { room: sanitizeRoomForClient(room), gameResult: room.gameResult });
           }
         } else {
           room.blackTime = Math.max(0, room.blackTime - 1);
@@ -144,7 +144,7 @@ async function startServer() {
               timestamp: Date.now(),
               isSystem: true,
             });
-            io.to(roomId).emit('game_over', sanitizeRoomForClient(room));
+            io.to(roomId).emit('game_over', { room: sanitizeRoomForClient(room), gameResult: room.gameResult });
           }
         }
         room.lastMoveTimestamp = now;
@@ -195,17 +195,19 @@ async function startServer() {
 
     // Send active rooms list on connection request
     socket.on('get_lobby_rooms', () => {
-      const lobbyRooms = Array.from(rooms.values()).map((r) => ({
-        roomId: r.roomId,
-        roomName: r.roomName,
-        timeControl: r.timeControl,
-        playersCount: (r.whitePlayer ? 1 : 0) + (r.blackPlayer ? 1 : 0),
-        spectatorsCount: r.spectators.length,
-        isStarted: r.isStarted,
-        isGameOver: r.isGameOver,
-        whitePlayer: r.whitePlayer ? { name: r.whitePlayer.name, country: r.whitePlayer.country, flag: r.whitePlayer.flag } : null,
-        blackPlayer: r.blackPlayer ? { name: r.blackPlayer.name, country: r.blackPlayer.country, flag: r.blackPlayer.flag } : null,
-      }));
+      const lobbyRooms = Array.from(rooms.values())
+        .filter((r) => !r.isGameOver)
+        .map((r) => ({
+          roomId: r.roomId,
+          roomName: r.roomName,
+          timeControl: r.timeControl,
+          playersCount: (r.whitePlayer ? 1 : 0) + (r.blackPlayer ? 1 : 0),
+          spectatorsCount: r.spectators.length,
+          isStarted: r.isStarted,
+          isGameOver: r.isGameOver,
+          whitePlayer: r.whitePlayer ? { name: r.whitePlayer.name, country: r.whitePlayer.country, flag: r.whitePlayer.flag } : null,
+          blackPlayer: r.blackPlayer ? { name: r.blackPlayer.name, country: r.blackPlayer.country, flag: r.blackPlayer.flag } : null,
+        }));
       socket.emit('lobby_rooms_list', lobbyRooms);
     });
 
@@ -353,7 +355,7 @@ async function startServer() {
         role,
       });
 
-      io.to(payload.roomId).emit('room_updated', sanitizeRoomForClient(room));
+      io.to(cleanRoomId).emit('room_updated', sanitizeRoomForClient(room));
       io.emit('lobby_room_updated');
     });
 
@@ -524,6 +526,11 @@ async function startServer() {
               text: `🏆 Game Over: ${room.gameResult}`,
               timestamp: Date.now(),
               isSystem: true,
+            });
+
+            io.to(payload.roomId).emit('game_over', {
+              room: sanitizeRoomForClient(room),
+              gameResult: room.gameResult,
             });
           }
 
@@ -763,11 +770,15 @@ async function startServer() {
         room.spectators = room.spectators.filter((s) => s.id !== socket.id && s.id !== playerProfile?.id);
       }
 
-      // Cleanup empty room after 10 mins or if no players left
+      const leavingRoomId = currentRoomId;
+      socket.leave(leavingRoomId);
+      currentRoomId = null;
+
+      // Cleanup empty room if no players left
       if (!room.whitePlayer && !room.blackPlayer && room.spectators.length === 0) {
-        rooms.delete(currentRoomId);
+        rooms.delete(leavingRoomId);
       } else {
-        io.to(currentRoomId).emit('room_updated', sanitizeRoomForClient(room));
+        io.to(leavingRoomId).emit('room_updated', sanitizeRoomForClient(room));
       }
 
       io.emit('lobby_room_updated');
