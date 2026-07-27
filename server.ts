@@ -712,20 +712,40 @@ async function startServer() {
       const isBlack = room.blackPlayer?.id === socket.id;
 
       if (isWhite) {
-        const name = room.whitePlayer?.name;
+        const leaverName = room.whitePlayer?.name || 'Player 1';
+        const winnerName = room.blackPlayer?.name || 'Player 2';
         room.whitePlayer = null;
         if (room.isStarted && !room.isGameOver) {
           room.isGameOver = true;
           room.winner = 'b';
-          room.gameResult = `${name} disconnected. Black wins by forfeit.`;
+          const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
+          room.gameResult = resultText;
+          room.messages.push({
+            id: `sys-${Date.now()}`,
+            senderName: 'System',
+            text: `🏆 ${leaverName} left the room. Congratulations to ${winnerName}, you win!`,
+            timestamp: Date.now(),
+            isSystem: true,
+          });
+          io.to(currentRoomId).emit('game_over', { room: sanitizeRoomForClient(room), gameResult: resultText });
         }
       } else if (isBlack) {
-        const name = room.blackPlayer?.name;
+        const leaverName = room.blackPlayer?.name || 'Player 2';
+        const winnerName = room.whitePlayer?.name || 'Player 1';
         room.blackPlayer = null;
         if (room.isStarted && !room.isGameOver) {
           room.isGameOver = true;
           room.winner = 'w';
-          room.gameResult = `${name} disconnected. White wins by forfeit.`;
+          const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+          room.gameResult = resultText;
+          room.messages.push({
+            id: `sys-${Date.now()}`,
+            senderName: 'System',
+            text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+            timestamp: Date.now(),
+            isSystem: true,
+          });
+          io.to(currentRoomId).emit('game_over', { room: sanitizeRoomForClient(room), gameResult: resultText });
         }
       } else {
         room.spectators = room.spectators.filter((s) => s.id !== socket.id);

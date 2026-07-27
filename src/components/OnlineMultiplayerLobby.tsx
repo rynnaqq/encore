@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { io, Socket } from 'socket.io-client';
 import {
@@ -16,7 +17,6 @@ import {
   RefreshCw,
   Clock,
   Flag,
-  Share2,
   Trophy,
   Smile,
   Shield,
@@ -25,6 +25,7 @@ import {
   Database,
   Cloud,
   ExternalLink,
+  LogOut,
 } from 'lucide-react';
 import { COUNTRIES, CountryOption } from '../data/countries';
 import { getSupabaseCredentials, saveSupabaseCredentials } from '../lib/supabaseClient';
@@ -182,7 +183,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
   const handleSaveProfile = () => {
     onUpdateProfile({
       ...playerProfile,
-      name: editName.trim() || 'Grandmaster',
+      name: editName.trim() || 'Player 1',
       country: editCountry.code,
       flag: editCountry.flag,
     });
@@ -220,59 +221,45 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
 
   return (
     <div className="w-full mb-6 font-sans">
-      {/* Network Status & Profile Header Bar */}
-      <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] shadow-lg flex flex-wrap items-center justify-between gap-4">
-        {/* Left: Global Connection Indicator */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#E195AB] to-[#FFCCE1] text-white flex items-center justify-center shadow-md">
-              <Globe className="w-5 h-5 animate-spin-slow" />
-            </div>
+      {/* Sleek Online Controls Bar (No Global Online Multiplayer Card) */}
+      <div className="p-3.5 rounded-2xl bg-white/90 backdrop-blur-xl border border-[#FFCCE1] shadow-sm flex flex-wrap items-center justify-between gap-3">
+        {/* Connection Status & Supabase Cloud */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1]">
             <span
-              className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 isConnected ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'
               }`}
             />
+            <span className="text-[11px] font-mono font-bold text-slate-700">
+              {isConnected ? 'Online' : 'Serverless'}
+            </span>
           </div>
-          <div>
-            <div className="text-xs font-bold text-slate-800 flex flex-wrap items-center gap-2">
-              <span>Global Online Multiplayer</span>
-              <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${
-                  isConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                }`}
-              >
-                {isConnected ? 'Server Connected' : 'Serverless Mode'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowSupabaseModal(true)}
-                className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                  supabaseCreds.isConfigured
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
-                    : 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
-                }`}
-              >
-                <Database className="w-3 h-3 text-[#E195AB]" />
-                <span>{supabaseCreds.isConfigured ? 'Supabase Realtime Active' : 'Setup Supabase Cloud'}</span>
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium">
-              Play real-time chess via Express Server or Supabase Cloud on Vercel!
-            </p>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowSupabaseModal(true)}
+            className={`text-[11px] font-mono px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              supabaseCreds.isConfigured
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                : 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-[#E195AB]" />
+            <span>{supabaseCreds.isConfigured ? 'Cloud Connected' : 'Cloud Setup'}</span>
+          </button>
         </div>
 
-        {/* Right: Player Profile Badge */}
-        <div className="flex items-center gap-3">
+        {/* Right: Player Profile Badge & Actions */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowProfileModal(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1] hover:border-[#E195AB] transition-all cursor-pointer shadow-sm group"
           >
-            <span className="text-xl group-hover:scale-110 transition-transform">{playerProfile.flag}</span>
+            <span className="text-lg group-hover:scale-110 transition-transform">{playerProfile.flag}</span>
             <div className="text-left">
               <div className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                <span>{playerProfile.name}</span>
+                <span>{playerProfile.name || 'Player 1'}</span>
                 <Trophy className="w-3 h-3 text-amber-500" />
               </div>
               <div className="text-[10px] font-mono text-[#E195AB] font-bold">
@@ -284,15 +271,15 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
           {!activeRoom ? (
             <button
               onClick={onQuickMatch}
-              className="px-4 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
             >
-              <Zap className="w-4 h-4 fill-white" />
+              <Zap className="w-3.5 h-3.5 fill-white" />
               <span>Quick Match</span>
             </button>
           ) : (
             <button
               onClick={onLeaveRoom}
-              className="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
             >
               Leave Room
             </button>
@@ -318,7 +305,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                Create a multiplayer room and send the 6-digit room code or share link directly to your friend to play in real-time.
+                Create a multiplayer room and send the 6-digit room code directly to your friend to play in real-time.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -388,7 +375,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#FFCCE1]/60">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#E195AB]" />
-                <h3 className="font-bold text-slate-800 text-sm">Live Global Matches</h3>
+                <h3 className="font-bold text-slate-800 text-sm">Live Matches</h3>
                 <span className="text-[11px] font-mono font-bold bg-[#FFF5D7] text-[#E195AB] px-2 py-0.5 rounded-lg border border-[#FFCCE1]">
                   {roomsList.length} Active
                 </span>
@@ -412,7 +399,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   className="px-4 py-2 rounded-xl bg-[#FFF5D7] text-[#E195AB] border border-[#FFCCE1] hover:bg-[#FFCCE1] text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Create Global Room</span>
+                  <span>Create Room</span>
                 </button>
               </div>
             ) : (
@@ -492,19 +479,19 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
               </div>
 
               <button
-                onClick={copyRoomLink}
+                onClick={copyRoomCode}
                 className="px-3 py-1.5 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
-                {copiedCode ? <Check className="w-3.5 h-3.5 text-white" /> : <Share2 className="w-3.5 h-3.5" />}
-                <span>{copiedCode ? 'Direct Link Copied!' : 'Copy Share Link'}</span>
+                {copiedCodeOnly ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedCodeOnly ? 'Code Copied!' : 'Copy Room Code'}</span>
               </button>
 
               <button
-                onClick={copyRoomCode}
-                className="px-3 py-1.5 rounded-xl bg-[#FFF5D7] hover:bg-[#FFCCE1] text-[#E195AB] border border-[#FFCCE1] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                onClick={onLeaveRoom}
+                className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                {copiedCodeOnly ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedCodeOnly ? 'Code Copied!' : 'Copy Code Only'}</span>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Leave Room</span>
               </button>
             </div>
 
@@ -542,15 +529,15 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                 <div>
                   <div className="font-bold text-amber-950 text-xs">Waiting for your friend or opponent to join...</div>
                   <div className="text-[11px] text-amber-800">
-                    Send them <strong>Room Code: {activeRoom.roomId}</strong> or click <strong>Copy Share Link</strong> above!
+                    Send them <strong>Room Code: {activeRoom.roomId}</strong> to join!
                   </div>
                 </div>
               </div>
               <button
-                onClick={copyRoomLink}
+                onClick={copyRoomCode}
                 className="px-3 py-1.5 rounded-xl bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs transition-colors cursor-pointer shadow-xs"
               >
-                Copy Link
+                Copy Code
               </button>
             </div>
           ) : (
@@ -646,280 +633,289 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
       )}
 
       {/* CREATE ROOM MODAL */}
-      <AnimatePresence>
-        {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
-            >
-              <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
-                <Plus className="w-5 h-5 text-[#E195AB]" />
-                <span>Host Global Room</span>
-              </h3>
-              <p className="text-xs text-slate-500 mb-4">
-                Configure your room parameters and invite players from around the world.
-              </p>
-
-              <form onSubmit={handleCreateSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Room Name</label>
-                  <input
-                    type="text"
-                    value={newRoomName}
-                    onChange={(e) => setNewRoomName(e.target.value)}
-                    placeholder={`${playerProfile.name}'s Match`}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/50 border border-[#FFCCE1] text-xs font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Timer Format</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { val: 0, label: '∞ Unlimited' },
-                      { val: 180, label: '3m Blitz' },
-                      { val: 300, label: '5m Rapid' },
-                      { val: 600, label: '10m Classical' },
-                    ].map((tc) => (
-                      <button
-                        type="button"
-                        key={tc.val}
-                        onClick={() => setNewTimeControl(tc.val)}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                          newTimeControl === tc.val
-                            ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
-                            : 'bg-[#FFF5D7]/60 text-slate-700 border-[#FFCCE1]'
-                        }`}
-                      >
-                        {tc.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Your Side Preference</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { val: 'random', label: '🎲 Random' },
-                      { val: 'w', label: '♔ White' },
-                      { val: 'b', label: '♚ Black' },
-                    ].map((side) => (
-                      <button
-                        type="button"
-                        key={side.val}
-                        onClick={() => setNewPreferredSide(side.val as 'w' | 'b' | 'random')}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                          newPreferredSide === side.val
-                            ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
-                            : 'bg-[#FFF5D7]/60 text-slate-700 border-[#FFCCE1]'
-                        }`}
-                      >
-                        {side.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold shadow-md cursor-pointer"
-                  >
-                    Create & Host
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* EDIT PLAYER PROFILE & COUNTRY MODAL */}
-      <AnimatePresence>
-        {showProfileModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
-            >
-              <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
-                <Globe className="w-5 h-5 text-[#E195AB]" />
-                <span>Player Profile & Country Flag</span>
-              </h3>
-              <p className="text-xs text-slate-500 mb-4">
-                Select your name and country flag to represent your nation in online matches.
-              </p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Player Display Name</label>
-                  <input
-                    type="text"
-                    maxLength={20}
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/60 border border-[#FFCCE1] text-xs font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Select Country</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                    {COUNTRIES.map((c) => (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => setEditCountry(c)}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer text-left ${
-                          editCountry.code === c.code
-                            ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
-                            : 'bg-[#FFF5D7]/40 text-slate-700 border-[#FFCCE1] hover:bg-[#FFCCE1]/50'
-                        }`}
-                      >
-                        <span className="text-lg">{c.flag}</span>
-                        <span className="truncate">{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowProfileModal(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveProfile}
-                    className="px-5 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold shadow-md cursor-pointer"
-                  >
-                    Save Profile
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* SUPABASE CLOUD MULTIPLAYER CONFIG MODAL */}
-      <AnimatePresence>
-        {showSupabaseModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-lg p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
-            >
-              <div className="flex items-center justify-between mb-3 border-b border-[#FFCCE1] pb-3">
-                <div className="flex items-center gap-2">
-                  <Database className="w-6 h-6 text-[#E195AB]" />
-                  <div>
-                    <h3 className="text-base font-bold text-slate-800">Supabase Realtime Cloud Settings</h3>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      Powers serverless chess multiplayer on Vercel & custom domain
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs font-mono font-bold bg-[#FFF5D7] text-[#E195AB] border border-[#FFCCE1] px-2.5 py-1 rounded-full">
-                  {supabaseCreds.isConfigured ? 'Connected' : 'Not Configured'}
-                </span>
-              </div>
-
-              <div className="mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1.5">
-                <div className="font-bold flex items-center gap-1.5">
-                  <Cloud className="w-4 h-4 text-amber-600" />
-                  <span>Why use Supabase on Vercel?</span>
-                </div>
-                <p>
-                  Vercel static deployments don't support traditional Node Socket.io connections. By connecting Supabase Realtime, chess rooms work <strong>100% serverlessly</strong> across all browsers without crashing on refresh!
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showCreateModal && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-md p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
+              >
+                <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-[#E195AB]" />
+                  <span>Host Room</span>
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  Configure your room parameters and invite players from around the world.
                 </p>
-              </div>
 
-              <form onSubmit={handleSaveSupabase} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Project URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://your-project.supabase.co"
-                    value={customSupaUrl}
-                    onChange={(e) => setCustomSupaUrl(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/40 border border-[#FFCCE1] text-xs font-mono font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Anon Key</label>
-                  <input
-                    type="text"
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    value={customSupaKey}
-                    onChange={(e) => setCustomSupaKey(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/40 border border-[#FFCCE1] text-xs font-mono text-slate-800 focus:outline-none focus:border-[#E195AB]"
-                  />
-                </div>
-
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-                  <p className="font-bold text-slate-800">💡 Quick Setup for Vercel Deployment:</p>
-                  <p>In your Vercel Dashboard → Project Settings → Environment Variables, add:</p>
-                  <div className="font-mono text-[10px] bg-slate-200/70 p-2 rounded-xl space-y-0.5">
-                    <div>VITE_SUPABASE_URL = https://your-project.supabase.co</div>
-                    <div>VITE_SUPABASE_ANON_KEY = your-anon-key</div>
+                <form onSubmit={handleCreateSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Room Name</label>
+                    <input
+                      type="text"
+                      value={newRoomName}
+                      onChange={(e) => setNewRoomName(e.target.value)}
+                      placeholder={`${playerProfile.name}'s Match`}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/50 border border-[#FFCCE1] text-xs font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
+                    />
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      saveSupabaseCredentials('', '');
-                      setCustomSupaUrl('');
-                      setCustomSupaKey('');
-                      setSupabaseCreds(getSupabaseCredentials());
-                    }}
-                    className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
-                  >
-                    Clear Credentials
-                  </button>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Timer Format</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { val: 0, label: '∞ Unlimited' },
+                        { val: 180, label: '3m Blitz' },
+                        { val: 300, label: '5m Rapid' },
+                        { val: 600, label: '10m Classical' },
+                      ].map((tc) => (
+                        <button
+                          type="button"
+                          key={tc.val}
+                          onClick={() => setNewTimeControl(tc.val)}
+                          className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            newTimeControl === tc.val
+                              ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
+                              : 'bg-[#FFF5D7]/60 text-slate-700 border-[#FFCCE1]'
+                          }`}
+                        >
+                          {tc.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  <div className="flex items-center gap-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Your Side Preference</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { val: 'random', label: '🎲 Random' },
+                        { val: 'w', label: '♔ White' },
+                        { val: 'b', label: '♚ Black' },
+                      ].map((side) => (
+                        <button
+                          type="button"
+                          key={side.val}
+                          onClick={() => setNewPreferredSide(side.val as 'w' | 'b' | 'random')}
+                          className={`p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            newPreferredSide === side.val
+                              ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
+                              : 'bg-[#FFF5D7]/60 text-slate-700 border-[#FFCCE1]'
+                          }`}
+                        >
+                          {side.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => setShowSupabaseModal(false)}
+                      onClick={() => setShowCreateModal(false)}
                       className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
                     >
-                      Close
+                      Cancel
                     </button>
                     <button
                       type="submit"
                       className="px-5 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold shadow-md cursor-pointer"
                     >
-                      Save & Connect
+                      Create & Host
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* EDIT PLAYER PROFILE & COUNTRY MODAL */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showProfileModal && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-md p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
+              >
+                <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-[#E195AB]" />
+                  <span>Player Profile & Country Flag</span>
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  Select your name and country flag to represent your nation in online matches.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Player Display Name</label>
+                    <input
+                      type="text"
+                      maxLength={20}
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/60 border border-[#FFCCE1] text-xs font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Select Country</label>
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                      {COUNTRIES.map((c) => (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => setEditCountry(c)}
+                          className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer text-left ${
+                            editCountry.code === c.code
+                              ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
+                              : 'bg-[#FFF5D7]/40 text-slate-700 border-[#FFCCE1] hover:bg-[#FFCCE1]/50'
+                          }`}
+                        >
+                          <span className="text-lg">{c.flag}</span>
+                          <span className="truncate">{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowProfileModal(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveProfile}
+                      className="px-5 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold shadow-md cursor-pointer"
+                    >
+                      Save Profile
                     </button>
                   </div>
                 </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* SUPABASE CLOUD MULTIPLAYER CONFIG MODAL */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showSupabaseModal && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-lg p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
+              >
+                <div className="flex items-center justify-between mb-3 border-b border-[#FFCCE1] pb-3">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-6 h-6 text-[#E195AB]" />
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800">Supabase Realtime Cloud Settings</h3>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        Powers serverless chess multiplayer on Vercel & custom domain
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-bold bg-[#FFF5D7] text-[#E195AB] border border-[#FFCCE1] px-2.5 py-1 rounded-full">
+                    {supabaseCreds.isConfigured ? 'Connected' : 'Not Configured'}
+                  </span>
+                </div>
+
+                <div className="mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1.5">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <Cloud className="w-4 h-4 text-amber-600" />
+                    <span>Why use Supabase on Vercel?</span>
+                  </div>
+                  <p>
+                    Vercel static deployments don't support traditional Node Socket.io connections. By connecting Supabase Realtime, chess rooms work <strong>100% serverlessly</strong> across all browsers without crashing on refresh!
+                  </p>
+                </div>
+
+                <form onSubmit={handleSaveSupabase} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Project URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://your-project.supabase.co"
+                      value={customSupaUrl}
+                      onChange={(e) => setCustomSupaUrl(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/40 border border-[#FFCCE1] text-xs font-mono font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Anon Key</label>
+                    <input
+                      type="text"
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      value={customSupaKey}
+                      onChange={(e) => setCustomSupaKey(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/40 border border-[#FFCCE1] text-xs font-mono text-slate-800 focus:outline-none focus:border-[#E195AB]"
+                    />
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                    <p className="font-bold text-slate-800">💡 Quick Setup for Vercel Deployment:</p>
+                    <p>In your Vercel Dashboard → Project Settings → Environment Variables, add:</p>
+                    <div className="font-mono text-[10px] bg-slate-200/70 p-2 rounded-xl space-y-0.5">
+                      <div>VITE_SUPABASE_URL = https://your-project.supabase.co</div>
+                      <div>VITE_SUPABASE_ANON_KEY = your-anon-key</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        saveSupabaseCredentials('', '');
+                        setCustomSupaUrl('');
+                        setCustomSupaKey('');
+                        setSupabaseCreds(getSupabaseCredentials());
+                      }}
+                      className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
+                    >
+                      Clear Credentials
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowSupabaseModal(false)}
+                        className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
+                      >
+                        Close
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold shadow-md cursor-pointer"
+                      >
+                        Save & Connect
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </div>
   );

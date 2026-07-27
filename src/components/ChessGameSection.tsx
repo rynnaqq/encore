@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Chess, Square } from 'chess.js';
 import { io, Socket } from 'socket.io-client';
@@ -27,6 +28,7 @@ import {
   Flag,
   Handshake,
   FlagTriangleRight,
+  LogOut,
 } from 'lucide-react';
 import { PieceSVG } from './ChessPieceSet';
 import { OnlineMultiplayerLobby, RoomState, PlayerInfo, ChatMessage } from './OnlineMultiplayerLobby';
@@ -144,11 +146,16 @@ export const ChessGameSection: React.FC = () => {
   const [playerProfile, setPlayerProfile] = useState<PlayerInfo>(() => {
     try {
       const saved = localStorage.getItem('chess_player_profile');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.name && !parsed.name.includes('Grandmaster')) {
+          return parsed;
+        }
+      }
     } catch {}
-    const defaultCountry = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+    const defaultCountry = COUNTRIES[0];
     return {
-      name: `Grandmaster #${Math.floor(1000 + Math.random() * 9000)}`,
+      name: 'Player 1',
       country: defaultCountry.code,
       flag: defaultCountry.flag,
       rating: 1200,
@@ -167,6 +174,16 @@ export const ChessGameSection: React.FC = () => {
 
   // Supabase Realtime Handler Ref
   const supabaseHandlerRef = useRef<SupabaseRoomHandler | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Game over modal
+  const [gameResult, setGameResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (gameResult || (activeRoom?.drawOffer && activeRoom.drawOffer !== yourSide)) {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [gameResult, activeRoom?.drawOffer, yourSide]);
 
   // Helper to sync room updates from Supabase Realtime
   const handleSupabaseRoomUpdate = useCallback((room: RoomState) => {
@@ -226,9 +243,6 @@ export const ChessGameSection: React.FC = () => {
 
   // Promotion state
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
-
-  // Game over modal
-  const [gameResult, setGameResult] = useState<string | null>(null);
 
   // Audio effect triggers using Web Audio API for zero external dependency lag
   const playAudioEffect = useCallback((type: 'move' | 'capture' | 'check' | 'gameover') => {
@@ -739,7 +753,7 @@ export const ChessGameSection: React.FC = () => {
           makeMove(aiMove.from as Square, aiMove.to as Square, aiMove.promotion || 'q');
         }
         setIsThinking(false);
-      }, 400);
+      }, 120);
       return () => clearTimeout(timer);
     }
   }, [game, gameMode, playerColor, gameResult, getAIMove, makeMove]);
@@ -962,7 +976,7 @@ export const ChessGameSection: React.FC = () => {
       <div
         key={squareName}
         onClick={() => handleSquareClick(squareName)}
-        className={`relative aspect-square flex items-center justify-center cursor-pointer select-none transition-colors ${
+        className={`relative aspect-square flex items-center justify-center cursor-pointer select-none transition-[background-color] duration-75 ${
           isDark ? sqTheme.dark : sqTheme.light
         } ${isSelected ? sqTheme.selected : ''} ${
           isLastMoveFrom || isLastMoveTo ? sqTheme.lastMove : ''
@@ -994,10 +1008,10 @@ export const ChessGameSection: React.FC = () => {
         {piece && (
           <motion.div
             key={`${squareName}-${piece.type}-${piece.color}`}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.15 }}
-            className="w-[85%] h-[85%] z-10"
+            initial={{ scale: 0.92 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.05, ease: 'easeOut' }}
+            className="w-[85%] h-[85%] z-10 transform-gpu will-change-transform flex items-center justify-center select-none"
           >
             <PieceSVG type={piece.type} color={piece.color} />
           </motion.div>
@@ -1018,7 +1032,7 @@ export const ChessGameSection: React.FC = () => {
   };
 
   return (
-    <section className="py-12 sm:py-16 min-h-screen flex flex-col justify-center relative overflow-hidden">
+    <section ref={sectionRef} className="py-12 sm:py-16 min-h-screen flex flex-col justify-center relative overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
         
         {/* Header Title */}
@@ -1304,7 +1318,7 @@ export const ChessGameSection: React.FC = () => {
             ) : gameMode === 'online' ? (
               <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold flex items-center gap-1">
                 <Globe className="w-3 h-3" />
-                Global Online
+                Online Multiplayer
               </span>
             ) : (
               <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold">
@@ -1341,8 +1355,8 @@ export const ChessGameSection: React.FC = () => {
                     <span>
                       {gameMode === 'online' && activeRoom
                         ? isFlipped
-                          ? activeRoom.whitePlayer?.name || 'Waiting for White...'
-                          : activeRoom.blackPlayer?.name || 'Waiting for Black...'
+                          ? activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
+                          : activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
                         : gameMode === 'ai'
                         ? playerColor === 'w'
                           ? `Bot (${difficulty})`
@@ -1435,8 +1449,8 @@ export const ChessGameSection: React.FC = () => {
                     <span>
                       {gameMode === 'online' && activeRoom
                         ? isFlipped
-                          ? activeRoom.blackPlayer?.name || 'Waiting for Black...'
-                          : activeRoom.whitePlayer?.name || 'Waiting for White...'
+                          ? activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
+                          : activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
                         : gameMode === 'ai'
                         ? playerColor === 'w'
                           ? 'You'
@@ -1509,7 +1523,7 @@ export const ChessGameSection: React.FC = () => {
 
               {/* Buttons Cluster */}
               {gameMode === 'online' ? (
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => {
                       if (supabaseHandlerRef.current) {
@@ -1520,7 +1534,7 @@ export const ChessGameSection: React.FC = () => {
                       }
                     }}
                     disabled={!activeRoom || game.isGameOver()}
-                    className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 disabled:opacity-40 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Flag className="w-3.5 h-3.5" />
                     <span>Resign</span>
@@ -1536,10 +1550,28 @@ export const ChessGameSection: React.FC = () => {
                       }
                     }}
                     disabled={!activeRoom || game.isGameOver()}
-                    className="px-3 py-2 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1] text-[#E195AB] text-xs font-bold hover:bg-[#FFCCE1] disabled:opacity-40 transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1] text-[#E195AB] text-[11px] font-bold hover:bg-[#FFCCE1] disabled:opacity-40 transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer"
                   >
                     <Handshake className="w-3.5 h-3.5" />
-                    <span>Offer Draw</span>
+                    <span>Draw</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (supabaseHandlerRef.current) {
+                        supabaseHandlerRef.current.leaveRoom();
+                        supabaseHandlerRef.current = null;
+                      }
+                      if (socket && activeRoom) {
+                        socket.emit('leave_room', { roomId: activeRoom.roomId });
+                      }
+                      setActiveRoom(null);
+                      setYourSide(null);
+                    }}
+                    className="px-2.5 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-bold hover:bg-rose-100 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Leave</span>
                   </button>
                 </div>
               ) : (
@@ -1607,88 +1639,172 @@ export const ChessGameSection: React.FC = () => {
         </div>
 
         {/* Promotion Dialog Modal */}
-        <AnimatePresence>
-          {promotionPending && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
-            >
+        {typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {promotionPending && (
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 shadow-2xl max-w-sm w-full text-center space-y-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
               >
-                <h3 className="font-sans font-bold text-lg text-slate-800">
-                  Promote Pawn
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Select a piece to promote your pawn to:
-                </p>
-                <div className="grid grid-cols-4 gap-3 pt-2">
-                  {[
-                    { type: 'q', label: 'Queen' },
-                    { type: 'r', label: 'Rook' },
-                    { type: 'b', label: 'Bishop' },
-                    { type: 'n', label: 'Knight' },
-                  ].map((item) => (
-                    <button
-                      key={item.type}
-                      onClick={() => handlePromotionChoice(item.type)}
-                      className="p-3 rounded-2xl bg-[#FFF5D7] border border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFCCE1] transition-all flex flex-col items-center gap-1 cursor-pointer"
-                    >
-                      <div className="w-8 h-8">
-                        <PieceSVG type={item.type} color={game.turn()} />
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-700">{item.label}</span>
-                    </button>
-                  ))}
-                </div>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 shadow-2xl max-w-sm w-full text-center space-y-4"
+                >
+                  <h3 className="font-sans font-bold text-lg text-slate-800">
+                    Promote Pawn
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Select a piece to promote your pawn to:
+                  </p>
+                  <div className="grid grid-cols-4 gap-3 pt-2">
+                    {[
+                      { type: 'q', label: 'Queen' },
+                      { type: 'r', label: 'Rook' },
+                      { type: 'b', label: 'Bishop' },
+                      { type: 'n', label: 'Knight' },
+                    ].map((item) => (
+                      <button
+                        key={item.type}
+                        onClick={() => handlePromotionChoice(item.type)}
+                        className="p-3 rounded-2xl bg-[#FFF5D7] border border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFCCE1] transition-all flex flex-col items-center gap-1 cursor-pointer"
+                      >
+                        <div className="w-8 h-8">
+                          <PieceSVG type={item.type} color={game.turn()} />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-700">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
+        {/* Draw Offer Pop-Up Modal */}
+        {typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {activeRoom?.drawOffer && activeRoom.drawOffer !== yourSide && !activeRoom.isGameOver && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
+                >
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center text-[#E195AB]">
+                    <Handshake className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-sans font-extrabold text-2xl text-slate-800">
+                      🤝 Tawaran Remis!
+                    </h3>
+                    <p className="text-sm font-semibold text-slate-600 leading-relaxed">
+                      Lawan Anda (
+                      <span className="font-bold text-[#E195AB]">
+                        {activeRoom.drawOffer === 'w'
+                          ? activeRoom.whitePlayer?.name || 'Pemain Putih'
+                          : activeRoom.blackPlayer?.name || 'Pemain Hitam'}
+                      </span>
+                      ) menawarkan hasil remis. Apakah Anda menerima?
+                    </p>
+                  </div>
+                  <div className="pt-2 grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        if (supabaseHandlerRef.current) {
+                          supabaseHandlerRef.current.declineDraw();
+                        }
+                        if (socket && activeRoom) {
+                          socket.emit('respond_draw', { roomId: activeRoom.roomId, accept: false });
+                        }
+                      }}
+                      className="py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-all cursor-pointer"
+                    >
+                      Tolak
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (supabaseHandlerRef.current) {
+                          supabaseHandlerRef.current.acceptDraw();
+                        }
+                        if (socket && activeRoom) {
+                          socket.emit('respond_draw', { roomId: activeRoom.roomId, accept: true });
+                        }
+                      }}
+                      className="py-3 rounded-2xl bg-[#E195AB] text-white font-bold text-sm hover:bg-[#d88299] transition-all shadow-md cursor-pointer"
+                    >
+                      Terima Remis
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* Game Result Modal */}
-        <AnimatePresence>
-          {gameResult && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
-            >
+        {typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {gameResult && (
               <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
               >
-                <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center text-[#E195AB]">
-                  <Sparkles className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-sans font-extrabold text-2xl text-slate-800">
-                    Game Over
-                  </h3>
-                  <p className="text-base font-bold text-[#E195AB]">
-                    {gameResult}
-                  </p>
-                </div>
-                <div className="pt-3 flex gap-3">
-                  <button
-                    onClick={resetGame}
-                    className="w-full py-3 rounded-2xl bg-[#E195AB] text-white font-bold text-sm hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all shadow-md cursor-pointer"
-                  >
-                    Play Again
-                  </button>
-                </div>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
+                >
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center text-[#E195AB]">
+                    <Trophy className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-sans font-extrabold text-2xl text-slate-800">
+                      Game Over!
+                    </h3>
+                    <p className="text-base font-bold text-[#E195AB] leading-relaxed">
+                      {gameResult}
+                    </p>
+                  </div>
+                  <div className="pt-3 flex gap-3">
+                    <button
+                      onClick={() => {
+                        resetGame();
+                        if (gameMode === 'online') {
+                          if (supabaseHandlerRef.current) {
+                            supabaseHandlerRef.current.requestRematch();
+                          }
+                          if (socket && activeRoom) {
+                            socket.emit('request_rematch', { roomId: activeRoom.roomId });
+                          }
+                        }
+                      }}
+                      className="w-full py-3 rounded-2xl bg-[#E195AB] text-white font-bold text-sm hover:bg-[#d88299] transition-all shadow-md cursor-pointer"
+                    >
+                      Play Again / Rematch
+                    </button>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
       </div>
     </section>

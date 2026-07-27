@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Terminal, Code, Cpu, CheckCircle2, Sparkles, Award, Heart, Mail, ExternalLink, Zap } from 'lucide-react';
 
@@ -42,18 +43,18 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
     },
   ];
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           {/* Backdrop Blur Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'linear' }}
+            transition={{ duration: 0.2, ease: 'linear' }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm cursor-pointer transform-gpu"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md cursor-pointer transform-gpu z-[99999]"
           />
 
           {/* Pop-Up Modal Container */}
@@ -61,8 +62,8 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             initial={{ scale: 0.96, opacity: 0, y: 16 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: 12 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-xl max-h-[90vh] bg-white border-2 border-[#FFCCE1] rounded-3xl shadow-2xl shadow-pink-200/40 overflow-hidden z-10 my-auto text-slate-800 flex flex-col gpu-smooth transform-gpu"
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-xl max-h-[90vh] bg-white border-2 border-[#FFCCE1] rounded-3xl shadow-2xl overflow-hidden z-[100000] my-auto text-slate-800 flex flex-col gpu-smooth transform-gpu"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Decorative Banner */}
@@ -319,4 +320,6 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       )}
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 };

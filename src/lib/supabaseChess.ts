@@ -9,6 +9,7 @@ export interface SupabaseRoomHandler {
   resignGame: () => void;
   offerDraw: () => void;
   acceptDraw: () => void;
+  declineDraw: () => void;
   requestRematch: () => void;
   leaveRoom: () => void;
   syncState: (roomState: RoomState) => void;
@@ -106,6 +107,39 @@ export function subscribeSupabaseChessRoom({
     currentRoomState.whitePlayer = white;
     currentRoomState.blackPlayer = black;
     currentRoomState.spectators = spectators;
+
+    // Check if player disconnected during active game
+    if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
+      if (white && !presentUsers.some((u) => u.id === white?.id || u.name === white?.name)) {
+        currentRoomState.isGameOver = true;
+        currentRoomState.winner = 'b';
+        const leaverName = white.name;
+        const winnerName = black?.name || 'Pemain Hitam';
+        const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+        currentRoomState.gameResult = resultText;
+        currentRoomState.messages.push({
+          id: `sys-${Date.now()}`,
+          senderName: 'System',
+          text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+          timestamp: Date.now(),
+          isSystem: true,
+        });
+      } else if (black && !presentUsers.some((u) => u.id === black?.id || u.name === black?.name)) {
+        currentRoomState.isGameOver = true;
+        currentRoomState.winner = 'w';
+        const leaverName = black.name;
+        const winnerName = white?.name || 'Pemain Putih';
+        const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+        currentRoomState.gameResult = resultText;
+        currentRoomState.messages.push({
+          id: `sys-${Date.now()}`,
+          senderName: 'System',
+          text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+          timestamp: Date.now(),
+          isSystem: true,
+        });
+      }
+    }
 
     // Determine my side
     const myId = playerProfile.id || playerProfile.name;
@@ -228,6 +262,17 @@ export function subscribeSupabaseChessRoom({
       });
       onRoomUpdate({ ...currentRoomState });
     })
+    .on('broadcast', { event: 'DECLINE_DRAW' }, () => {
+      currentRoomState.drawOffer = null;
+      currentRoomState.messages.push({
+        id: `sys-${Date.now()}`,
+        senderName: 'System',
+        text: `❌ Draw offer declined. Game continues!`,
+        timestamp: Date.now(),
+        isSystem: true,
+      });
+      onRoomUpdate({ ...currentRoomState });
+    })
     .on('broadcast', { event: 'REMATCH' }, () => {
       currentRoomState.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
       currentRoomState.moveHistory = [];
@@ -244,6 +289,28 @@ export function subscribeSupabaseChessRoom({
         isSystem: true,
       });
       onRoomUpdate({ ...currentRoomState });
+    })
+    .on('broadcast', { event: 'PLAYER_LEFT' }, ({ payload }) => {
+      if (payload && !currentRoomState.isGameOver) {
+        currentRoomState.isGameOver = true;
+        const leaverSide = payload.leaverSide;
+        const leaverName = payload.leaverName || (leaverSide === 'w' ? 'Pemain Putih' : 'Pemain Hitam');
+        const winnerSide = leaverSide === 'w' ? 'b' : 'w';
+        const winnerPlayer = winnerSide === 'w' ? currentRoomState.whitePlayer : currentRoomState.blackPlayer;
+        const winnerName = winnerPlayer?.name || (winnerSide === 'w' ? 'Pemain Putih' : 'Pemain Hitam');
+
+        currentRoomState.winner = winnerSide;
+        const resultText = `🎉 ${leaverName} telah meninggalkan pertandingan! Selamat kepada ${winnerName} atas kemenangannya!`;
+        currentRoomState.gameResult = resultText;
+        currentRoomState.messages.push({
+          id: `sys-${Date.now()}`,
+          senderName: 'System',
+          text: `🏆 ${leaverName} telah meninggalkan room. Selamat kepada ${winnerName}, Anda menang!`,
+          timestamp: Date.now(),
+          isSystem: true,
+        });
+        onRoomUpdate({ ...currentRoomState });
+      }
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
@@ -307,6 +374,13 @@ export function subscribeSupabaseChessRoom({
         payload: {},
       });
     },
+    declineDraw: () => {
+      channel.send({
+        type: 'broadcast',
+        event: 'DECLINE_DRAW',
+        payload: {},
+      });
+    },
     requestRematch: () => {
       channel.send({
         type: 'broadcast',
@@ -315,6 +389,19 @@ export function subscribeSupabaseChessRoom({
       });
     },
     leaveRoom: () => {
+      if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
+        const myId = playerProfile.id || playerProfile.name;
+        const leaverSide =
+          currentRoomState.whitePlayer?.id === myId || currentRoomState.whitePlayer?.name === playerProfile.name
+            ? 'w'
+            : 'b';
+        const leaverName = playerProfile.name || (leaverSide === 'w' ? 'Player 1' : 'Player 2');
+        channel.send({
+          type: 'broadcast',
+          event: 'PLAYER_LEFT',
+          payload: { leaverSide, leaverName },
+        });
+      }
       channel.untrack();
       channel.unsubscribe();
     },
