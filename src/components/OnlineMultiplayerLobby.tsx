@@ -22,8 +22,12 @@ import {
   Shield,
   ArrowRight,
   Settings,
+  Database,
+  Cloud,
+  ExternalLink,
 } from 'lucide-react';
 import { COUNTRIES, CountryOption } from '../data/countries';
+import { getSupabaseCredentials, saveSupabaseCredentials } from '../lib/supabaseClient';
 
 export interface PlayerInfo {
   id?: string;
@@ -127,8 +131,21 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
     COUNTRIES.find((c) => c.code === playerProfile.country) || COUNTRIES[0]
   );
 
-  // Chat input
+  // Chat input state
   const [chatInput, setChatInput] = useState('');
+
+  // Supabase state
+  const [supabaseCreds, setSupabaseCreds] = useState(getSupabaseCredentials());
+  const [showSupabaseModal, setShowSupabaseModal] = useState(false);
+  const [customSupaUrl, setCustomSupaUrl] = useState(supabaseCreds.url);
+  const [customSupaKey, setCustomSupaKey] = useState(supabaseCreds.key);
+
+  const handleSaveSupabase = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveSupabaseCredentials(customSupaUrl.trim(), customSupaKey.trim());
+    setSupabaseCreds(getSupabaseCredentials());
+    setShowSupabaseModal(false);
+  };
 
   // Fetch lobby rooms when socket connects / refreshes
   useEffect(() => {
@@ -218,18 +235,30 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
             />
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-800 flex items-center gap-2">
+            <div className="text-xs font-bold text-slate-800 flex flex-wrap items-center gap-2">
               <span>Global Online Multiplayer</span>
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wide ${
                   isConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
                 }`}
               >
-                {isConnected ? 'Live Connected' : 'Connecting...'}
+                {isConnected ? 'Server Connected' : 'Serverless Mode'}
               </span>
+              <button
+                type="button"
+                onClick={() => setShowSupabaseModal(true)}
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  supabaseCreds.isConfigured
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                    : 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
+                }`}
+              >
+                <Database className="w-3 h-3 text-[#E195AB]" />
+                <span>{supabaseCreds.isConfigured ? 'Supabase Realtime Active' : 'Setup Supabase Cloud'}</span>
+              </button>
             </div>
             <p className="text-[11px] text-slate-500 font-medium">
-              Play real-time chess with players across 30+ countries!
+              Play real-time chess via Express Server or Supabase Cloud on Vercel!
             </p>
           </div>
         </div>
@@ -788,6 +817,110 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
           </div>
         )}
       </AnimatePresence>
+
+      {/* SUPABASE CLOUD MULTIPLAYER CONFIG MODAL */}
+      <AnimatePresence>
+        {showSupabaseModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-lg p-6 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1]"
+            >
+              <div className="flex items-center justify-between mb-3 border-b border-[#FFCCE1] pb-3">
+                <div className="flex items-center gap-2">
+                  <Database className="w-6 h-6 text-[#E195AB]" />
+                  <div>
+                    <h3 className="text-base font-bold text-slate-800">Supabase Realtime Cloud Settings</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Powers serverless chess multiplayer on Vercel & custom domain
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold bg-[#FFF5D7] text-[#E195AB] border border-[#FFCCE1] px-2.5 py-1 rounded-full">
+                  {supabaseCreds.isConfigured ? 'Connected' : 'Not Configured'}
+                </span>
+              </div>
+
+              <div className="mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Cloud className="w-4 h-4 text-amber-600" />
+                  <span>Why use Supabase on Vercel?</span>
+                </div>
+                <p>
+                  Vercel static deployments don't support traditional Node Socket.io connections. By connecting Supabase Realtime, chess rooms work <strong>100% serverlessly</strong> across all browsers without crashing on refresh!
+                </p>
+              </div>
+
+              <form onSubmit={handleSaveSupabase} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Project URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://your-project.supabase.co"
+                    value={customSupaUrl}
+                    onChange={(e) => setCustomSupaUrl(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/40 border border-[#FFCCE1] text-xs font-mono font-bold text-slate-800 focus:outline-none focus:border-[#E195AB]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Supabase Anon Key</label>
+                  <input
+                    type="text"
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={customSupaKey}
+                    onChange={(e) => setCustomSupaKey(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#FFF5D7]/40 border border-[#FFCCE1] text-xs font-mono text-slate-800 focus:outline-none focus:border-[#E195AB]"
+                  />
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                  <p className="font-bold text-slate-800">💡 Quick Setup for Vercel Deployment:</p>
+                  <p>In your Vercel Dashboard → Project Settings → Environment Variables, add:</p>
+                  <div className="font-mono text-[10px] bg-slate-200/70 p-2 rounded-xl space-y-0.5">
+                    <div>VITE_SUPABASE_URL = https://your-project.supabase.co</div>
+                    <div>VITE_SUPABASE_ANON_KEY = your-anon-key</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      saveSupabaseCredentials('', '');
+                      setCustomSupaUrl('');
+                      setCustomSupaKey('');
+                      setSupabaseCreds(getSupabaseCredentials());
+                    }}
+                    className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
+                  >
+                    Clear Credentials
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowSupabaseModal(false)}
+                      className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 cursor-pointer"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-[#E195AB] hover:bg-[#d88299] text-white text-xs font-bold shadow-md cursor-pointer"
+                    >
+                      Save & Connect
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

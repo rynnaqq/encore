@@ -29,8 +29,10 @@ import {
   FlagTriangleRight,
 } from 'lucide-react';
 import { PieceSVG } from './ChessPieceSet';
-import { OnlineMultiplayerLobby, RoomState, PlayerInfo } from './OnlineMultiplayerLobby';
+import { OnlineMultiplayerLobby, RoomState, PlayerInfo, ChatMessage } from './OnlineMultiplayerLobby';
 import { COUNTRIES } from '../data/countries';
+import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode } from '../lib/supabaseChess';
+import { getSupabaseCredentials } from '../lib/supabaseClient';
 
 type GameMode = 'ai' | 'pass' | 'online';
 type AIDifficulty = 'easy' | 'medium' | 'hard';
@@ -162,6 +164,65 @@ export const ChessGameSection: React.FC = () => {
       socket.emit('update_profile', p);
     }
   }, [socket, isConnected]);
+
+  // Supabase Realtime Handler Ref
+  const supabaseHandlerRef = useRef<SupabaseRoomHandler | null>(null);
+
+  // Helper to sync room updates from Supabase Realtime
+  const handleSupabaseRoomUpdate = useCallback((room: RoomState) => {
+    setActiveRoom(room);
+    const newChess = new Chess(room.fen);
+    setGame(newChess);
+    setWhiteTime(room.whiteTime);
+    setBlackTime(room.blackTime);
+    if (room.gameResult) setGameResult(room.gameResult);
+
+    const historyItems: MoveHistoryItem[] = room.moveHistory.map((m) => ({
+      san: m.san,
+      from: m.from as Square,
+      to: m.to as Square,
+      piece: 'p',
+      color: m.color,
+    }));
+    setMoveHistory(historyItems);
+  }, []);
+
+  const handleSupabaseChatMessage = useCallback((msg: ChatMessage) => {
+    // Message already appended to activeRoom.messages in supabaseChess handler
+  }, []);
+
+  // Join or host room via Supabase Realtime
+  const handleJoinSupabaseRoom = useCallback(
+    (code: string) => {
+      const supaCreds = getSupabaseCredentials();
+      if (!supaCreds.isConfigured) return;
+
+      if (supabaseHandlerRef.current) {
+        supabaseHandlerRef.current.leaveRoom();
+        supabaseHandlerRef.current = null;
+      }
+
+      const handler = subscribeSupabaseChessRoom({
+        roomId: code,
+        playerProfile,
+        onRoomUpdate: handleSupabaseRoomUpdate,
+        onChatMessage: handleSupabaseChatMessage,
+        onYourSideAssigned: (side) => {
+          setYourSide(side);
+          if (side === 'b') setIsFlipped(true);
+          else if (side === 'w') setIsFlipped(false);
+        },
+        onError: (err) => {
+          console.warn('Supabase Realtime notice:', err);
+        },
+      });
+
+      if (handler) {
+        supabaseHandlerRef.current = handler;
+      }
+    },
+    [playerProfile, handleSupabaseRoomUpdate, handleSupabaseChatMessage]
+  );
 
   // Promotion state
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
@@ -521,19 +582,79 @@ export const ChessGameSection: React.FC = () => {
   // Execute a move on the chess instance
   const makeMove = useCallback(
     (from: Square, to: Square, promotionPiece = 'q') => {
-      // If in online mode, delegate move to socket server
+      // If in online mode, delegate move to Supabase or Socket server
       if (gameMode === 'online') {
-        if (!socket || !activeRoom) return false;
+        if (!activeRoom) return false;
         if (yourSide !== activeRoom.turn) return false;
 
-        socket.emit('make_move', {
-          roomId: activeRoom.roomId,
-          move: { from, to, promotion: promotionPiece },
-        });
+        // If Supabase Realtime Handler is active
+        if (supabaseHandlerRef.current) {
+          try {
+            const moveResult = game.move({ from, to, promotion: promotionPiece });
+            if (moveResult) {
+              const newGame = new Chess(game.fen());
+              setGame(newGame);
+              setSelectedSquare(null);
+              setPossibleMoves([]);
+              setLastMove({ from, to });
+              setHintSquare(null);
 
-        setSelectedSquare(null);
-        setPossibleMoves([]);
-        return true;
+              setMoveHistory((prev) => [
+                ...prev,
+                {
+                  san: moveResult.san,
+                  from,
+                  to,
+                  piece: moveResult.piece,
+                  color: moveResult.color,
+                  captured: moveResult.captured,
+                },
+              ]);
+
+              if (newGame.isCheckmate()) {
+                playAudioEffect('gameover');
+              } else if (newGame.inCheck()) {
+                playAudioEffect('check');
+              } else if (moveResult.captured) {
+                playAudioEffect('capture');
+              } else {
+                playAudioEffect('move');
+              }
+
+              supabaseHandlerRef.current.makeMove({
+                from,
+                to,
+                promotion: promotionPiece,
+                fen: newGame.fen(),
+                san: moveResult.san,
+                color: moveResult.color,
+              });
+
+              if (socket) {
+                socket.emit('make_move', {
+                  roomId: activeRoom.roomId,
+                  move: { from, to, promotion: promotionPiece },
+                });
+              }
+              return true;
+            }
+          } catch {
+            return false;
+          }
+        }
+
+        // Socket.IO fallback
+        if (socket) {
+          socket.emit('make_move', {
+            roomId: activeRoom.roomId,
+            move: { from, to, promotion: promotionPiece },
+          });
+          setSelectedSquare(null);
+          setPossibleMoves([]);
+          return true;
+        }
+
+        return false;
       }
 
       try {
@@ -1099,21 +1220,55 @@ export const ChessGameSection: React.FC = () => {
             yourSide={yourSide}
             playerProfile={playerProfile}
             onUpdateProfile={handleUpdateProfile}
-            onCreateRoom={(opts) => socket?.emit('create_room', { player: playerProfile, ...opts })}
-            onJoinRoom={(code) => socket?.emit('join_room', { roomId: code, player: playerProfile })}
-            onQuickMatch={() => socket?.emit('quick_match', { player: playerProfile })}
+            onCreateRoom={(opts) => {
+              const supaCreds = getSupabaseCredentials();
+              if (supaCreds.isConfigured) {
+                const code = generateRoomCode();
+                handleJoinSupabaseRoom(code);
+              }
+              if (socket) {
+                socket.emit('create_room', { player: playerProfile, ...opts });
+              }
+            }}
+            onJoinRoom={(code) => {
+              const supaCreds = getSupabaseCredentials();
+              if (supaCreds.isConfigured) {
+                handleJoinSupabaseRoom(code);
+              }
+              if (socket) {
+                socket.emit('join_room', { roomId: code, player: playerProfile });
+              }
+            }}
+            onQuickMatch={() => {
+              const supaCreds = getSupabaseCredentials();
+              if (supaCreds.isConfigured) {
+                const code = '123456';
+                handleJoinSupabaseRoom(code);
+              }
+              if (socket) {
+                socket.emit('quick_match', { player: playerProfile });
+              }
+            }}
             onLeaveRoom={() => {
-              if (activeRoom) {
-                socket?.emit('leave_room', { roomId: activeRoom.roomId });
+              if (supabaseHandlerRef.current) {
+                supabaseHandlerRef.current.leaveRoom();
+                supabaseHandlerRef.current = null;
+              }
+              if (socket && activeRoom) {
+                socket.emit('leave_room', { roomId: activeRoom.roomId });
               }
               setActiveRoom(null);
               setYourSide(null);
             }}
             onSendChat={(text) => {
-              if (activeRoom) {
-                socket?.emit('send_chat', { roomId: activeRoom.roomId, text });
+              if (supabaseHandlerRef.current) {
+                supabaseHandlerRef.current.sendChat(text);
+              }
+              if (socket && activeRoom) {
+                socket.emit('send_chat', { roomId: activeRoom.roomId, text });
               }
             }}
+
           />
         )}
 
@@ -1357,8 +1512,11 @@ export const ChessGameSection: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     onClick={() => {
-                      if (activeRoom) {
-                        socket?.emit('resign_game', { roomId: activeRoom.roomId });
+                      if (supabaseHandlerRef.current) {
+                        supabaseHandlerRef.current.resignGame();
+                      }
+                      if (activeRoom && socket) {
+                        socket.emit('resign_game', { roomId: activeRoom.roomId });
                       }
                     }}
                     disabled={!activeRoom || game.isGameOver()}
@@ -1370,8 +1528,11 @@ export const ChessGameSection: React.FC = () => {
 
                   <button
                     onClick={() => {
-                      if (activeRoom) {
-                        socket?.emit('offer_draw', { roomId: activeRoom.roomId });
+                      if (supabaseHandlerRef.current) {
+                        supabaseHandlerRef.current.offerDraw();
+                      }
+                      if (activeRoom && socket) {
+                        socket.emit('offer_draw', { roomId: activeRoom.roomId });
                       }
                     }}
                     disabled={!activeRoom || game.isGameOver()}
