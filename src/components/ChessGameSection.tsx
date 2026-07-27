@@ -186,7 +186,8 @@ export const ChessGameSection: React.FC = () => {
   });
 
   const handleUpdateProfile = useCallback((name: string, country: string) => {
-    const p: PlayerInfo = { ...playerProfile, name, country };
+    const flag = COUNTRIES.find(c => c.code === country)?.flag || COUNTRIES[0].flag;
+    const p: PlayerInfo = { ...playerProfile, name, country, flag };
     setPlayerProfile(p);
     try {
       localStorage.setItem('chess_player_profile', JSON.stringify(p));
@@ -1093,15 +1094,12 @@ export const ChessGameSection: React.FC = () => {
 
         {/* Piece Icon */}
         {piece && (
-          <motion.div
+          <div
             key={`${squareName}-${piece.type}-${piece.color}`}
-            initial={{ scale: 0.92 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.05, ease: 'easeOut' }}
-            className="w-[85%] h-[85%] z-10 transform-gpu will-change-transform flex items-center justify-center select-none"
+            className="w-[85%] h-[85%] z-10 flex items-center justify-center select-none"
           >
             <PieceSVG type={piece.type} color={piece.color} />
-          </motion.div>
+          </div>
         )}
 
         {/* Possible Move Indicator */}

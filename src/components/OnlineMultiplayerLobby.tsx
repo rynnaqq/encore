@@ -301,8 +301,8 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                         <div className="font-bold text-xs text-slate-800">{r.roomName || 'Unnamed Room'}</div>
                         <div className="text-[10px] text-slate-500">{r.timeControl} min • {r.playersCount}/2 Players</div>
                       </div>
-                      <button onClick={() => onJoinRoom(r.roomId)} disabled={r.playersCount >= 2} className="px-3 py-1.5 bg-[#FFF5D7] text-[#d88299] font-bold text-[10px] rounded-lg disabled:opacity-50">
-                        {r.playersCount >= 2 ? 'Full' : 'Join'}
+                      <button onClick={() => onJoinRoom(r.roomId)} className="px-3 py-1.5 bg-[#FFF5D7] text-[#d88299] font-bold text-[10px] rounded-lg hover:bg-[#ffe3ea] transition-colors">
+                        {r.playersCount >= 2 ? 'Spectate' : 'Join'}
                       </button>
                     </div>
                   ))
