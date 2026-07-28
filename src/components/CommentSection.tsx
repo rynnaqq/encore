@@ -78,9 +78,12 @@ export const CommentSection: React.FC = () => {
         setText('');
         setPhotoBase64(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
+      } else {
+        alert('Failed to post comment. Image might be too large.');
       }
     } catch (error) {
       console.error('Error posting comment:', error);
+      alert('Failed to post comment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
