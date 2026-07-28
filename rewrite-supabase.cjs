@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dices, Trophy, Users, Plus, ChevronLeft, Settings, Copy, Check, UsersRound, Send, RotateCcw, User, ArrowRight } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -86,7 +88,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
        return null;
     }
 
-    const newChannel = supabase.channel(`room:${roomId}`, {
+    const newChannel = supabase.channel(\`room:\${roomId}\`, {
       config: {
         broadcast: { ack: false },
         presence: { key: myId }
@@ -103,7 +105,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
           const currentRoom = { ...roomRef.current };
           if (currentRoom.players.length < 4 && !currentRoom.isStarted && !currentRoom.players.find(p => p.id === payload.id)) {
             currentRoom.players.push(payload);
-            currentRoom.logs.push(`${payload.name} joined the room.`);
+            currentRoom.logs.push(\`\${payload.name} joined the room.\`);
             setRoom(currentRoom);
             // Must use new state for broadcast
             if (newChannel) {
@@ -123,7 +125,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
            if (idx !== -1) {
              const leaver = currentRoom.players[idx];
              currentRoom.players.splice(idx, 1);
-             currentRoom.logs.push(`${leaver.name} left the room.`);
+             currentRoom.logs.push(\`\${leaver.name} left the room.\`);
              if (currentRoom.isStarted && currentRoom.currentPlayerIndex >= currentRoom.players.length) {
                 currentRoom.currentPlayerIndex = 0;
              }
@@ -265,9 +267,9 @@ export const SnakeAndLaddersSection: React.FC = () => {
     
     if (newPos > TOTAL_CELLS) {
       newPos = TOTAL_CELLS - (newPos - TOTAL_CELLS);
-      currentRoom.logs.push(`${currentPlayer.name} rolled ${roll} but bounced back to ${newPos}`);
+      currentRoom.logs.push(\`\${currentPlayer.name} rolled \${roll} but bounced back to \${newPos}\`);
     } else {
-      currentRoom.logs.push(`${currentPlayer.name} rolled ${roll} and moved to ${newPos}`);
+      currentRoom.logs.push(\`\${currentPlayer.name} rolled \${roll} and moved to \${newPos}\`);
     }
 
     if (SNAKES_AND_LADDERS[newPos]) {
@@ -277,11 +279,11 @@ export const SnakeAndLaddersSection: React.FC = () => {
         if (!roomRef.current) return;
         const delayedRoom = { ...roomRef.current };
         delayedRoom.players[delayedRoom.currentPlayerIndex].position = dest;
-        delayedRoom.logs.push(`${currentPlayer.name} hit a ${isLadder ? 'ladder' : 'snake'}! Moved to ${dest}`);
+        delayedRoom.logs.push(\`\${currentPlayer.name} hit a \${isLadder ? 'ladder' : 'snake'}! Moved to \${dest}\`);
         
         if (dest === TOTAL_CELLS) {
           delayedRoom.winnerId = currentPlayer.id;
-          delayedRoom.logs.push(`${currentPlayer.name} wins!`);
+          delayedRoom.logs.push(\`\${currentPlayer.name} wins!\`);
         } else {
           delayedRoom.currentPlayerIndex = (delayedRoom.currentPlayerIndex + 1) % delayedRoom.players.length;
         }
@@ -292,7 +294,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
       currentRoom.players[currentRoom.currentPlayerIndex].position = newPos;
       if (newPos === TOTAL_CELLS) {
         currentRoom.winnerId = currentPlayer.id;
-        currentRoom.logs.push(`${currentPlayer.name} wins!`);
+        currentRoom.logs.push(\`\${currentPlayer.name} wins!\`);
       } else {
         currentRoom.currentPlayerIndex = (currentRoom.currentPlayerIndex + 1) % currentRoom.players.length;
       }
@@ -358,7 +360,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
               <button
                 key={c}
                 onClick={() => setPlayerColor(c)}
-                className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center ${playerColor === c ? 'scale-110 shadow-md ring-2 ring-offset-2' : 'hover:scale-105'}`}
+                className={\`w-10 h-10 rounded-xl transition-all flex items-center justify-center \${playerColor === c ? 'scale-110 shadow-md ring-2 ring-offset-2' : 'hover:scale-105'}\`}
                 style={{ backgroundColor: c, ringColor: c }}
               >
                 {playerColor === c && <Check className="w-5 h-5 text-white" />}
@@ -556,9 +558,9 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   return (
                     <div 
                       key={cellNum}
-                      className={`relative flex items-center justify-center font-black text-lg sm:text-xl ${
+                      className={\`relative flex items-center justify-center font-black text-lg sm:text-xl \${
                         isEven ? 'bg-white/40' : 'bg-[#E195AB]/10'
-                      } border border-slate-800/10`}
+                      } border border-slate-800/10\`}
                     >
                       <span className="absolute top-1 left-1.5 text-xs font-bold opacity-40">{cellNum}</span>
                     </div>
@@ -577,18 +579,18 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   return (
                     <g key={idx}>
                       <line
-                        x1={`${startPos.x}%`}
-                        y1={`${startPos.y}%`}
-                        x2={`${endPos.x}%`}
-                        y2={`${endPos.y}%`}
+                        x1={\`\${startPos.x}%\`}
+                        y1={\`\${startPos.y}%\`}
+                        x2={\`\${endPos.x}%\`}
+                        y2={\`\${endPos.y}%\`}
                         stroke={isLadder ? "#10b981" : "#ef4444"}
                         strokeWidth="4"
                         strokeDasharray={isLadder ? "8 4" : "none"}
                         strokeLinecap="round"
                         opacity="0.6"
                       />
-                      <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="4" fill={isLadder ? "#10b981" : "#ef4444"} opacity="0.8" />
-                      <circle cx={`${endPos.x}%`} cy={`${endPos.y}%`} r="4" fill={isLadder ? "#10b981" : "#ef4444"} opacity="0.8" />
+                      <circle cx={\`\${startPos.x}%\`} cy={\`\${startPos.y}%\`} r="4" fill={isLadder ? "#10b981" : "#ef4444"} opacity="0.8" />
+                      <circle cx={\`\${endPos.x}%\`} cy={\`\${endPos.y}%\`} r="4" fill={isLadder ? "#10b981" : "#ef4444"} opacity="0.8" />
                     </g>
                   );
                 })}
@@ -605,8 +607,8 @@ export const SnakeAndLaddersSection: React.FC = () => {
                     className="absolute w-8 h-8 sm:w-10 sm:h-10 -ml-4 -mt-4 sm:-ml-5 sm:-mt-5 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white z-20"
                     style={{ backgroundColor: p.color }}
                     animate={{ 
-                      left: `${pos.x}%`, 
-                      top: `${pos.y}%`,
+                      left: \`\${pos.x}%\`, 
+                      top: \`\${pos.y}%\`,
                       x: offset,
                       y: offset,
                       scale: idx === room.currentPlayerIndex ? [1, 1.1, 1] : 1
@@ -639,7 +641,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
                       {diceValue}
                     </motion.div>
                   ) : (
-                    <Dices className={`w-10 h-10 text-[#E195AB] ${isRolling ? 'animate-spin' : ''}`} />
+                    <Dices className={\`w-10 h-10 text-[#E195AB] \${isRolling ? 'animate-spin' : ''}\`} />
                   )}
                 </div>
                 
@@ -649,7 +651,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   className="w-full py-4 rounded-xl bg-[#E195AB] text-white font-extrabold text-lg hover:bg-[#d88299] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 transition-all shadow-md relative overflow-hidden group"
                 >
                   <span className="relative z-10">
-                    {isRolling ? 'Rolling...' : isMyTurn ? 'Roll Dice!' : `Waiting for ${currentPlayer?.name}...`}
+                    {isRolling ? 'Rolling...' : isMyTurn ? 'Roll Dice!' : \`Waiting for \${currentPlayer?.name}...\`}
                   </span>
                 </button>
               </div>
@@ -659,11 +661,11 @@ export const SnakeAndLaddersSection: React.FC = () => {
                 {room.players.map((p, idx) => (
                   <div 
                     key={p.id}
-                    className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                    className={\`flex items-center justify-between p-3 rounded-xl border-2 transition-all \${
                       idx === room.currentPlayerIndex 
                         ? 'border-[#E195AB] bg-[#FFF5D7]' 
                         : 'border-slate-100 bg-white'
-                    }`}
+                    }\`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: p.color }}>
@@ -756,3 +758,5 @@ export const SnakeAndLaddersSection: React.FC = () => {
     </section>
   );
 };
+`;
+fs.writeFileSync('src/components/SnakeAndLaddersSection.tsx', code);

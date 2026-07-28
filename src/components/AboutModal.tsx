@@ -306,7 +306,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <motion.a
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.96 }}
-                  href="mailto:maulasera42@gmail.com"
+                  href="mailto:contact@encore.dev"
                   onClick={onClose}
                   className="px-5 py-2 rounded-xl bg-[#E195AB] text-white text-xs font-bold hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all flex items-center gap-1.5 shadow-md shadow-pink-200/50 cursor-pointer"
                 >
