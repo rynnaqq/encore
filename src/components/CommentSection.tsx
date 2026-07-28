@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
 interface Comment {
@@ -14,7 +14,8 @@ interface Comment {
 export const CommentSection: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true';
-  const [username, setUsername] = useState(isAdmin ? 'AdminKawaaii' : '');
+  const [username, setUsername] = useState('');
+  const [loggedInUser, setLoggedInUser] = useState(isAdmin ? 'AdminKawaaii' : (typeof window !== 'undefined' ? localStorage.getItem('username') || '' : ''));
   const [text, setText] = useState('');
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   
@@ -79,9 +80,32 @@ export const CommentSection: React.FC = () => {
   };
 
 
+  
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim()) return;
+    if (!isAdmin && username.trim().toLowerCase().includes('admin')) {
+      alert('You cannot use "Admin" in your username.');
+      return;
+    }
+    localStorage.setItem('username', username.trim());
+    setLoggedInUser(username.trim());
+    setUsername('');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('username');
+    setLoggedInUser('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !text.trim()) return;
+    if (!loggedInUser.trim() || !text.trim()) return;
+
+    if (!isAdmin && loggedInUser.trim().toLowerCase().includes('admin')) {
+      alert('You cannot use "Admin" in your username.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -94,7 +118,7 @@ export const CommentSection: React.FC = () => {
       
       const newComment = {
         id: Date.now().toString(),
-        username: username.trim(),
+        username: loggedInUser.trim(),
         text: text.trim(),
         photo_base64: photoBase64,
         timestamp: Date.now()
@@ -241,84 +265,116 @@ export const CommentSection: React.FC = () => {
           viewport={{ once: true }}
           className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100 mb-12 shadow-sm"
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Username</label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Your name"
-                  readOnly={isAdmin}
-                  className={`w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 outline-none transition-all font-medium text-slate-800 ${isAdmin ? 'opacity-75 cursor-not-allowed' : 'focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'}`}
-                />
+          
+          {!loggedInUser ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Join the conversation</h3>
+                <p className="text-slate-500 mb-6">Choose a username to start commenting</p>
+                <div className="flex w-full max-w-sm gap-2">
+                  <input
+                    type="text"
+                    placeholder="Your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="flex-1 px-4 py-3 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors"
+                    maxLength={30}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors whitespace-nowrap"
+                  >
+                    Log In
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Message</label>
-              <textarea
-                required
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="What's on your mind?"
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-medium text-slate-800 resize-none"
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                  ref={fileInputRef}
-                  id="photo-upload"
-                />
-                <label
-                  htmlFor="photo-upload"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer text-sm"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Attach Photo</span>
-                </label>
-                {photoBase64 && (
-                  <div className="mt-3 relative inline-block">
-                    <img src={photoBase64} alt="Preview" className="h-16 rounded-lg border border-slate-200 object-cover shadow-sm" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPhotoBase64(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-slate-200 text-rose-500 flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 font-medium">Commenting as:</span>
+                  <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                    {loggedInUser}
+                  </span>
+                </div>
+                {!isAdmin && (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors"
+                  >
+                    Log Out
+                  </button>
                 )}
+              </div>
+              <div>
+                <textarea
+                  placeholder="Write your comment..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors resize-y min-h-[120px]"
+                  maxLength={500}
+                />
+                <div className="text-right mt-1">
+                  <span className={`text-xs font-medium ${text.length >= 450 ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {text.length}/500
+                  </span>
+                </div>
               </div>
               
-              <button
-                type="submit"
-                disabled={isSubmitting || !username.trim() || !text.trim()}
-                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all shadow-md flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <span className="animate-pulse">Posting...</span>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    <span>Post Comment</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handlePhotoUpload}
+                  />
+                  <label
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer text-sm"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Attach Photo</span>
+                  </label>
+                  {photoBase64 && (
+                    <div className="mt-3 relative inline-block">
+                      <img src={photoBase64} alt="Preview" className="h-16 rounded-lg border border-slate-200 object-cover shadow-sm" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhotoBase64(null);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-slate-200 text-rose-500 flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !loggedInUser.trim() || !text.trim()}
+                  className="w-full sm:w-auto px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all shadow-md flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <span className="animate-pulse">Posting...</span>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Post Comment</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
         </motion.div>
 
         {/* Comments List */}
@@ -356,7 +412,18 @@ export const CommentSection: React.FC = () => {
                   
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="font-bold text-slate-800">{comment.username}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className={comment.username === 'AdminKawaaii' ? "font-bold text-red-600" : "font-bold text-slate-800"}>
+                          {comment.username}
+                        </h4>
+                        <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
+                          comment.username === 'AdminKawaaii' 
+                            ? "bg-red-100 text-red-600" 
+                            : "bg-slate-100 text-slate-500"
+                        }`}>
+                          {comment.username === 'AdminKawaaii' ? 'Admin' : 'Guest'}
+                        </span>
+                      </div>
                       <span className="text-xs text-slate-400 font-medium">
                         {new Date(comment.timestamp).toLocaleDateString()}
                       </span>
@@ -389,7 +456,7 @@ export const CommentSection: React.FC = () => {
                       <>
                       {comment.text.startsWith('[PINNED]:') && (
                         <div className="flex items-center gap-1 text-xs font-bold text-indigo-500 mb-1">
-                          📌 Pinned by Admin
+                          <Pin className="w-3 h-3" /> Pinned by Admin
                         </div>
                       )}
                       <p className="text-slate-600 text-sm whitespace-pre-wrap">
@@ -409,14 +476,16 @@ export const CommentSection: React.FC = () => {
                     )}
                     
                     
-                  {isAdmin && (
+                  {(isAdmin || (loggedInUser && loggedInUser === comment.username)) && (
                     <div className="flex items-center gap-3 mt-4 transition-opacity">
-                      <button 
-                        onClick={() => handlePin(comment.id)}
-                        className="text-xs font-bold text-slate-400 hover:text-amber-500 flex items-center gap-1 transition-colors"
-                      >
-                        📌 {comment.text.startsWith('[PINNED]:') ? 'Unpin' : 'Pin'}
-                      </button>
+                      {isAdmin && (
+                        <button 
+                          onClick={() => handlePin(comment.id)}
+                          className="text-xs font-bold text-slate-400 hover:text-amber-500 flex items-center gap-1 transition-colors"
+                        >
+                          {comment.text.startsWith('[PINNED]:') ? <><PinOff className="w-3 h-3" /> Unpin</> : <><Pin className="w-3 h-3" /> Pin</>}
+                        </button>
+                      )}
                       <button 
                         onClick={() => startEditing(comment)}
                         className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors"
