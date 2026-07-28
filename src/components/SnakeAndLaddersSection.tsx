@@ -82,7 +82,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
 
   const initChannel = (roomId: string, hosting: boolean) => {
     if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
-       setErrorMsg('Supabase credentials not configured in Settings.');
+       setErrorMsg('Multiplayer credentials not configured in Settings.');
        return null;
     }
 
@@ -183,7 +183,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
 
   const handleCreateRoom = () => {
     if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
-       setErrorMsg('Please configure Supabase Secrets first.');
+       setErrorMsg('Please configure Multiplayer Secrets first.');
        return;
     }
     const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -338,14 +338,14 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-md mx-auto bg-white/90 backdrop-blur-md rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl relative"
+      className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl relative"
     >
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-[#FFF5D7] rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-[#FFCCE1]">
           <UsersRound className="w-8 h-8 text-[#E195AB]" />
         </div>
         <h3 className="text-2xl font-black text-slate-800">Multiplayer Setup</h3>
-        <p className="text-slate-500 font-medium mt-2">Play online with friends using Supabase!</p>
+        <p className="text-slate-500 font-medium mt-2">Play online with friends!</p>
       </div>
       
       {errorMsg && (
@@ -404,7 +404,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-md mx-auto bg-white/90 backdrop-blur-md rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl"
+      className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl"
     >
       <div className="flex items-center gap-4 mb-8">
         <h3 className="text-2xl font-black text-slate-800">Room Lobby</h3>
@@ -413,7 +413,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
       {!room ? (
         <div className="text-center py-8 space-y-4">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-[#E195AB] rounded-full animate-spin mx-auto" />
-          <p className="text-slate-500 font-bold">Connecting to Supabase...</p>
+          <p className="text-slate-500 font-bold">Connecting to server...</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -492,7 +492,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-md mx-auto bg-white/90 backdrop-blur-md rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl"
+      className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl"
     >
       <div className="flex items-center gap-4 mb-8">
         <button onClick={() => setSetupMode('menu')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
@@ -543,7 +543,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
           className="text-center mb-10"
         >
           <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF5D7] border border-[#FFCCE1] text-[#E195AB] font-bold text-sm mb-4">
-            <Trophy className="w-4 h-4" /> Supabase Multiplayer
+            <Trophy className="w-4 h-4" /> Online Multiplayer
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
             Snakes & <span className="text-[#E195AB]">Ladders</span>
@@ -591,19 +591,31 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   
                   return (
                     <g key={idx}>
+                      {/* Thicker background glow for better visibility */}
                       <line
                         x1={`${startPos.x}%`}
                         y1={`${startPos.y}%`}
                         x2={`${endPos.x}%`}
                         y2={`${endPos.y}%`}
                         stroke={isLadder ? "#10b981" : "#ef4444"}
-                        strokeWidth="4"
-                        strokeDasharray={isLadder ? "8 4" : "none"}
+                        strokeWidth={isLadder ? "14" : "10"}
                         strokeLinecap="round"
-                        opacity="0.6"
+                        opacity="0.25"
                       />
-                      <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="4" fill={isLadder ? "#10b981" : "#ef4444"} opacity="0.8" />
-                      <circle cx={`${endPos.x}%`} cy={`${endPos.y}%`} r="4" fill={isLadder ? "#10b981" : "#ef4444"} opacity="0.8" />
+                      {/* Foreground detailed line */}
+                      <line
+                        x1={`${startPos.x}%`}
+                        y1={`${startPos.y}%`}
+                        x2={`${endPos.x}%`}
+                        y2={`${endPos.y}%`}
+                        stroke={isLadder ? "#10b981" : "#ef4444"}
+                        strokeWidth={isLadder ? "6" : "6"}
+                        strokeDasharray={isLadder ? "12 8" : "none"}
+                        strokeLinecap="round"
+                        opacity="0.95"
+                      />
+                      <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="6" fill={isLadder ? "#10b981" : "#ef4444"} stroke="#ffffff" strokeWidth="2" opacity="1" />
+                      <circle cx={`${endPos.x}%`} cy={`${endPos.y}%`} r="6" fill={isLadder ? "#10b981" : "#ef4444"} stroke="#ffffff" strokeWidth="2" opacity="1" />
                     </g>
                   );
                 })}
@@ -624,12 +636,11 @@ export const SnakeAndLaddersSection: React.FC = () => {
                       top: `${pos.y}%`,
                       x: offset,
                       y: offset,
-                      scale: idx === room.currentPlayerIndex ? [1, 1.1, 1] : 1
+                      scale: idx === room.currentPlayerIndex ? 1.15 : 1
                     }}
                     transition={{ 
                       duration: 0.5, 
-                      type: "spring",
-                      scale: { repeat: Infinity, duration: 1.5 }
+                      type: "spring"
                     }}
                   >
                     <User className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -641,7 +652,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
 
           {/* Controls & Log */}
           <div className="space-y-6">
-            <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border-2 border-[#FFCCE1] shadow-xl relative overflow-hidden">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#FFCCE1] shadow-xl relative overflow-hidden">
               <div className="text-center mb-8">
                 <div className="w-20 h-20 mx-auto rounded-3xl bg-[#FFF5D7] flex items-center justify-center mb-6 shadow-inner border-2 border-[#FFCCE1] relative">
                   {diceValue ? (
@@ -694,7 +705,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 border-2 border-[#FFCCE1] shadow-xl">
+            <div className="bg-white rounded-3xl p-6 border-2 border-[#FFCCE1] shadow-xl">
                <div className="flex items-center justify-between mb-4">
                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Game Log</h4>
                  <div className="text-xs font-bold text-slate-400">Room: {room.roomId}</div>
@@ -733,7 +744,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
