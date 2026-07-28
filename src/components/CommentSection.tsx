@@ -217,10 +217,13 @@ export const CommentSection: React.FC = () => {
         return;
       }
       
+      const rootId = replyingToId ? resolveRootId(replyingToId) : null;
+      const serializedText = serializeCommentText(text.trim(), false, replyingToId, replyingToUser);
+
       const newComment = {
         id: Date.now().toString(),
         username: loggedInUser.trim(),
-        text: text.trim(),
+        text: serializedText,
         photo_base64: photoBase64,
         timestamp: Date.now()
       };
@@ -239,6 +242,13 @@ export const CommentSection: React.FC = () => {
         }]);
         setText('');
         setPhotoBase64(null);
+        
+        if (rootId) {
+          setExpandedReplies(prev => ({ ...prev, [rootId]: true }));
+        }
+
+        setReplyingToId(null);
+        setReplyingToUser(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
         console.error('Response failed:', error);
@@ -573,6 +583,7 @@ export const CommentSection: React.FC = () => {
             <AnimatePresence>
               {topLevelComments.map((comment, index) => {
                 const threadReplies = repliesByRootId[comment.id] || [];
+                if (threadReplies.length > 0) console.log('Comment', comment.id, 'has replies:', threadReplies);
                 
                 return (
                 <motion.div
