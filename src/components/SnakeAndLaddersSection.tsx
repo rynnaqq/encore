@@ -10,9 +10,9 @@ const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 
 const SNAKES_AND_LADDERS: Record<number, number> = {
   // Ladders
-  2: 38, 9: 31, 28: 84, 51: 67, 71: 91, 80: 100,
+  3: 21, 7: 30, 28: 84, 58: 77, 75: 86, 80: 100, 90: 91,
   // Snakes
-  16: 6, 49: 11, 62: 19, 64: 60, 87: 24, 95: 75, 98: 78
+  17: 12, 62: 22, 57: 40, 88: 18, 52: 29, 95: 51, 97: 79
 };
 
 const getCellCoords = (cell: number) => {
