@@ -15,6 +15,7 @@ interface Comment {
 const parseCommentText = (rawText: string) => {
   let isPinned = false;
   let parentId: string | null = null;
+  let replyToUsername: string | null = null;
   let text = rawText;
 
   if (text.startsWith('[PINNED]:')) {
@@ -22,19 +23,24 @@ const parseCommentText = (rawText: string) => {
     text = text.substring(9);
   }
 
-  const replyMatch = text.match(/^\[REPLY_TO:([^\]]+)\](.*)/s);
+  const replyMatch = text.match(/^\[REPLY_TO:([^\]:]+)(?::([^\]]+))?\](.*)/s);
   if (replyMatch) {
     parentId = replyMatch[1];
-    text = replyMatch[2];
+    replyToUsername = replyMatch[2] || null;
+    text = replyMatch[3];
   }
 
-  return { isPinned, parentId, text };
+  return { isPinned, parentId, replyToUsername, text };
 };
 
-const serializeCommentText = (text: string, isPinned: boolean, parentId: string | null) => {
+const serializeCommentText = (text: string, isPinned: boolean, parentId: string | null, replyToUsername: string | null = null) => {
   let res = text;
   if (parentId) {
-    res = `[REPLY_TO:${parentId}]${res}`;
+    if (replyToUsername) {
+      res = `[REPLY_TO:${parentId}:${replyToUsername}]${res}`;
+    } else {
+      res = `[REPLY_TO:${parentId}]${res}`;
+    }
   }
   if (isPinned) {
     res = `[PINNED]:${res}`;
@@ -59,6 +65,7 @@ export const CommentSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyingToUser, setReplyingToUser] = useState<string | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -255,8 +262,8 @@ export const CommentSection: React.FC = () => {
       
       const comment = comments.find(c => c.id === id);
       if (!comment) return;
-      const { isPinned, parentId } = parseCommentText(comment.text);
-      const finalString = serializeCommentText(editText.trim(), isPinned, parentId);
+      const { isPinned, parentId, replyToUsername } = parseCommentText(comment.text);
+      const finalString = serializeCommentText(editText.trim(), isPinned, parentId, replyToUsername);
 
       const { error } = await supabase
         .from('comments')
@@ -302,8 +309,8 @@ export const CommentSection: React.FC = () => {
       const comment = comments.find(c => c.id === id);
       if (!comment) return;
       
-      const { isPinned, parentId, text } = parseCommentText(comment.text);
-      const finalString = serializeCommentText(text, !isPinned, parentId);
+      const { isPinned, parentId, replyToUsername, text } = parseCommentText(comment.text);
+      const finalString = serializeCommentText(text, !isPinned, parentId, replyToUsername);
 
       const { error } = await supabase
         .from('comments')
@@ -325,9 +332,21 @@ export const CommentSection: React.FC = () => {
 
 
   const commentsWithMeta = comments.map(c => {
-    const { isPinned, parentId, text } = parseCommentText(c.text);
-    return { ...c, isPinned, parentId, parsedText: text };
+    const { isPinned, parentId, replyToUsername, text } = parseCommentText(c.text);
+    return { ...c, isPinned, parentId, replyToUsername, parsedText: text };
   });
+
+  const resolveRootId = (commentId: string): string => {
+    let currentId = commentId;
+    let maxDepth = 10;
+    while (maxDepth > 0) {
+      const parent = commentsWithMeta.find(c => c.id === currentId);
+      if (!parent || !parent.parentId) break;
+      currentId = parent.parentId;
+      maxDepth--;
+    }
+    return currentId;
+  };
 
   const topLevelComments = commentsWithMeta
     .filter(c => !c.parentId)
@@ -337,11 +356,14 @@ export const CommentSection: React.FC = () => {
       return 0;
     });
 
-  const repliesByParentId = commentsWithMeta
+  const repliesByRootId = commentsWithMeta
     .filter(c => c.parentId)
     .reduce((acc, reply) => {
-      if (!acc[reply.parentId!]) acc[reply.parentId!] = [];
-      acc[reply.parentId!].push(reply);
+      const rootId = resolveRootId(reply.id);
+      if (rootId !== reply.id) {
+        if (!acc[rootId]) acc[rootId] = [];
+        acc[rootId].push(reply);
+      }
       return acc;
     }, {} as Record<string, typeof commentsWithMeta>);
 
@@ -441,11 +463,11 @@ export const CommentSection: React.FC = () => {
                 <div className="flex items-center justify-between bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium border border-indigo-100">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
-                    <span>Replying to comment...</span>
+                    <span>Replying to {replyingToUser ? <span className="font-bold">@{replyingToUser}</span> : 'comment'}</span>
                   </div>
                   <button 
                     type="button" 
-                    onClick={() => setReplyingToId(null)}
+                    onClick={() => { setReplyingToId(null); setReplyingToUser(null); }}
                     className="p-1 hover:bg-indigo-100 rounded-full transition-colors"
                   >
                     <X className="w-4 h-4" />
@@ -550,7 +572,7 @@ export const CommentSection: React.FC = () => {
           ) : (
             <AnimatePresence>
               {topLevelComments.map((comment, index) => {
-                const threadReplies = repliesByParentId[comment.id] || [];
+                const threadReplies = repliesByRootId[comment.id] || [];
                 
                 return (
                 <motion.div
@@ -642,6 +664,7 @@ export const CommentSection: React.FC = () => {
                           <button 
                             onClick={() => {
                               setReplyingToId(comment.id);
+                              setReplyingToUser(comment.username);
                               document.getElementById('comment-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                               setText('');
                             }}
@@ -750,6 +773,7 @@ export const CommentSection: React.FC = () => {
                               </div>
                             ) : (
                               <p className="text-slate-600 text-sm whitespace-pre-wrap">
+                                {reply.replyToUsername && <span className="text-indigo-600 font-bold mr-1">@{reply.replyToUsername}</span>}
                                 {reply.parsedText}
                               </p>
                             )}
@@ -764,22 +788,37 @@ export const CommentSection: React.FC = () => {
                               </div>
                             )}
 
-                            {(isAdmin || (loggedInUser && loggedInUser === reply.username)) && (
-                              <div className="flex items-center gap-3 mt-3 transition-opacity">
+                            <div className="flex items-center gap-4 mt-3 transition-opacity">
+                              {loggedInUser && (
                                 <button 
-                                  onClick={() => startEditing(reply)}
-                                  className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors"
+                                  onClick={() => {
+                                    setReplyingToId(reply.id);
+                                    setReplyingToUser(reply.username);
+                                    document.getElementById('comment-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setText('');
+                                  }}
+                                  className="text-xs font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
                                 >
-                                  <Edit2 className="w-3 h-3" /> Edit
+                                  <Reply className="w-3 h-3" /> Reply
                                 </button>
-                                <button 
-                                  onClick={() => handleDelete(reply.id)}
-                                  className="text-xs font-bold text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors"
-                                >
-                                  <Trash2 className="w-3 h-3" /> Delete
-                                </button>
+                              )}
+                              {(isAdmin || (loggedInUser && loggedInUser === reply.username)) && (
+                                <>
+                                  <button 
+                                    onClick={() => startEditing(reply)}
+                                    className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors"
+                                  >
+                                    <Edit2 className="w-3 h-3" /> Edit
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDelete(reply.id)}
+                                    className="text-xs font-bold text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" /> Delete
+                                  </button>
+                                </>
+                              )}
                               </div>
-                            )}
                           </div>
                         </div>
                       ))}
