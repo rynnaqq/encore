@@ -143,18 +143,13 @@ function MainLayout() {
   const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
   
   useEffect(() => {
-    // Check local storage for changelog seen status
-    const hasSeen = localStorage.getItem('hasSeenChangelog_v1.2.0');
-    if (hasSeen !== 'true') {
-      // Small delay for better UX after load
-      const t = setTimeout(() => setIsChangelogModalOpen(true), 1500);
-      return () => clearTimeout(t);
-    }
+    // Open changelog every time the website is loaded
+    const t = setTimeout(() => setIsChangelogModalOpen(true), 1500);
+    return () => clearTimeout(t);
   }, []);
 
   const handleCloseChangelog = () => {
     setIsChangelogModalOpen(false);
-    localStorage.setItem('hasSeenChangelog_v1.2.0', 'true');
   };
   const location = useLocation();
 
