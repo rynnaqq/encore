@@ -10,9 +10,9 @@ const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 
 const SNAKES_AND_LADDERS: Record<number, number> = {
   // Ladders
-  12: 29, 20: 81, 34: 67, 63: 78, 76: 85, 89: 92,
+  2: 38, 9: 31, 28: 84, 51: 67, 71: 91, 80: 100,
   // Snakes
-  17: 8, 57: 38, 73: 32, 95: 71, 99: 19
+  16: 6, 49: 11, 62: 19, 64: 60, 87: 24, 95: 75, 98: 78
 };
 
 const getCellCoords = (cell: number) => {
@@ -558,7 +558,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
           <div className="xl:col-span-2 bg-white p-4 sm:p-8 rounded-[2.5rem] shadow-2xl border-4 border-[#FFCCE1] relative">
             <div 
               ref={boardRef}
-              className="aspect-square relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-[#FFF5D7] bg-cover bg-center"
+              className="aspect-square relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-[#FFF5D7] bg-[length:100%_100%] bg-no-repeat"
               style={{ backgroundImage: "url('/board.jpg')" }}
             >
               <div className="absolute inset-0 grid grid-cols-10 grid-rows-10">
