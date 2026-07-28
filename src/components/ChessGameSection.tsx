@@ -1423,7 +1423,8 @@ export const ChessGameSection: React.FC = () => {
         </div>
 
         {/* Main Chess Layout (Board + Sidebar) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {(!activeRoom || activeRoom.isStarted) && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Board & Player Info */}
           <div className="lg:col-span-8 flex flex-col items-center">
@@ -1637,7 +1638,7 @@ export const ChessGameSection: React.FC = () => {
                   <button
                     onClick={() => {
                       if (supabaseHandlerRef.current) {
-                        supabaseHandlerRef.current.offerDraw();
+                        supabaseHandlerRef.current.offerDraw(yourSide as "w" | "b");
                       }
                       if (activeRoom && socket) {
                         socket.emit('offer_draw', { roomId: activeRoom.roomId });
@@ -1731,6 +1732,7 @@ export const ChessGameSection: React.FC = () => {
           </div>
 
         </div>
+        )}
 
         {/* Promotion Dialog Modal */}
         {typeof document !== 'undefined' && createPortal(

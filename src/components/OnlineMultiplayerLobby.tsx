@@ -190,63 +190,125 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
       </div>
 
       {activeRoom ? (
-        <div className="bg-white/80 p-5 rounded-3xl border border-[#FFCCE1]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#E195AB]" /> {activeRoom.roomName}
-            </h3>
-            <div className="flex items-center gap-2 bg-[#FFF5D7] px-3 py-1.5 rounded-xl border border-[#FFCCE1]">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Room Code</span>
-              <span className="text-sm font-mono font-bold text-slate-800">{activeRoom.roomId}</span>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?room=' + activeRoom.roomId);
-                  setCopiedCodeOnly(true);
-                  setTimeout(() => setCopiedCodeOnly(false), 2000);
-                }}
-                className="p-1 hover:bg-[#FFCCE1]/50 rounded-lg transition-colors cursor-pointer text-[#E195AB]"
-                title="Copy Invite Link"
-              >
-                {copiedCodeOnly ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+        !activeRoom.isStarted && (
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl border-2 border-[#FFCCE1] shadow-xl relative overflow-hidden">
+          {/* Background animation if not started */}
+          {!activeRoom.isStarted && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-10">
+              <div className="w-[400px] h-[400px] bg-[#E195AB] rounded-full animate-ping" style={{ animationDuration: '3s' }} />
+            </div>
+          )}
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                {!activeRoom.isStarted ? (
+                  <>
+                    <Activity className="w-5 h-5 text-[#E195AB] animate-pulse" /> Mencari Lawan...
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-5 h-5 text-[#E195AB]" /> {activeRoom.roomName}
+                  </>
+                )}
+              </h3>
+              
+              {!activeRoom.isStarted && (
+                <div className="flex items-center gap-2 bg-[#FFF5D7] px-3 py-1.5 rounded-xl border border-[#FFCCE1] shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Room Code</span>
+                  <span className="text-sm font-mono font-bold text-slate-800">{activeRoom.roomId}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?room=' + activeRoom.roomId);
+                      setCopiedCodeOnly(true);
+                      setTimeout(() => setCopiedCodeOnly(false), 2000);
+                    }}
+                    className="p-1 hover:bg-[#FFCCE1]/50 rounded-lg transition-colors cursor-pointer text-[#E195AB]"
+                    title="Copy Invite Link"
+                  >
+                    {copiedCodeOnly ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 my-8">
+              {/* White Player */}
+              <div className="relative flex flex-col items-center">
+                <div className="w-20 h-20 rounded-2xl bg-white shadow-lg border-2 border-[#FFCCE1] flex items-center justify-center text-4xl z-10">
+                  {activeRoom.whitePlayer?.flag || '⚪'}
+                </div>
+                <div className="mt-3 text-center">
+                  <div className="font-extrabold text-sm text-slate-800">{activeRoom.whitePlayer?.name || 'Menunggu...'}</div>
+                  <div className="text-[11px] font-bold text-slate-500">Putih</div>
+                </div>
+                {!activeRoom.whitePlayer && (
+                  <div className="absolute inset-0 rounded-2xl border-4 border-[#E195AB] border-dashed animate-[spin_4s_linear_infinite] opacity-30" />
+                )}
+              </div>
+
+              {/* VS Badge */}
+              <div className="flex items-center justify-center relative">
+                <div className="w-12 h-12 rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center shadow-inner z-10">
+                  <span className="text-xs font-black text-[#E195AB]">VS</span>
+                </div>
+                {!activeRoom.isStarted && (
+                  <div className="absolute w-24 h-24 bg-[#FFCCE1]/50 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+                )}
+              </div>
+
+              {/* Black Player */}
+              <div className="relative flex flex-col items-center">
+                <div className="w-20 h-20 rounded-2xl bg-slate-900 shadow-lg border-2 border-slate-700 flex items-center justify-center text-4xl z-10">
+                  {activeRoom.blackPlayer?.flag || '⚫'}
+                </div>
+                <div className="mt-3 text-center">
+                  <div className="font-extrabold text-sm text-slate-800">{activeRoom.blackPlayer?.name || 'Menunggu...'}</div>
+                  <div className="text-[11px] font-bold text-slate-500">Hitam</div>
+                </div>
+                {!activeRoom.blackPlayer && (
+                  <div className="absolute inset-0 rounded-2xl border-4 border-slate-400 border-dashed animate-[spin_4s_linear_infinite] opacity-30" />
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-6 flex items-center justify-between border-t border-[#FFCCE1]/50 pt-4">
+              <div className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                <Activity className="w-4 h-4 text-[#E195AB]" />
+                {activeRoom.isStarted ? 'Pertandingan Berlangsung' : 'Menunggu Lawan...'}
+              </div>
+              <button onClick={onLeaveRoom} className="px-5 py-2.5 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl hover:bg-rose-100 hover:scale-105 active:scale-95 transition-all shadow-sm">
+                Batalkan
               </button>
             </div>
           </div>
-          
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100">
-               <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-lg">{activeRoom.whitePlayer?.flag || '⚪'}</div>
-                 <div>
-                   <div className="font-bold text-xs text-slate-800">{activeRoom.whitePlayer?.name || 'Waiting...'}</div>
-                   <div className="text-[10px] text-slate-500">White • {activeRoom.timeControl} min</div>
-                 </div>
-               </div>
-            </div>
-            
-            <div className="flex items-center justify-center">
-              <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">VS</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800">
-               <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-lg">{activeRoom.blackPlayer?.flag || '⚫'}</div>
-                 <div>
-                   <div className="font-bold text-xs text-white">{activeRoom.blackPlayer?.name || 'Waiting...'}</div>
-                   <div className="text-[10px] text-slate-400">Black • {activeRoom.timeControl} min</div>
-                 </div>
-               </div>
-            </div>
-          </div>
-          
-          <div className="mt-5 flex justify-end">
-            <button onClick={onLeaveRoom} className="px-4 py-2 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl hover:bg-rose-100">
-              Leave Room
-            </button>
-          </div>
         </div>
+        )
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white/80 p-5 rounded-3xl border border-[#FFCCE1]">
+        <div className="space-y-4">
+          {/* Cari Lawan Cepat / Quick Match Banner */}
+          <div className="bg-gradient-to-r from-[#E195AB] to-[#d88299] p-6 rounded-3xl shadow-lg flex flex-col md:flex-row items-center justify-between text-white relative overflow-hidden">
+            <div className="relative z-10 text-center md:text-left mb-4 md:mb-0">
+              <h2 className="text-2xl font-black mb-1 flex items-center justify-center md:justify-start gap-2">
+                <Users className="w-6 h-6" /> Cari Lawan Cepat
+              </h2>
+              <p className="text-white/80 font-medium text-sm">Temukan lawan secara instan dari seluruh dunia!</p>
+            </div>
+            <button 
+              onClick={onQuickMatch}
+              className="relative z-10 px-8 py-3 bg-white text-[#E195AB] font-extrabold rounded-2xl hover:bg-[#FFF5D7] hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-2"
+            >
+              <Activity className="w-5 h-5 animate-pulse" />
+              Mulai Matchmaking
+            </button>
+            {/* Minimalist BG Decoration */}
+            <div className="absolute right-0 top-0 opacity-10 pointer-events-none translate-x-1/4 -translate-y-1/4">
+              <Users className="w-48 h-48" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white/80 p-5 rounded-3xl border border-[#FFCCE1]">
             <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><Plus className="w-4 h-4 text-[#E195AB]" /> Create Room</h3>
             <form onSubmit={handleCreateRoom} className="space-y-3">
               <input type="text" placeholder="Room Name" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs" />
@@ -309,6 +371,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                 )}
              </div>
           </div>
+        </div>
         </div>
       )}
 

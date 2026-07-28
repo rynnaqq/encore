@@ -7,7 +7,7 @@ export interface SupabaseRoomHandler {
   makeMove: (move: { from: string; to: string; promotion?: string; fen: string; san: string; color: 'w' | 'b' }) => void;
   sendChat: (text: string) => void;
   resignGame: () => void;
-  offerDraw: () => void;
+  offerDraw: (side: 'w' | 'b') => void;
   acceptDraw: () => void;
   declineDraw: () => void;
   requestRematch: () => void;
@@ -398,9 +398,7 @@ export function subscribeSupabaseChessRoom({
         payload: { resignerSide },
       });
     },
-    offerDraw: () => {
-      const myId = playerProfile.id || playerProfile.name;
-      const side = currentRoomState.whitePlayer?.id === myId ? 'w' : 'b';
+    offerDraw: (side: 'w' | 'b') => {
       channel.send({
         type: 'broadcast',
         event: 'OFFER_DRAW',
