@@ -10,6 +10,7 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
 import { ChessGameSection } from './components/ChessGameSection';
+import { AdminPage } from './components/AdminPage';
 import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
 import { Footer } from './components/Footer';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -131,6 +132,21 @@ function AnimatedRoutes({
               className="gpu-smooth"
             >
               <SnakeAndLaddersSection />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <motion.div
+              key="route-admin"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <AdminPage />
             </motion.div>
           }
         />

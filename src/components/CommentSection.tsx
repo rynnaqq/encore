@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { getSupabaseClient } from '../lib/supabaseClient';
 
 interface Comment {
   id: string;
@@ -12,7 +13,8 @@ interface Comment {
 
 export const CommentSection: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [username, setUsername] = useState('');
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true';
+  const [username, setUsername] = useState(isAdmin ? 'Admin kawaii' : '');
   const [text, setText] = useState('');
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   
@@ -27,12 +29,32 @@ export const CommentSection: React.FC = () => {
     fetchComments();
   }, []);
 
+
   const fetchComments = async () => {
     try {
-      const res = await fetch('/api/comments');
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setComments(data);
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        // Fallback to empty array if no supabase
+        setComments([]);
+        setIsLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .order('timestamp', { ascending: true });
+        
+      if (error) {
+        console.error('Error fetching comments:', error);
+      } else if (data) {
+        // map db columns to state
+        setComments(data.map(c => ({
+          id: c.id,
+          username: c.username,
+          text: c.text,
+          photoBase64: c.photo_base64,
+          timestamp: c.timestamp
+        })));
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -56,32 +78,46 @@ export const CommentSection: React.FC = () => {
     }
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !text.trim()) return;
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: username.trim(),
-          text: text.trim(),
-          photoBase64
-        })
-      });
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        alert('Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
+        setIsSubmitting(false);
+        return;
+      }
       
-      if (res.ok) {
-        const newComment = await res.json();
-        setComments([...comments, newComment]);
+      const newComment = {
+        id: Date.now().toString(),
+        username: username.trim(),
+        text: text.trim(),
+        photo_base64: photoBase64,
+        timestamp: Date.now()
+      };
+      
+      const { error } = await supabase
+        .from('comments')
+        .insert([newComment]);
+        
+      if (!error) {
+        setComments([...comments, {
+          id: newComment.id,
+          username: newComment.username,
+          text: newComment.text,
+          photoBase64: newComment.photo_base64,
+          timestamp: newComment.timestamp
+        }]);
         setText('');
         setPhotoBase64(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
-        const errText = await res.text();
-        console.error('Response failed:', res.status, errText);
-        alert(`Failed to post comment (Status: ${res.status}). ${errText || 'Image might be too large.'}`);
+        console.error('Response failed:', error);
+        alert(`Failed to post comment. ${error.message}`);
       }
     } catch (error) {
       console.error('Error posting comment:', error);
@@ -91,19 +127,21 @@ export const CommentSection: React.FC = () => {
     }
   };
 
+
   const handleEditSubmit = async (id: string) => {
     if (!editText.trim()) return;
     
     try {
-      const res = await fetch(`/api/comments/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: editText.trim() })
-      });
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
       
-      if (res.ok) {
-        const updated = await res.json();
-        setComments(comments.map(c => c.id === id ? updated : c));
+      const { error } = await supabase
+        .from('comments')
+        .update({ text: editText.trim() })
+        .eq('id', id);
+        
+      if (!error) {
+        setComments(comments.map(c => c.id === id ? { ...c, text: editText.trim() } : c));
         setEditingId(null);
       }
     } catch (error) {
@@ -111,15 +149,20 @@ export const CommentSection: React.FC = () => {
     }
   };
 
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this comment?')) return;
     
     try {
-      const res = await fetch(`/api/comments/${id}`, {
-        method: 'DELETE'
-      });
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
       
-      if (res.ok) {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', id);
+        
+      if (!error) {
         setComments(comments.filter(c => c.id !== id));
       }
     } catch (error) {
@@ -170,7 +213,8 @@ export const CommentSection: React.FC = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Your name"
-                  className="w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-medium text-slate-800"
+                  readOnly={isAdmin}
+                  className={`w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 outline-none transition-all font-medium text-slate-800 ${isAdmin ? 'opacity-75 cursor-not-allowed' : 'focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'}`}
                 />
               </div>
             </div>
