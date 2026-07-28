@@ -5,9 +5,11 @@ import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { AboutModal } from './components/AboutModal';
+import { ChangelogModal } from './components/ChangelogModal';
 import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
 import { ChessGameSection } from './components/ChessGameSection';
+import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
 import { Footer } from './components/Footer';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -115,6 +117,21 @@ function AnimatedRoutes({
             </motion.div>
           }
         />
+        <Route
+          path="/snake-ladders"
+          element={
+            <motion.div
+              key="route-snake-ladders"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <SnakeAndLaddersSection />
+            </motion.div>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );
@@ -123,6 +140,22 @@ function AnimatedRoutes({
 function MainLayout() {
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+  const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Check local storage for changelog seen status
+    const hasSeen = localStorage.getItem('hasSeenChangelog_v1.2.0');
+    if (hasSeen !== 'true') {
+      // Small delay for better UX after load
+      const t = setTimeout(() => setIsChangelogModalOpen(true), 1500);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const handleCloseChangelog = () => {
+    setIsChangelogModalOpen(false);
+    localStorage.setItem('hasSeenChangelog_v1.2.0', 'true');
+  };
   const location = useLocation();
 
   const handleOpenAboutModal = () => {
@@ -183,6 +216,10 @@ function MainLayout() {
         onClose={handleCloseAboutModal}
       />
 
+      <ChangelogModal
+        isOpen={isChangelogModalOpen}
+        onClose={handleCloseChangelog}
+      />
       <Footer />
     </>
   );

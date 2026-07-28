@@ -25,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'game', label: 'Calculator', path: '/game' },
     { id: 'fishing', label: 'Fishing Game', path: '/fishing' },
     { id: 'chess', label: 'Chess Game', path: '/chess' },
+    { id: 'snake', label: 'Snake & Ladders', path: '/snake-ladders' },
   ];
 
   useEffect(() => {
