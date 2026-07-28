@@ -559,10 +559,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
             <div 
               ref={boardRef}
               className="aspect-square relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-[#FFF5D7]"
-              style={{
-                backgroundImage: 'radial-gradient(#FFCCE1 20%, transparent 20%)',
-                backgroundSize: '20px 20px'
-              }}
+              style={{}}
             >
               <div className="absolute inset-0 grid grid-cols-10 grid-rows-10">
                 {cells.map((cellNum) => {
@@ -591,31 +588,80 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   
                   return (
                     <g key={idx}>
-                      {/* Thicker background glow for better visibility */}
-                      <line
-                        x1={`${startPos.x}%`}
-                        y1={`${startPos.y}%`}
-                        x2={`${endPos.x}%`}
-                        y2={`${endPos.y}%`}
-                        stroke={isLadder ? "#10b981" : "#ef4444"}
-                        strokeWidth={isLadder ? "14" : "10"}
-                        strokeLinecap="round"
-                        opacity="0.25"
-                      />
-                      {/* Foreground detailed line */}
-                      <line
-                        x1={`${startPos.x}%`}
-                        y1={`${startPos.y}%`}
-                        x2={`${endPos.x}%`}
-                        y2={`${endPos.y}%`}
-                        stroke={isLadder ? "#10b981" : "#ef4444"}
-                        strokeWidth={isLadder ? "6" : "6"}
-                        strokeDasharray={isLadder ? "12 8" : "none"}
-                        strokeLinecap="round"
-                        opacity="0.95"
-                      />
-                      <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="6" fill={isLadder ? "#10b981" : "#ef4444"} stroke="#ffffff" strokeWidth="2" opacity="1" />
-                      <circle cx={`${endPos.x}%`} cy={`${endPos.y}%`} r="6" fill={isLadder ? "#10b981" : "#ef4444"} stroke="#ffffff" strokeWidth="2" opacity="1" />
+                      {isLadder ? (
+                        <g opacity="0.9">
+                          {/* Ladder Rails */}
+                          <line
+                            x1={`${startPos.x}%`}
+                            y1={`${startPos.y}%`}
+                            x2={`${endPos.x}%`}
+                            y2={`${endPos.y}%`}
+                            stroke="#b45309"
+                            strokeWidth="16"
+                            strokeLinecap="round"
+                          />
+                          {/* Ladder Inner (Hollow) */}
+                          <line
+                            x1={`${startPos.x}%`}
+                            y1={`${startPos.y}%`}
+                            x2={`${endPos.x}%`}
+                            y2={`${endPos.y}%`}
+                            stroke="#FFF5D7"
+                            strokeWidth="10"
+                            strokeLinecap="round"
+                          />
+                          {/* Ladder Rungs */}
+                          <line
+                            x1={`${startPos.x}%`}
+                            y1={`${startPos.y}%`}
+                            x2={`${endPos.x}%`}
+                            y2={`${endPos.y}%`}
+                            stroke="#b45309"
+                            strokeWidth="16"
+                            strokeDasharray="4 12"
+                          />
+                        </g>
+                      ) : (
+                        <g opacity="0.9">
+                          {/* Snake Body Outline */}
+                          <line
+                            x1={`${startPos.x}%`}
+                            y1={`${startPos.y}%`}
+                            x2={`${endPos.x}%`}
+                            y2={`${endPos.y}%`}
+                            stroke="#065f46"
+                            strokeWidth="16"
+                            strokeLinecap="round"
+                          />
+                          {/* Snake Body */}
+                          <line
+                            x1={`${startPos.x}%`}
+                            y1={`${startPos.y}%`}
+                            x2={`${endPos.x}%`}
+                            y2={`${endPos.y}%`}
+                            stroke="#10b981"
+                            strokeWidth="12"
+                            strokeLinecap="round"
+                          />
+                          {/* Snake Pattern */}
+                          <line
+                            x1={`${startPos.x}%`}
+                            y1={`${startPos.y}%`}
+                            x2={`${endPos.x}%`}
+                            y2={`${endPos.y}%`}
+                            stroke="#065f46"
+                            strokeWidth="12"
+                            strokeDasharray="4 12"
+                            strokeLinecap="round"
+                          />
+                          {/* Snake Head */}
+                          <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="12" fill="#10b981" stroke="#065f46" strokeWidth="2" />
+                          {/* Snake Eyes/Tongue */}
+                          <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="4" fill="#ef4444" />
+                          {/* Snake Tail */}
+                          <circle cx={`${endPos.x}%`} cy={`${endPos.y}%`} r="6" fill="#10b981" stroke="#065f46" strokeWidth="2" />
+                        </g>
+                      )}
                     </g>
                   );
                 })}

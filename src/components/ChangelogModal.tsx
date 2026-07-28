@@ -11,6 +11,21 @@ interface ChangelogModalProps {
 export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose }) => {
   const changelogs = [
     {
+      version: 'v1.2.1',
+      date: 'July 27, 2026',
+      type: 'update',
+      title: 'Snake & Ladders Visual Overhaul',
+      items: [
+        'Improved visuals for snakes and ladders on the board.',
+        'Removed pink dotted background for better clarity.',
+        'Optimized animations for low-end devices.'
+      ],
+      icon: Sparkles,
+      color: 'text-pink-500',
+      bg: 'bg-pink-100',
+      border: 'border-pink-200'
+    },
+    {
       version: 'v1.2.0',
       date: 'July 27, 2026',
       type: 'feature',
@@ -137,7 +152,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose 
 
             {/* Content Area */}
             <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-50 space-y-6">
-              {changelogs.map((log, index) => {
+              {changelogs.slice(0, 1).map((log, index) => {
                 const Icon = log.icon;
                 return (
                   <motion.div
