@@ -70,8 +70,8 @@ export const CommentSection: React.FC = () => {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size too large (max 5MB)');
+      if (file.size > 1 * 1024 * 1024) {
+        alert('File size too large (max 1MB)');
         return;
       }
       const reader = new FileReader();
