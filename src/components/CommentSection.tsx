@@ -14,7 +14,7 @@ interface Comment {
 export const CommentSection: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true';
-  const [username, setUsername] = useState(isAdmin ? 'Admin kawaii' : '');
+  const [username, setUsername] = useState(isAdmin ? 'AdminKawaaii' : '');
   const [text, setText] = useState('');
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   
@@ -304,9 +304,17 @@ export const CommentSection: React.FC = () => {
                   transition={{ delay: index * 0.05 }}
                   className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex gap-4 group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 font-black flex items-center justify-center shrink-0">
-                    {comment.username.charAt(0).toUpperCase()}
-                  </div>
+                  
+                  {comment.username === 'AdminKawaaii' ? (
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 overflow-hidden border-2 border-indigo-200">
+                      <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 font-black flex items-center justify-center shrink-0">
+                      {comment.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
                   
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
@@ -353,7 +361,7 @@ export const CommentSection: React.FC = () => {
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-3 mt-4 transition-opacity">
                       <button 
                         onClick={() => startEditing(comment)}
                         className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors"
