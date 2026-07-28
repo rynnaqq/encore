@@ -135,13 +135,17 @@ export const CommentSection: React.FC = () => {
       const supabase = getSupabaseClient();
       if (!supabase) return;
       
+      const comment = comments.find(c => c.id === id);
+      const isPinned = comment?.text.startsWith('[PINNED]:');
+      const finalString = isPinned ? '[PINNED]:' + editText.trim() : editText.trim();
+
       const { error } = await supabase
         .from('comments')
-        .update({ text: editText.trim() })
+        .update({ text: finalString })
         .eq('id', id);
         
       if (!error) {
-        setComments(comments.map(c => c.id === id ? { ...c, text: editText.trim() } : c));
+        setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
         setEditingId(null);
       }
     } catch (error) {
@@ -170,10 +174,44 @@ export const CommentSection: React.FC = () => {
     }
   };
 
+
+  const handlePin = async (id: string) => {
+    try {
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
+      
+      const comment = comments.find(c => c.id === id);
+      if (!comment) return;
+      
+      const isPinned = comment.text.startsWith('[PINNED]:');
+      const finalString = isPinned ? comment.text.substring(9) : '[PINNED]:' + comment.text;
+
+      const { error } = await supabase
+        .from('comments')
+        .update({ text: finalString })
+        .eq('id', id);
+        
+      if (!error) {
+        setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
+      }
+    } catch (error) {
+      console.error('Error pinning comment:', error);
+    }
+  };
+
   const startEditing = (comment: Comment) => {
     setEditingId(comment.id);
-    setEditText(comment.text);
+    setEditText(comment.text.startsWith('[PINNED]:') ? comment.text.substring(9) : comment.text);
   };
+
+
+  const sortedComments = [...comments].sort((a, b) => {
+    const aPinned = a.text.startsWith('[PINNED]:');
+    const bPinned = b.text.startsWith('[PINNED]:');
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
+  });
 
   return (
     <section id="comments" className="py-20 relative bg-white border-t-2 border-slate-100">
@@ -295,7 +333,7 @@ export const CommentSection: React.FC = () => {
             </div>
           ) : (
             <AnimatePresence>
-              {comments.map((comment, index) => (
+              {sortedComments.map((comment, index) => (
                 <motion.div
                   key={comment.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -348,7 +386,16 @@ export const CommentSection: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-slate-600 text-sm whitespace-pre-wrap">{comment.text}</p>
+                      <>
+                      {comment.text.startsWith('[PINNED]:') && (
+                        <div className="flex items-center gap-1 text-xs font-bold text-indigo-500 mb-1">
+                          📌 Pinned by Admin
+                        </div>
+                      )}
+                      <p className="text-slate-600 text-sm whitespace-pre-wrap">
+                        {comment.text.startsWith('[PINNED]:') ? comment.text.substring(9) : comment.text}
+                      </p>
+                      </>
                     )}
                     
                     {comment.photoBase64 && (
@@ -361,7 +408,15 @@ export const CommentSection: React.FC = () => {
                       </div>
                     )}
                     
+                    
+                  {isAdmin && (
                     <div className="flex items-center gap-3 mt-4 transition-opacity">
+                      <button 
+                        onClick={() => handlePin(comment.id)}
+                        className="text-xs font-bold text-slate-400 hover:text-amber-500 flex items-center gap-1 transition-colors"
+                      >
+                        📌 {comment.text.startsWith('[PINNED]:') ? 'Unpin' : 'Pin'}
+                      </button>
                       <button 
                         onClick={() => startEditing(comment)}
                         className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors"
@@ -375,6 +430,8 @@ export const CommentSection: React.FC = () => {
                         <Trash2 className="w-3 h-3" /> Delete
                       </button>
                     </div>
+                  )}
+
                   </div>
                 </motion.div>
               ))}
