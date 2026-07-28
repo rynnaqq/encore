@@ -2,19 +2,19 @@ const fs = require('fs');
 let code = fs.readFileSync('src/components/ChangelogModal.tsx', 'utf8');
 
 const newEntry = `    {
-      version: 'v1.2.1',
+      version: 'v1.2.2',
       date: 'July 27, 2026',
       type: 'update',
-      title: 'Snake & Ladders Visual Overhaul',
+      title: 'Snake & Ladders Visual Redesign',
       items: [
-        'Improved visuals for snakes and ladders on the board.',
-        'Removed pink dotted background for better clarity.',
-        'Optimized animations for low-end devices.'
+        'Updated Snakes and Ladders board design and graphics.',
+        'Matched the underlying game logic (snakes & ladders positions) to the new custom board layout.',
+        'Removed all pink dots from the game board.',
       ],
       icon: Sparkles,
-      color: 'text-pink-500',
-      bg: 'bg-pink-100',
-      border: 'border-pink-200'
+      color: 'text-amber-500',
+      bg: 'bg-amber-100',
+      border: 'border-amber-200'
     },
 `;
 

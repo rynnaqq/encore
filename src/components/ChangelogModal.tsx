@@ -11,6 +11,21 @@ interface ChangelogModalProps {
 export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose }) => {
   const changelogs = [
     {
+      version: 'v1.2.2',
+      date: 'July 27, 2026',
+      type: 'update',
+      title: 'Snake & Ladders Visual Redesign',
+      items: [
+        'Updated Snakes and Ladders board design and graphics.',
+        'Matched the underlying game logic (snakes & ladders positions) to the new custom board layout.',
+        'Removed all pink dots from the game board.',
+      ],
+      icon: Sparkles,
+      color: 'text-amber-500',
+      bg: 'bg-amber-100',
+      border: 'border-amber-200'
+    },
+    {
       version: 'v1.2.1',
       date: 'July 27, 2026',
       type: 'update',

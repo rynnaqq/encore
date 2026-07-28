@@ -10,9 +10,9 @@ const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 
 const SNAKES_AND_LADDERS: Record<number, number> = {
   // Ladders
-  4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91,
+  12: 29, 20: 81, 34: 67, 63: 78, 76: 85, 89: 92,
   // Snakes
-  17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78
+  17: 8, 57: 38, 73: 32, 95: 71, 99: 19
 };
 
 const getCellCoords = (cell: number) => {
@@ -558,8 +558,8 @@ export const SnakeAndLaddersSection: React.FC = () => {
           <div className="xl:col-span-2 bg-white p-4 sm:p-8 rounded-[2.5rem] shadow-2xl border-4 border-[#FFCCE1] relative">
             <div 
               ref={boardRef}
-              className="aspect-square relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-[#FFF5D7]"
-              style={{}}
+              className="aspect-square relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-[#FFF5D7] bg-cover bg-center"
+              style={{ backgroundImage: "url('/board.jpg')" }}
             >
               <div className="absolute inset-0 grid grid-cols-10 grid-rows-10">
                 {cells.map((cellNum) => {
@@ -568,104 +568,15 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   return (
                     <div 
                       key={cellNum}
-                      className={`relative flex items-center justify-center font-black text-lg sm:text-xl ${
-                        isEven ? 'bg-white/40' : 'bg-[#E195AB]/10'
-                      } border border-slate-800/10`}
+                      className="relative flex items-center justify-center"
                     >
-                      <span className="absolute top-1 left-1.5 text-xs font-bold opacity-40">{cellNum}</span>
+                      
                     </div>
                   );
                 })}
               </div>
 
-              {/* Render Snakes & Ladders */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                {Object.entries(SNAKES_AND_LADDERS).map(([start, end], idx) => {
-                  const s = parseInt(start);
-                  const startPos = getCellPercent(s);
-                  const endPos = getCellPercent(end);
-                  const isLadder = end > s;
-                  
-                  return (
-                    <g key={idx}>
-                      {isLadder ? (
-                        <g opacity="0.9">
-                          {/* Ladder Rails */}
-                          <line
-                            x1={`${startPos.x}%`}
-                            y1={`${startPos.y}%`}
-                            x2={`${endPos.x}%`}
-                            y2={`${endPos.y}%`}
-                            stroke="#b45309"
-                            strokeWidth="16"
-                            strokeLinecap="round"
-                          />
-                          {/* Ladder Inner (Hollow) */}
-                          <line
-                            x1={`${startPos.x}%`}
-                            y1={`${startPos.y}%`}
-                            x2={`${endPos.x}%`}
-                            y2={`${endPos.y}%`}
-                            stroke="#FFF5D7"
-                            strokeWidth="10"
-                            strokeLinecap="round"
-                          />
-                          {/* Ladder Rungs */}
-                          <line
-                            x1={`${startPos.x}%`}
-                            y1={`${startPos.y}%`}
-                            x2={`${endPos.x}%`}
-                            y2={`${endPos.y}%`}
-                            stroke="#b45309"
-                            strokeWidth="16"
-                            strokeDasharray="4 12"
-                          />
-                        </g>
-                      ) : (
-                        <g opacity="0.9">
-                          {/* Snake Body Outline */}
-                          <line
-                            x1={`${startPos.x}%`}
-                            y1={`${startPos.y}%`}
-                            x2={`${endPos.x}%`}
-                            y2={`${endPos.y}%`}
-                            stroke="#065f46"
-                            strokeWidth="16"
-                            strokeLinecap="round"
-                          />
-                          {/* Snake Body */}
-                          <line
-                            x1={`${startPos.x}%`}
-                            y1={`${startPos.y}%`}
-                            x2={`${endPos.x}%`}
-                            y2={`${endPos.y}%`}
-                            stroke="#10b981"
-                            strokeWidth="12"
-                            strokeLinecap="round"
-                          />
-                          {/* Snake Pattern */}
-                          <line
-                            x1={`${startPos.x}%`}
-                            y1={`${startPos.y}%`}
-                            x2={`${endPos.x}%`}
-                            y2={`${endPos.y}%`}
-                            stroke="#065f46"
-                            strokeWidth="12"
-                            strokeDasharray="4 12"
-                            strokeLinecap="round"
-                          />
-                          {/* Snake Head */}
-                          <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="12" fill="#10b981" stroke="#065f46" strokeWidth="2" />
-                          {/* Snake Eyes/Tongue */}
-                          <circle cx={`${startPos.x}%`} cy={`${startPos.y}%`} r="4" fill="#ef4444" />
-                          {/* Snake Tail */}
-                          <circle cx={`${endPos.x}%`} cy={`${endPos.y}%`} r="6" fill="#10b981" stroke="#065f46" strokeWidth="2" />
-                        </g>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
+              
 
               {/* Render Players */}
               {room.players.map((p, idx) => {
