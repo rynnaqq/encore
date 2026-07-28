@@ -81,7 +81,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   };
 
   const initChannel = (roomId: string, hosting: boolean) => {
-    if (!import.meta.env.VITE_SUPABASE_URL) {
+    if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
        setErrorMsg('Supabase credentials not configured in Settings.');
        return null;
     }
@@ -133,7 +133,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
         }
       });
 
-    newChannel.subscribe((status) => {
+    newChannel.subscribe((status, err) => {
       if (status === 'SUBSCRIBED') {
         if (hosting) {
           // Send initial state
@@ -158,7 +158,22 @@ export const SnakeAndLaddersSection: React.FC = () => {
             event: 'join_request',
             payload: { id: myId, name: playerName, color: playerColor, position: 1 }
           });
+          
+          // Timeout if no response is received
+          setTimeout(() => {
+            if (!roomRef.current) {
+              supabase.removeChannel(newChannel);
+              setChannel(null);
+              setSetupMode('menu');
+              setErrorMsg('Room not found or invalid code.');
+            }
+          }, 3000);
         }
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+        supabase.removeChannel(newChannel);
+        setChannel(null);
+        setSetupMode('menu');
+        setErrorMsg('Failed to connect to room.');
       }
     });
 
@@ -167,7 +182,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   };
 
   const handleCreateRoom = () => {
-    if (!import.meta.env.VITE_SUPABASE_URL) {
+    if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
        setErrorMsg('Please configure Supabase Secrets first.');
        return;
     }
