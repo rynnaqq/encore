@@ -4,6 +4,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
+import { CommentSection } from './components/CommentSection';
 import { AboutModal } from './components/AboutModal';
 import { ChangelogModal } from './components/ChangelogModal';
 import { CalculatorSection } from './components/CalculatorSection';
@@ -69,6 +70,7 @@ function AnimatedRoutes({
             >
               <HeroSection onOpenAboutModal={handleOpenAboutModal} />
               <AboutSection onOpenModal={handleOpenAboutModal} />
+              <CommentSection />
             </motion.div>
           }
         />
