@@ -4,17 +4,26 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { GameState, Card, Player, Color, generateDeck, isValidPlay } from '../lib/unoLogic';
 import { Copy, Play, UserPlus, Users, ArrowRight, MessageSquare, ShieldAlert, Sparkles, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const UnoGameSection: React.FC = () => {
+  const { currentUser } = useAuth();
   const [supabase] = useState(() => getSupabaseClient());
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   
   const [playerName, setPlayerName] = useState(() => {
+    if (currentUser?.username) return currentUser.username;
     if (typeof window !== 'undefined') {
       return localStorage.getItem('username') || '';
     }
     return '';
   });
+
+  useEffect(() => {
+    if (currentUser?.username) {
+      setPlayerName(currentUser.username);
+    }
+  }, [currentUser]);
   const [joinRoomId, setJoinRoomId] = useState('');
   const [localPlayerId] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -66,6 +75,77 @@ export const UnoGameSection: React.FC = () => {
     }
   };
 
+  const handlePlayerLeave = (leavingPlayerId: string, activeChannel?: RealtimeChannel | null) => {
+    const currentState = stateRef.current;
+    if (!currentState) return;
+
+    const leavingIndex = currentState.players.findIndex(p => p.id === leavingPlayerId);
+    if (leavingIndex === -1) return; // Already removed
+
+    const remainingPlayers = currentState.players.filter(p => p.id !== leavingPlayerId);
+    if (remainingPlayers.length === 0) return;
+
+    const newHostId = currentState.hostId === leavingPlayerId ? remainingPlayers[0].id : currentState.hostId;
+    const iAmNewHost = localPlayerId === newHostId;
+
+    if (iAmNewHost) {
+      setIsHost(true);
+      const state = JSON.parse(JSON.stringify(currentState)) as GameState;
+      const pIndex = state.players.findIndex(p => p.id === leavingPlayerId);
+      if (pIndex === -1) return;
+
+      const leavingPlayerName = state.players[pIndex].name;
+      state.players.splice(pIndex, 1);
+
+      state.hostId = newHostId;
+      state.players.forEach(p => {
+        p.isHost = (p.id === newHostId);
+      });
+
+      if (state.status === 'playing') {
+        if (state.players.length <= 1) {
+          // Automatic win if only 1 player remains
+          state.status = 'finished';
+          state.winnerId = state.players[0]?.id || null;
+          if (!state.logs) state.logs = [];
+          state.logs.push(`${leavingPlayerName} meninggalkan permainan. ${state.players[0]?.name || 'Pemain'} menang otomatis!`);
+        } else {
+          // Adjust turn for remaining players
+          if (pIndex < state.currentTurn) {
+            state.currentTurn = (state.currentTurn - 1 + state.players.length) % state.players.length;
+          } else if (pIndex === state.currentTurn) {
+            state.currentTurn = state.currentTurn % state.players.length;
+          } else {
+            state.currentTurn = state.currentTurn % state.players.length;
+          }
+          if (!state.logs) state.logs = [];
+          state.logs.push(`${leavingPlayerName} meninggalkan permainan.`);
+        }
+      } else if (state.status === 'waiting') {
+        if (!state.logs) state.logs = [];
+        state.logs.push(`${leavingPlayerName} keluar dari room.`);
+      }
+
+      setGameState(state);
+      stateRef.current = state;
+      broadcastState(state, activeChannel || channel || undefined);
+    }
+  };
+
+  const handleLeaveRoom = () => {
+    if (channel && gameState) {
+      channel.send({
+        type: 'broadcast',
+        event: 'LEAVE_REQUEST',
+        payload: { playerId: localPlayerId }
+      });
+      supabase?.removeChannel(channel);
+    }
+    setChannel(null);
+    setGameState(null);
+    setIsHost(false);
+  };
+
   const handleCreateRoom = () => {
     if (!supabase) return setErrorMsg('Supabase not configured');
     if (!playerName.trim()) return setErrorMsg('Name required');
@@ -101,7 +181,10 @@ export const UnoGameSection: React.FC = () => {
   const joinChannel = (roomId: string, initialHostState?: GameState) => {
     if (channel) supabase?.removeChannel(channel);
     const newChannel = supabase!.channel(`uno-${roomId}`, {
-      config: { broadcast: { self: true } }
+      config: { 
+        broadcast: { self: true },
+        presence: { key: localPlayerId }
+      }
     });
 
     newChannel.on('broadcast', { event: 'SYNC_STATE' }, ({ payload }) => {
@@ -129,8 +212,23 @@ export const UnoGameSection: React.FC = () => {
       }
     });
 
-    newChannel.subscribe((status) => {
+    newChannel.on('broadcast', { event: 'LEAVE_REQUEST' }, ({ payload }) => {
+      if (payload.playerId) {
+        handlePlayerLeave(payload.playerId, newChannel);
+      }
+    });
+
+    newChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
+      leftPresences.forEach((presence: any) => {
+        if (presence.id) {
+          handlePlayerLeave(presence.id, newChannel);
+        }
+      });
+    });
+
+    newChannel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
+        await newChannel.track({ id: localPlayerId, name: playerName });
         if (!initialHostState) {
           // I am a client joining
           newChannel.send({
@@ -449,7 +547,7 @@ export const UnoGameSection: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
-             <button onClick={() => { setGameState(null); supabase?.removeChannel(channel!); setChannel(null); }} className="px-4 py-2 bg-rose-500/20 text-rose-400 rounded-lg font-bold text-sm hover:bg-rose-500/30">
+             <button onClick={handleLeaveRoom} className="px-4 py-2 bg-rose-500/20 text-rose-400 rounded-lg font-bold text-sm hover:bg-rose-500/30">
                Leave
              </button>
           </div>

@@ -14,6 +14,7 @@ import { UnoGameSection } from './components/UnoGameSection';
 import { AdminPage } from './components/AdminPage';
 import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
 import { Footer } from './components/Footer';
+import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -262,18 +263,20 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] text-zinc-800`}>
-        <FloatingBackground />
-        
-        {/* Fullscreen Cybernetic Loading Screen */}
-        {isLoading && (
-          <LoadingScreen onFinishLoading={handleFinishLoading} />
-        )}
-        
-        {!isLoading && <MainLayout />}
-      </div>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] text-zinc-800`}>
+          <FloatingBackground />
+          
+          {/* Fullscreen Cybernetic Loading Screen */}
+          {isLoading && (
+            <LoadingScreen onFinishLoading={handleFinishLoading} />
+          )}
+          
+          {!isLoading && <MainLayout />}
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

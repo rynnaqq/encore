@@ -35,6 +35,7 @@ import { OnlineMultiplayerLobby, RoomState, PlayerInfo, ChatMessage } from './On
 import { COUNTRIES } from '../data/countries';
 import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode, publishRoomToGlobalLobby } from '../lib/supabaseChess';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 type GameMode = 'ai' | 'pass' | 'online';
 type AIDifficulty = 'easy' | 'medium' | 'hard';
@@ -163,6 +164,7 @@ export const ChessGameSection: React.FC = () => {
     }
   }, [activeRoom]);
 
+  const { currentUser } = useAuth();
   const [yourSide, setYourSide] = useState<'w' | 'b' | 'spectator' | null>(null);
 
   // Stored Player Profile
@@ -178,12 +180,19 @@ export const ChessGameSection: React.FC = () => {
     } catch {}
     const defaultCountry = COUNTRIES[0];
     return {
-      name: 'Player 1',
+      name: currentUser ? currentUser.username : 'Player 1',
       country: defaultCountry.code,
       flag: defaultCountry.flag,
       rating: 1200,
     };
   });
+
+  // Sync profile when currentUser changes
+  useEffect(() => {
+    if (currentUser?.username && playerProfile.name !== currentUser.username) {
+      setPlayerProfile(prev => ({ ...prev, name: currentUser.username }));
+    }
+  }, [currentUser]);
 
   const handleUpdateProfile = useCallback((name: string, country: string) => {
     const flag = COUNTRIES.find(c => c.code === country)?.flag || COUNTRIES[0].flag;

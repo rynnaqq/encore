@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Users, MessageSquare, Shield, KeyRound, UserPlus, Search, LogOut, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAuth, User } from '../context/AuthContext';
 
 interface Comment {
   id: string;
@@ -11,32 +12,36 @@ interface Comment {
 }
 
 export const AdminPage: React.FC = () => {
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAdmin') === 'true');
+  const { currentUser, users, addUser, deleteUser, updateUserRole, login, logout } = useAuth();
+  
+  const [adminPassword, setAdminPassword] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [activeTab, setActiveTab] = useState<'users' | 'comments' | 'system'>('users');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Add user modal / state
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState<'user' | 'admin'>('user');
+  const [userActionMsg, setUserActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const isAdminAuthenticated = currentUser?.role === 'admin';
+
+  const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'seramaula432') {
-      localStorage.setItem('isAdmin', 'true');
-      setIsAuthenticated(true);
-    } else {
-      alert('Incorrect password');
+    const res = login('admin', adminPassword);
+    if (!res.success) {
+      alert(res.message || 'Password Admin salah!');
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAdmin');
-    setIsAuthenticated(false);
-  };
-
   const fetchComments = async () => {
-    setIsLoading(true);
+    setIsLoadingComments(true);
     try {
       const supabase = getSupabaseClient();
       if (!supabase) {
-        setIsLoading(false);
+        setIsLoadingComments(false);
         return;
       }
       const { data, error } = await supabase
@@ -56,18 +61,18 @@ export const AdminPage: React.FC = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingComments(false);
     }
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAdminAuthenticated) {
       fetchComments();
     }
-  }, [isAuthenticated]);
+  }, [isAdminAuthenticated]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
+  const handleDeleteComment = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus komentar ini?')) return;
     
     try {
       const supabase = getSupabaseClient();
@@ -81,33 +86,76 @@ export const AdminPage: React.FC = () => {
       if (!error) {
         setComments(comments.filter(c => c.id !== id));
       } else {
-        alert('Failed to delete comment: ' + error.message);
+        alert('Gagal menghapus komentar: ' + error.message);
       }
     } catch (error) {
       console.error('Error deleting comment:', error);
     }
   };
 
-  if (!isAuthenticated) {
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserActionMsg(null);
+
+    const res = addUser(newUsername, newPassword, newRole);
+    if (res.success) {
+      setUserActionMsg({ type: 'success', text: `User "${newUsername}" berhasil dibuat!` });
+      setNewUsername('');
+      setNewPassword('');
+    } else {
+      setUserActionMsg({ type: 'error', text: res.message || 'Gagal membuat user' });
+    }
+  };
+
+  const handleDeleteUserClick = (targetUsername: string) => {
+    if (targetUsername.toLowerCase() === 'admin') {
+      alert('User "admin" utama tidak dapat dihapus!');
+      return;
+    }
+    if (!confirm(`Hapus akun user "${targetUsername}"?`)) return;
+
+    const res = deleteUser(targetUsername);
+    if (res.success) {
+      setUserActionMsg({ type: 'success', text: `User "${targetUsername}" telah dihapus.` });
+    } else {
+      setUserActionMsg({ type: 'error', text: res.message || 'Gagal menghapus user' });
+    }
+  };
+
+  const filteredUsers = users.filter((u) =>
+    u.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (!isAdminAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <form onSubmit={handleLogin} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 max-w-sm w-full">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Admin Login</h2>
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 pt-24">
+        <form onSubmit={handleAdminLogin} className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 max-w-md w-full">
+          <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
+            <Shield className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-1 text-center">Universal Admin Login</h2>
+          <p className="text-slate-400 text-xs text-center mb-6">
+            Masukan password admin untuk mengakses kontrol universal
+          </p>
+          
           <div className="mb-6">
-            <label className="block text-sm font-bold text-slate-700 mb-2">Password</label>
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Password Admin
+            </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 outline-none"
-              placeholder="Enter password"
+              required
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-sm"
+              placeholder="Masukkan password admin (admin123 / seramaula432)"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700"
+            className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white font-black hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/30 text-sm"
           >
-            Login
+            Masuk Ke Dashboard Admin
           </button>
         </form>
       </div>
@@ -115,48 +163,263 @@ export const AdminPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 sm:p-12">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-black text-slate-800">Admin Dashboard</h1>
+    <div className="min-h-screen bg-slate-950 text-slate-100 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-slate-900 p-6 rounded-3xl border border-slate-800">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/30 shrink-0">
+              <Shield className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-white">Universal Admin Dashboard</h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Kelola User, Game State, dan Komentar untuk Chess, Snake & Ladders, dan UNO
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              Admin: {currentUser.username}
+            </span>
+            <button
+              onClick={logout}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-2 border border-slate-700 transition-colors"
+            >
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-800 pb-3">
           <button
-            onClick={handleLogout}
-            className="px-6 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold hover:bg-slate-300"
+            onClick={() => setActiveTab('users')}
+            className={`px-5 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all ${
+              activeTab === 'users'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+            }`}
           >
-            Logout
+            <Users className="w-4 h-4" /> Kelola User ({users.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('comments')}
+            className={`px-5 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all ${
+              activeTab === 'comments'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" /> Kelola Komentar ({comments.length})
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-          <h2 className="text-xl font-bold text-slate-800 mb-6">Manage Comments</h2>
-          
-          {isLoading ? (
-            <p className="text-slate-500">Loading comments...</p>
-          ) : comments.length === 0 ? (
-            <p className="text-slate-500">No comments found.</p>
-          ) : (
-            <div className="space-y-4">
-              {comments.map((comment) => (
-                <div key={comment.id} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-start gap-4">
-                  <div>
-                    <div className="font-bold text-slate-800">{comment.username} <span className="text-sm font-normal text-slate-400">{new Date(comment.timestamp).toLocaleString()}</span></div>
-                    <p className="text-slate-600 mt-2">{comment.text}</p>
-                    {comment.photoBase64 && (
-                      <img src={comment.photoBase64} alt="Attached" className="max-h-24 mt-2 rounded-lg border border-slate-200" />
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleDelete(comment.id)}
-                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                    title="Delete Comment"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+        {/* TAB 1: User Management */}
+        {activeTab === 'users' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Create New User Box */}
+            <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 h-fit">
+              <h3 className="text-base font-black text-white mb-4 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-indigo-400" /> Tambah User Baru
+              </h3>
+
+              {userActionMsg && (
+                <div
+                  className={`p-3 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2 ${
+                    userActionMsg.type === 'success'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                  }`}
+                >
+                  {userActionMsg.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{userActionMsg.text}</span>
                 </div>
-              ))}
+              )}
+
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    placeholder="Contoh: player_master"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Masukkan password"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Role Akun
+                  </label>
+                  <select
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value as 'user' | 'admin')}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                  >
+                    <option value="user">User (Pemain)</option>
+                    <option value="admin">Admin (Akses Penuh)</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/30 transition-all mt-2"
+                >
+                  + Tambah Akun
+                </button>
+              </form>
             </div>
-          )}
-        </div>
+
+            {/* Users List */}
+            <div className="lg:col-span-2 bg-slate-900 p-6 rounded-3xl border border-slate-800">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-400" /> Daftar Pengguna Terdaftar
+                </h3>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cari username..."
+                    className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:border-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-slate-300">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-xs font-bold uppercase text-slate-500">
+                      <th className="py-3 px-3">Username</th>
+                      <th className="py-3 px-3">Role</th>
+                      <th className="py-3 px-3">Terdaftar</th>
+                      <th className="py-3 px-3 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filteredUsers.map((u) => (
+                      <tr key={u.username} className="hover:bg-slate-800/40">
+                        <td className="py-3.5 px-3 font-bold text-white flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-black text-xs flex items-center justify-center border border-indigo-500/30">
+                            {u.username.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span>{u.username}</span>
+                        </td>
+                        <td className="py-3.5 px-3">
+                          <select
+                            value={u.role}
+                            onChange={(e) => updateUserRole(u.username, e.target.value as 'user' | 'admin')}
+                            className={`px-2.5 py-1 rounded-xl font-bold text-xs border outline-none ${
+                              u.role === 'admin'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                            }`}
+                          >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                        <td className="py-3.5 px-3 text-xs text-slate-400">
+                          {new Date(u.createdAt).toLocaleDateString('id-ID')}
+                        </td>
+                        <td className="py-3.5 px-3 text-right">
+                          {u.username.toLowerCase() !== 'admin' ? (
+                            <button
+                              onClick={() => handleDeleteUserClick(u.username)}
+                              className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-colors"
+                              title="Hapus User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 font-bold uppercase">Utama</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: Comments Management */}
+        {activeTab === 'comments' && (
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-indigo-400" /> Komentar Pengguna
+              </h3>
+
+              <button
+                onClick={fetchComments}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 border border-slate-700"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingComments ? 'animate-spin' : ''}`} /> Refresh
+              </button>
+            </div>
+
+            {isLoadingComments ? (
+              <p className="text-slate-500 text-sm py-8 text-center">Memuat komentar...</p>
+            ) : comments.length === 0 ? (
+              <p className="text-slate-500 text-sm py-8 text-center">Belum ada komentar pengguna.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="p-4 border border-slate-800 bg-slate-950/60 rounded-2xl flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{comment.username}</span>
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          {new Date(comment.timestamp).toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                      <p className="text-slate-300 text-xs mt-2 leading-relaxed">{comment.text}</p>
+                      {comment.photoBase64 && (
+                        <img src={comment.photoBase64} alt="Attachment" className="max-h-28 mt-3 rounded-xl border border-slate-800 object-cover" />
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-colors shrink-0"
+                      title="Hapus Komentar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

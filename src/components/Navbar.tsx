@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
+import { Menu, X, ArrowUpRight, User as UserIcon, Shield, LogOut, LogIn } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { LoginModal } from './LoginModal';
 
 interface NavbarProps {
   activeSection: string;
@@ -16,6 +18,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,6 +32,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'snake', label: 'Snake & Ladders', path: '/snake-ladders' },
     { id: 'uno', label: 'UNO Game', path: '/uno' },
   ];
+
+  if (currentUser?.role === 'admin') {
+    navItems.push({ id: 'admin', label: 'Admin Page', path: '/admin' });
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,8 +99,46 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[#E195AB] font-black text-2xl leading-none">.</span>
             </button>
 
-            {/* Right Action Cluster: Hamburger Only */}
-            <div className="flex items-center gap-2.5">
+            {/* Right Action Cluster */}
+            <div className="flex items-center gap-2">
+              {/* User Account Button */}
+              {currentUser ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      if (currentUser.role === 'admin') navigate('/admin');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition-all ${
+                      currentUser.role === 'admin'
+                        ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200 cursor-pointer'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    {currentUser.role === 'admin' ? (
+                      <Shield className="w-3.5 h-3.5 text-amber-600" />
+                    ) : (
+                      <UserIcon className="w-3.5 h-3.5 text-[#E195AB]" />
+                    )}
+                    <span>{currentUser.username}</span>
+                  </button>
+                  <button
+                    onClick={logout}
+                    title="Logout"
+                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-200 transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#E195AB] to-[#d68097] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-pink-200 hover:opacity-95 transition-all cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Login</span>
+                </button>
+              )}
+
               {/* Hamburger Toggle */}
               <button
                 onClick={() => setHamburgerOpen(!hamburgerOpen)}
@@ -107,6 +153,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
         </div>
       </header>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
 
       {/* Minimal Hamburger Menu Full Overlay Drawer */}
       <AnimatePresence>

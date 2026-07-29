@@ -4,6 +4,7 @@ import { Dices, Trophy, Users, Plus, ChevronLeft, Settings, Copy, Check, UsersRo
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { useAuth } from '../context/AuthContext';
 
 const BOARD_SIZE = 10;
 const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
@@ -46,13 +47,20 @@ interface SNLRoomState {
 }
 
 export const SnakeAndLaddersSection: React.FC = () => {
+  const { currentUser } = useAuth();
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [room, setRoom] = useState<SNLRoomState | null>(null);
   
   // Setup state
   const availableColors = ['#E195AB', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
   const [myId] = useState(() => Math.random().toString(36).substring(2, 10)); // Unique ID for this client
-  const [playerName, setPlayerName] = useState('Player ' + Math.floor(Math.random() * 100));
+  const [playerName, setPlayerName] = useState(() => currentUser ? currentUser.username : 'Player ' + Math.floor(Math.random() * 100));
+
+  useEffect(() => {
+    if (currentUser?.username) {
+      setPlayerName(currentUser.username);
+    }
+  }, [currentUser]);
   const [playerColor, setPlayerColor] = useState(availableColors[0]);
   const [joinRoomId, setJoinRoomId] = useState('');
   const [setupMode, setSetupMode] = useState<'menu' | 'create' | 'join'>('menu');
