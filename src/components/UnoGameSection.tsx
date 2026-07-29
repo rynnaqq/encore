@@ -259,21 +259,33 @@ export const UnoGameSection: React.FC = () => {
     }
 
     setColorPickerVisible(null);
-    channel.send({
-      type: 'broadcast',
-      event: 'PLAYER_ACTION',
-      payload: { playerId: localPlayerId, action: 'PLAY_CARD', cardId: card.id, chosenColor }
-    });
+    const payload = { playerId: localPlayerId, action: 'PLAY_CARD', cardId: card.id, chosenColor };
+    
+    if (isHost) {
+      processAction(payload);
+    } else {
+      channel.send({
+        type: 'broadcast',
+        event: 'PLAYER_ACTION',
+        payload
+      });
+    }
   };
 
   const handleDrawCard = () => {
     if (!channel || !gameState) return;
     if (gameState.currentTurn !== gameState.players.findIndex(p => p.id === localPlayerId)) return;
-    channel.send({
-      type: 'broadcast',
-      event: 'PLAYER_ACTION',
-      payload: { playerId: localPlayerId, action: 'DRAW_CARD' }
-    });
+    
+    const payload = { playerId: localPlayerId, action: 'DRAW_CARD' };
+    if (isHost) {
+      processAction(payload);
+    } else {
+      channel.send({
+        type: 'broadcast',
+        event: 'PLAYER_ACTION',
+        payload
+      });
+    }
   };
 
   const handleUnlock = (e: React.FormEvent) => {
