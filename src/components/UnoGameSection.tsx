@@ -444,13 +444,17 @@ export const UnoGameSection: React.FC = () => {
              </div>
           )}
           
-          <input
-            type="text"
-            placeholder="Your Nickname"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 mb-4 font-bold text-slate-700 outline-none"
-          />
+          <div className="mb-4 text-left">
+            <label className="block text-xs font-bold text-slate-500 mb-1">Your Nickname (Terkunci)</label>
+            <input
+              type="text"
+              value={playerName}
+              disabled
+              readOnly
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 font-bold text-slate-500 cursor-not-allowed outline-none"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Username disamakan dengan akun login Anda.</p>
+          </div>
           <button
             onClick={handleCreateRoom}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mb-6 shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2"

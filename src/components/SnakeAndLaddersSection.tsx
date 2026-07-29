@@ -364,14 +364,15 @@ export const SnakeAndLaddersSection: React.FC = () => {
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">Your Name</label>
+          <label className="block text-sm font-bold text-slate-700 mb-1">Your Name (Terkunci)</label>
           <input
             type="text"
             value={playerName}
-            onChange={e => setPlayerName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 outline-none transition-all font-bold text-slate-700"
-            placeholder="Enter your name"
+            disabled
+            readOnly
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 font-bold text-slate-500 cursor-not-allowed outline-none"
           />
+          <p className="text-xs text-slate-400 mt-1">Username disamakan dengan akun login Anda.</p>
         </div>
 
         <div>

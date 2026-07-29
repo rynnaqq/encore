@@ -30,7 +30,10 @@ export const AdminPage: React.FC = () => {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const res = login('admin', adminPassword);
+    let res = login('AdminKawaaii', adminPassword);
+    if (!res.success) {
+      res = login('admin', adminPassword);
+    }
     if (!res.success) {
       alert(res.message || 'Password Admin salah!');
     }
@@ -108,8 +111,8 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleDeleteUserClick = (targetUsername: string) => {
-    if (targetUsername.toLowerCase() === 'admin') {
-      alert('User "admin" utama tidak dapat dihapus!');
+    if (targetUsername.toLowerCase() === 'admin' || targetUsername.toLowerCase() === 'adminkawaaii') {
+      alert('User admin utama tidak dapat dihapus!');
       return;
     }
     if (!confirm(`Hapus akun user "${targetUsername}"?`)) return;
@@ -148,7 +151,7 @@ export const AdminPage: React.FC = () => {
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-sm"
-              placeholder="Masukkan password admin (admin123 / seramaula432)"
+              placeholder="Masukkan password admin"
             />
           </div>
           <button

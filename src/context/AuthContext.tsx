@@ -26,8 +26,8 @@ const STORAGE_CURRENT_USER_KEY = 'app_current_user_v1';
 
 const DEFAULT_USERS: StoredUserAccount[] = [
   {
-    username: 'admin',
-    password: 'admin123',
+    username: 'AdminKawaaii',
+    password: 'seramaula432',
     role: 'admin',
     createdAt: Date.now() - 86400000 * 30,
   },
@@ -104,10 +104,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username not found. Please register first.' };
     }
 
-    // Allow admin123 or seramaula432 for admin
-    const isAdminAccount = account.username.toLowerCase() === 'admin';
+    // Allow admin password check for admin account
+    const isAdminAccount = account.username.toLowerCase() === 'adminkawaaii' || account.username.toLowerCase() === 'admin';
     const isPasswordValid =
-      account.password === password || (isAdminAccount && password === 'seramaula432');
+      account.password === password || (isAdminAccount && (password === 'seramaula432' || password === 'admin123'));
 
     if (!isPasswordValid) {
       return { success: false, message: 'Incorrect password' };
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username is already taken' };
     }
 
-    const isFirstAdmin = cleanUsername.toLowerCase() === 'admin';
+    const isFirstAdmin = cleanUsername.toLowerCase() === 'adminkawaaii' || cleanUsername.toLowerCase() === 'admin';
     const newAccount: StoredUserAccount = {
       username: cleanUsername,
       password,
@@ -192,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteUser = (username: string) => {
-    if (username.toLowerCase() === 'admin') {
+    if (username.toLowerCase() === 'adminkawaaii' || username.toLowerCase() === 'admin') {
       return { success: false, message: 'Cannot delete primary admin user' };
     }
 
