@@ -125,7 +125,7 @@ export const UnoGameSection: React.FC = () => {
 
     newChannel.on('broadcast', { event: 'PLAYER_ACTION' }, ({ payload }) => {
       if (stateRef.current && stateRef.current.hostId === localPlayerId) {
-        processAction(payload);
+        processAction(payload, newChannel);
       }
     });
 
@@ -145,7 +145,7 @@ export const UnoGameSection: React.FC = () => {
     setChannel(newChannel);
   };
 
-  const processAction = (payload: any) => {
+  const processAction = (payload: any, activeChannel = channel) => {
     let state = JSON.parse(JSON.stringify(stateRef.current!));
     if (state.status !== 'playing' || state.winnerId) return;
 
@@ -206,7 +206,7 @@ export const UnoGameSection: React.FC = () => {
 
     setGameState(state);
     stateRef.current = state;
-    broadcastState(state);
+    broadcastState(state, activeChannel);
   };
 
   const drawCards = (state: GameState, pIndex: number, count: number) => {
@@ -456,7 +456,7 @@ export const UnoGameSection: React.FC = () => {
         </div>
 
         {/* Game Area */}
-        <div className="flex flex-col lg:flex-row h-[850px] lg:h-[700px] overflow-hidden">
+        <div className="flex flex-col lg:flex-row min-h-[600px] h-[calc(100vh-150px)] lg:h-[calc(100vh-100px)] overflow-hidden">
           {/* Main Board */}
           <div className="flex-1 p-4 flex flex-col relative bg-emerald-900/40 overflow-y-auto overflow-x-hidden">
             {/* Status Overlay */}
@@ -577,7 +577,7 @@ export const UnoGameSection: React.FC = () => {
                     {localPlayer?.hand.map((card) => {
                       const isValid = isMyTurn && isValidPlay(card, gameState.topCard!, gameState.currentColor);
                       return (
-                        <div key={card.id} className="relative">
+                        <div key={card.id} className={`relative ${colorPickerVisible?.cardId === card.id ? 'z-50' : 'z-10'}`}>
                           {renderCard(card, isMyTurn, () => {
                             if (!isValid) {
                               // Maybe show a temporary error or just do nothing?
