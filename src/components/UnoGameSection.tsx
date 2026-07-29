@@ -430,8 +430,8 @@ export const UnoGameSection: React.FC = () => {
   const isMyTurn = gameState.status === 'playing' && gameState.currentTurn === localPlayerIndex;
 
   return (
-    <div id="uno" className="max-w-7xl mx-auto p-4 pt-28 pb-8">
-      <div className="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+    <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-24 md:pt-28 pb-4 md:pb-8 flex flex-col h-[100dvh]">
+      <div className="bg-slate-900 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col flex-1">
         
         {/* Header */}
         <div className="bg-slate-800 p-4 px-6 flex items-center justify-between border-b border-slate-700">
@@ -456,9 +456,9 @@ export const UnoGameSection: React.FC = () => {
         </div>
 
         {/* Game Area */}
-        <div className="flex flex-col lg:flex-row min-h-[600px] h-[calc(100vh-150px)] lg:h-[calc(100vh-100px)] overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Main Board */}
-          <div className="flex-1 p-4 flex flex-col relative bg-emerald-900/40 overflow-y-auto overflow-x-hidden">
+          <div className="flex-1 p-2 md:p-4 flex flex-col relative bg-emerald-900/40 overflow-hidden">
             {/* Status Overlay */}
             {gameState.status === 'waiting' && (
               <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
@@ -573,12 +573,12 @@ export const UnoGameSection: React.FC = () => {
                     </h4>
                   </div>
                   
-                  <div className="w-full max-w-full overflow-x-auto pb-10 pt-6 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    <div className="flex flex-row justify-start md:justify-center w-max min-w-full mx-auto -space-x-3 md:-space-x-8 px-4 pr-12 md:pr-4">
+                  <div className="w-full max-w-full overflow-x-auto pb-4 pt-4 px-2 scroll-smooth">
+                    <div className="flex flex-row justify-start w-max min-w-full gap-2 md:gap-4 px-4 pb-4 mx-auto">
                     {localPlayer?.hand.map((card) => {
                       const isValid = isMyTurn && isValidPlay(card, gameState.topCard!, gameState.currentColor);
                       return (
-                        <div key={card.id} className={`relative transition-all duration-300 hover:z-[100] hover:-translate-y-6 ${colorPickerVisible?.cardId === card.id ? 'z-[100]' : 'z-10'}`}>
+                        <div key={card.id} className={`relative transition-transform duration-200 ${isMyTurn && isValid ? 'hover:-translate-y-2' : ''} ${colorPickerVisible?.cardId === card.id ? 'z-[50]' : 'z-10'}`}>
                           {renderCard(card, isValid, () => handlePlayCard(card), isMyTurn)}
                           
                           {/* Color Picker for Wilds */}
