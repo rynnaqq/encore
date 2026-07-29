@@ -1,10 +1,22 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 
+const adminUsernamesSet = new Set<string>(['adminkawaaii', 'admin']);
+
+export const registerAdminUsername = (username?: string | null) => {
+  if (username) {
+    adminUsernamesSet.add(username.trim().toLowerCase());
+  }
+};
+
+export const registerAdminUsernames = (usernames: string[]) => {
+  usernames.forEach((u) => registerAdminUsername(u));
+};
+
 export const isAdminName = (name?: string | null): boolean => {
   if (!name) return false;
   const clean = name.trim().toLowerCase();
-  return clean === 'adminkawaaii' || clean === 'admin';
+  return adminUsernamesSet.has(clean) || clean === 'adminkawaaii' || clean === 'admin';
 };
 
 export const AdminBadge: React.FC<{ className?: string }> = ({ className = '' }) => {
@@ -15,3 +27,4 @@ export const AdminBadge: React.FC<{ className?: string }> = ({ className = '' })
     </span>
   );
 };
+

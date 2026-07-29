@@ -14,8 +14,9 @@ import { UnoGameSection } from './components/UnoGameSection';
 import { AdminPage } from './components/AdminPage';
 import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
 import { Footer } from './components/Footer';
-import { AuthProvider } from './context/AuthContext';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginModal } from './components/LoginModal';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 function ScrollToTop() {
@@ -26,6 +27,26 @@ function ScrollToTop() {
   }, [pathname]);
 
   return null;
+}
+
+function ProtectedGameRoute({ children, targetPath }: { children: React.ReactNode; targetPath: string }) {
+  const { currentUser, openLoginModal } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/', { replace: true });
+      openLoginModal(() => {
+        navigate(targetPath);
+      });
+    }
+  }, [currentUser, navigate, openLoginModal, targetPath]);
+
+  if (!currentUser) {
+    return null;
+  }
+
+  return <>{children}</>;
 }
 
 const pageVariants = {
@@ -125,31 +146,35 @@ function AnimatedRoutes({
         <Route
           path="/snake-ladders"
           element={
-            <motion.div
-              key="route-snake-ladders"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <SnakeAndLaddersSection />
-            </motion.div>
+            <ProtectedGameRoute targetPath="/snake-ladders">
+              <motion.div
+                key="route-snake-ladders"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <SnakeAndLaddersSection />
+              </motion.div>
+            </ProtectedGameRoute>
           }
         />
         <Route
           path="/uno"
           element={
-            <motion.div
-              key="route-uno"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <UnoGameSection />
-            </motion.div>
+            <ProtectedGameRoute targetPath="/uno">
+              <motion.div
+                key="route-uno"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <UnoGameSection />
+              </motion.div>
+            </ProtectedGameRoute>
           }
         />
         <Route
@@ -263,8 +288,8 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] text-zinc-800`}>
           <FloatingBackground />
           
@@ -275,8 +300,8 @@ export default function App() {
           
           {!isLoading && <MainLayout />}
         </div>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

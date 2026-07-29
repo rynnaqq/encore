@@ -1,4 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { LoginModal } from '../components/LoginModal';
+import {
+  fetchUsersFromSupabase,
+  saveUserToSupabase,
+  deleteUserFromSupabase,
+  updateUserRoleInSupabase,
+  StoredUserAccount,
+  DEFAULT_USERS,
+} from '../lib/supabaseAuth';
+import { registerAdminUsernames } from '../components/AdminBadge';
 
 export interface User {
   username: string;
@@ -6,13 +16,12 @@ export interface User {
   createdAt: number;
 }
 
-interface StoredUserAccount extends User {
-  password: string;
-}
-
 interface AuthContextType {
   currentUser: User | null;
   users: User[];
+  isLoginModalOpen: boolean;
+  openLoginModal: (onSuccessCallback?: () => void) => void;
+  closeLoginModal: () => void;
   login: (username: string, password: string) => { success: boolean; message?: string };
   register: (username: string, password: string) => { success: boolean; message?: string };
   logout: () => void;
@@ -21,23 +30,8 @@ interface AuthContextType {
   updateUserRole: (username: string, role: 'user' | 'admin') => { success: boolean; message?: string };
 }
 
-const STORAGE_USERS_KEY = 'app_users_v1';
-const STORAGE_CURRENT_USER_KEY = 'app_current_user_v1';
-
-const DEFAULT_USERS: StoredUserAccount[] = [
-  {
-    username: 'AdminKawaaii',
-    password: 'seramaula432',
-    role: 'admin',
-    createdAt: Date.now() - 86400000 * 30,
-  },
-  {
-    username: 'player1',
-    password: 'password123',
-    role: 'user',
-    createdAt: Date.now() - 86400000 * 7,
-  },
-];
+const STORAGE_USERS_KEY = 'app_users_v3';
+const STORAGE_CURRENT_USER_KEY = 'app_current_user_v3';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -47,15 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const saved = localStorage.getItem(STORAGE_USERS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
     } catch (e) {
       console.error('Error loading users:', e);
     }
-    localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(DEFAULT_USERS));
-    return DEFAULT_USERS;
+    return [];
   });
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -70,9 +63,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   });
 
+  // Sync state with Supabase database on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSupabaseAccounts() {
+      const remoteUsers = await fetchUsersFromSupabase();
+      if (isMounted) {
+        setStoredAccounts(remoteUsers || []);
+      }
+    }
+    loadSupabaseAccounts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(storedAccounts));
+      // Register all admin usernames so isAdminName returns true for them in games
+      const adminNames = storedAccounts
+        .filter((acc) => acc.role === 'admin')
+        .map((acc) => acc.username);
+      registerAdminUsernames(adminNames);
     } catch (e) {
       console.error('Error persisting users:', e);
     }
@@ -90,6 +103,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentUser]);
 
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginSuccessCallback, setLoginSuccessCallback] = useState<(() => void) | null>(null);
+
+  const openLoginModal = (callback?: () => void) => {
+    if (typeof callback === 'function') {
+      setLoginSuccessCallback(() => callback);
+    } else {
+      setLoginSuccessCallback(null);
+    }
+    setIsLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+    setLoginSuccessCallback(null);
+  };
+
   const login = (username: string, password: string) => {
     const cleanUsername = username.trim();
     if (!cleanUsername || !password) {
@@ -104,10 +134,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username not found. Please register first.' };
     }
 
-    // Allow admin password check for admin account
-    const isAdminAccount = account.username.toLowerCase() === 'adminkawaaii' || account.username.toLowerCase() === 'admin';
-    const isPasswordValid =
-      account.password === password || (isAdminAccount && (password === 'seramaula432' || password === 'admin123'));
+    // Password verification against account password
+    const isPasswordValid = account.password === password;
 
     if (!isPasswordValid) {
       return { success: false, message: 'Incorrect password' };
@@ -120,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     setCurrentUser(userObj);
+    setIsLoginModalOpen(false);
     return { success: true };
   };
 
@@ -152,6 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = [...storedAccounts, newAccount];
     setStoredAccounts(updated);
 
+    // Save asynchronously to Supabase database
+    saveUserToSupabase(newAccount);
+
     const userObj: User = {
       username: newAccount.username,
       role: newAccount.role,
@@ -159,6 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     setCurrentUser(userObj);
+    setIsLoginModalOpen(false);
     return { success: true };
   };
 
@@ -188,15 +221,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     setStoredAccounts((prev) => [...prev, newAccount]);
+
+    // Save asynchronously to Supabase database
+    saveUserToSupabase(newAccount);
+
     return { success: true };
   };
 
   const deleteUser = (username: string) => {
-    if (username.toLowerCase() === 'adminkawaaii' || username.toLowerCase() === 'admin') {
-      return { success: false, message: 'Cannot delete primary admin user' };
-    }
-
     setStoredAccounts((prev) => prev.filter((u) => u.username.toLowerCase() !== username.toLowerCase()));
+
+    // Delete asynchronously from Supabase database
+    deleteUserFromSupabase(username);
 
     if (currentUser?.username.toLowerCase() === username.toLowerCase()) {
       setCurrentUser(null);
@@ -214,6 +250,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return acc;
       })
     );
+
+    // Update asynchronously in Supabase database
+    updateUserRoleInSupabase(username, role);
 
     if (currentUser?.username.toLowerCase() === username.toLowerCase()) {
       setCurrentUser({ ...currentUser, role });
@@ -233,6 +272,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         users,
+        isLoginModalOpen,
+        openLoginModal,
+        closeLoginModal,
         login,
         register,
         logout,
@@ -242,6 +284,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }}
     >
       {children}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={closeLoginModal}
+        onSuccess={loginSuccessCallback || undefined}
+      />
     </AuthContext.Provider>
   );
 };
@@ -253,3 +300,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

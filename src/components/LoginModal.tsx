@@ -74,6 +74,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
           {/* Header */}
           <div className="text-center mb-6">
+            {!currentUser && (
+              <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 border border-pink-200 text-[#E195AB] text-xs font-bold animate-pulse">
+                <Shield className="w-3.5 h-3.5" />
+                <span>Silakan Login / Daftar Terlebih Dahulu</span>
+              </div>
+            )}
             <div className="w-14 h-14 bg-gradient-to-tr from-[#E195AB] to-[#FFCCE1] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-pink-200">
               {isRegisterMode ? (
                 <UserPlus className="w-7 h-7 text-white" />

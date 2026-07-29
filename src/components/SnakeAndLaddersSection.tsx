@@ -48,7 +48,7 @@ interface SNLRoomState {
 }
 
 export const SnakeAndLaddersSection: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, openLoginModal } = useAuth();
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [room, setRoom] = useState<SNLRoomState | null>(null);
   
@@ -191,6 +191,10 @@ export const SnakeAndLaddersSection: React.FC = () => {
   };
 
   const handleCreateRoom = () => {
+    if (!currentUser) {
+      openLoginModal();
+      return;
+    }
     if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
        setErrorMsg('Please configure Multiplayer Secrets first.');
        return;
@@ -202,6 +206,10 @@ export const SnakeAndLaddersSection: React.FC = () => {
   };
 
   const handleJoinRoom = () => {
+    if (!currentUser) {
+      openLoginModal();
+      return;
+    }
     if (!joinRoomId) return;
     setIsHost(false);
     initChannel(joinRoomId.toUpperCase(), false);
@@ -548,7 +556,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const isMyTurn = currentPlayer?.id === myId;
 
   return (
-    <section className="py-12 sm:py-16 min-h-screen flex flex-col justify-center relative overflow-hidden bg-slate-50">
+    <section className="pt-28 sm:pt-32 pb-12 sm:pb-16 min-h-screen flex flex-col justify-center relative overflow-hidden bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

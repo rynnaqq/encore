@@ -5,6 +5,7 @@ import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { AdminBadge, isAdminName } from './AdminBadge';
 import { subscribeToGlobalLobby } from "../lib/supabaseChess";
 import { createPortal } from 'react-dom';
+import { useAuth } from '../context/AuthContext';
 
 export interface PlayerInfo {
   name: string;
@@ -90,6 +91,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
   onQuickMatch,
   onLeaveRoom,
 }) => {
+  const { currentUser, openLoginModal } = useAuth();
   const [roomsList, setRoomsList] = useState<LobbyRoomSummary[]>([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [customName, setCustomName] = useState(playerProfile.name);
@@ -153,11 +155,19 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
 
   const handleCreateRoom = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      openLoginModal();
+      return;
+    }
     onCreateRoom({ roomName: newRoomName || 'New Room', timeControl, isPublic });
   };
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      openLoginModal();
+      return;
+    }
     if (joinCode.trim()) onJoinRoom(joinCode.trim());
   };
 

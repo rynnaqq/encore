@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName } from './AdminBadge';
 
 export const UnoGameSection: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, openLoginModal } = useAuth();
   const [supabase] = useState(() => getSupabaseClient());
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   
@@ -148,6 +148,10 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const handleCreateRoom = () => {
+    if (!currentUser) {
+      openLoginModal();
+      return;
+    }
     if (!supabase) return setErrorMsg('Supabase not configured');
     if (!playerName.trim()) return setErrorMsg('Name required');
     
@@ -173,6 +177,10 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const handleJoinRoom = () => {
+    if (!currentUser) {
+      openLoginModal();
+      return;
+    }
     if (!supabase) return setErrorMsg('Supabase not configured');
     if (!playerName.trim() || !joinRoomId.trim()) return setErrorMsg('Name and Room ID required');
     setIsHost(false);
@@ -404,8 +412,8 @@ export const UnoGameSection: React.FC = () => {
 
   if (!isUnlocked) {
     return (
-      <div id="uno" className="max-w-6xl mx-auto p-4 py-12 lg:py-24">
-        <div className="bg-white/80 backdrop-blur-xl border border-white p-8 rounded-3xl shadow-xl max-w-md mx-auto text-center">
+      <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
+        <div className="bg-white/80 backdrop-blur-xl border border-white p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
           <ShieldAlert className="w-16 h-16 text-rose-500 mx-auto mb-4" />
           <h2 className="text-2xl font-black text-slate-800 mb-6">Developer Access Required</h2>
           <p className="text-slate-600 mb-6">This game is currently in beta. Please enter the developer PIN to access.</p>
@@ -432,8 +440,8 @@ export const UnoGameSection: React.FC = () => {
 
   if (!gameState) {
     return (
-      <div id="uno" className="max-w-6xl mx-auto p-4 py-12 lg:py-24">
-        <div className="bg-white/80 backdrop-blur-xl border border-white p-8 rounded-3xl shadow-xl max-w-md mx-auto text-center">
+      <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
+        <div className="bg-white/80 backdrop-blur-xl border border-white p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
           <div className="w-20 h-20 bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-12 shadow-lg border-4 border-white">
             <span className="text-white font-black text-2xl -rotate-12">UNO</span>
           </div>
@@ -533,7 +541,7 @@ export const UnoGameSection: React.FC = () => {
   const isMyTurn = gameState.status === 'playing' && gameState.currentTurn === localPlayerIndex;
 
   return (
-    <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-16 md:pt-24 pb-4 md:pb-8 flex flex-col min-h-screen">
+    <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-24 sm:pt-28 md:pt-32 pb-4 md:pb-8 flex flex-col min-h-screen">
       <div className="bg-slate-900 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col flex-1">
         
         {/* Header */}

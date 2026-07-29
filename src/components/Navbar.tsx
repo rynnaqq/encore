@@ -18,8 +18,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { currentUser, logout } = useAuth();
+
+  const { currentUser, logout, openLoginModal } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -50,6 +50,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     
     if (id === 'about' && onOpenAboutModal) {
       onOpenAboutModal();
+      return;
+    }
+
+    // Require login before entering Snake & Ladders or UNO Game
+    const isProtectedGame = id === 'snake' || id === 'uno' || path === '/snake-ladders' || path === '/uno';
+    if (isProtectedGame && !currentUser) {
+      openLoginModal(() => {
+        navigate(path);
+      });
       return;
     }
 
@@ -131,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               ) : (
                 <button
-                  onClick={() => setIsLoginModalOpen(true)}
+                  onClick={openLoginModal}
                   className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#E195AB] to-[#d68097] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-pink-200 hover:opacity-95 transition-all cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
@@ -153,12 +162,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
         </div>
       </header>
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
 
       {/* Minimal Hamburger Menu Full Overlay Drawer */}
       <AnimatePresence>

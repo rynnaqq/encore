@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
+import { AdminBadge, isAdminName } from './AdminBadge';
 
 interface Comment {
   id: string;
@@ -50,9 +52,12 @@ const serializeCommentText = (text: string, isPinned: boolean, parentId: string 
 
 export const CommentSection: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true';
+  const { currentUser, login, register, logout, openLoginModal } = useAuth();
+  
+  const loggedInUser = currentUser?.username || '';
+  const isAdmin = currentUser ? (currentUser.role === 'admin' || isAdminName(currentUser.username)) : false;
+
   const [username, setUsername] = useState('');
-  const [loggedInUser, setLoggedInUser] = useState(isAdmin ? 'AdminKawaaii' : (typeof window !== 'undefined' ? localStorage.getItem('username') || '' : ''));
   const [password, setPassword] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [authError, setAuthError] = useState('');
@@ -75,12 +80,10 @@ export const CommentSection: React.FC = () => {
     fetchComments();
   }, []);
 
-
   const fetchComments = async () => {
     try {
       const supabase = getSupabaseClient();
       if (!supabase) {
-        // Fallback to empty array if no supabase
         setComments([]);
         setIsLoading(false);
         return;
@@ -93,7 +96,6 @@ export const CommentSection: React.FC = () => {
       if (error) {
         console.error('Error fetching comments:', error);
       } else if (data) {
-        // map db columns to state
         setComments(data.map(c => ({
           id: c.id,
           username: c.username,
@@ -124,9 +126,6 @@ export const CommentSection: React.FC = () => {
     }
   };
 
-
-  
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -134,69 +133,28 @@ export const CommentSection: React.FC = () => {
       setAuthError('Username and password are required');
       return;
     }
-    
-    if (!isAdmin && username.trim().toLowerCase().includes('admin')) {
-      setAuthError('You cannot use "Admin" in your username.');
-      return;
-    }
 
-    try {
-      const supabase = getSupabaseClient();
-      if (!supabase) return;
-
-      if (isLoginMode) {
-        // Log in
-        const { data, error } = await supabase
-          .from('comment_users')
-          .select('*')
-          .eq('username', username.trim())
-          .eq('password', password)
-          .single();
-
-        if (error || !data) {
-          setAuthError('Invalid username or password. (Note: Ensure comment_users table exists with username and password columns)');
-          return;
-        }
-
-        localStorage.setItem('username', username.trim());
-        setLoggedInUser(username.trim());
-        setUsername('');
-        setPassword('');
-      } else {
-        // Sign up
-        const { data: existingUser } = await supabase
-          .from('comment_users')
-          .select('username')
-          .eq('username', username.trim())
-          .single();
-          
-        if (existingUser) {
-          setAuthError('Username already taken');
-          return;
-        }
-
-        const { error } = await supabase
-          .from('comment_users')
-          .insert([{ username: username.trim(), password: password }]);
-
-        if (error) {
-          setAuthError('Signup failed: ' + error.message + ' (Note: Ensure comment_users table exists)');
-          return;
-        }
-
-        localStorage.setItem('username', username.trim());
-        setLoggedInUser(username.trim());
-        setUsername('');
-        setPassword('');
+    if (isLoginMode) {
+      const res = login(username.trim(), password);
+      if (!res.success) {
+        setAuthError(res.message || 'Login failed');
+        return;
       }
-    } catch (err: any) {
-      setAuthError(err.message || 'Authentication failed');
+      setUsername('');
+      setPassword('');
+    } else {
+      const res = register(username.trim(), password);
+      if (!res.success) {
+        setAuthError(res.message || 'Registration failed');
+        return;
+      }
+      setUsername('');
+      setPassword('');
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('username');
-    setLoggedInUser('');
+    logout();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -595,7 +553,7 @@ export const CommentSection: React.FC = () => {
                   className="flex flex-col gap-3"
                 >
                   <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex gap-4 group">
-                    {comment.username === 'AdminKawaaii' ? (
+                    {isAdminName(comment.username) ? (
                       <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 overflow-hidden border-2 border-indigo-200">
                         <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
                       </div>
@@ -608,15 +566,15 @@ export const CommentSection: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <h4 className={comment.username === 'AdminKawaaii' ? "font-bold text-red-600" : "font-bold text-slate-800"}>
+                          <h4 className={isAdminName(comment.username) ? "font-bold text-red-600" : "font-bold text-slate-800"}>
                             {comment.username}
                           </h4>
                           <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
-                            comment.username === 'AdminKawaaii' 
+                            isAdminName(comment.username) 
                               ? "bg-red-100 text-red-600" 
                               : "bg-slate-100 text-slate-500"
                           }`}>
-                            {comment.username === 'AdminKawaaii' ? 'Admin' : 'Guest'}
+                            {isAdminName(comment.username) ? 'Admin' : 'Guest'}
                           </span>
                         </div>
                         <span className="text-xs text-slate-400 font-medium">
@@ -730,7 +688,7 @@ export const CommentSection: React.FC = () => {
                     <div className="ml-8 pl-4 border-l-2 border-slate-100 space-y-3 mt-3">
                       {threadReplies.map(reply => (
                         <div key={reply.id} className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex gap-3">
-                          {reply.username === 'AdminKawaaii' ? (
+                          {isAdminName(reply.username) ? (
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 overflow-hidden border border-indigo-200">
                               <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
                             </div>
@@ -743,15 +701,15 @@ export const CommentSection: React.FC = () => {
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-2">
-                                <h4 className={reply.username === 'AdminKawaaii' ? "font-bold text-sm text-red-600" : "font-bold text-sm text-slate-800"}>
+                                <h4 className={isAdminName(reply.username) ? "font-bold text-sm text-red-600" : "font-bold text-sm text-slate-800"}>
                                   {reply.username}
                                 </h4>
                                 <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full ${
-                                  reply.username === 'AdminKawaaii' 
+                                  isAdminName(reply.username) 
                                     ? "bg-red-100 text-red-600" 
                                     : "bg-slate-200 text-slate-500"
                                 }`}>
-                                  {reply.username === 'AdminKawaaii' ? 'Admin' : 'Guest'}
+                                  {isAdminName(reply.username) ? 'Admin' : 'Guest'}
                                 </span>
                               </div>
                               <span className="text-[10px] text-slate-400 font-medium">

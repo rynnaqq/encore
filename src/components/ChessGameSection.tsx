@@ -165,7 +165,7 @@ export const ChessGameSection: React.FC = () => {
     }
   }, [activeRoom]);
 
-  const { currentUser } = useAuth();
+  const { currentUser, openLoginModal } = useAuth();
   const [yourSide, setYourSide] = useState<'w' | 'b' | 'spectator' | null>(null);
 
   // Stored Player Profile
@@ -1189,6 +1189,10 @@ export const ChessGameSection: React.FC = () => {
             </button>
             <button
               onClick={() => {
+                if (!currentUser) {
+                  openLoginModal();
+                  return;
+                }
                 setGameMode('online');
               }}
               className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
