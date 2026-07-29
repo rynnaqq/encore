@@ -109,7 +109,7 @@ export const UnoGameSection: React.FC = () => {
     });
 
     newChannel.on('broadcast', { event: 'JOIN_REQUEST' }, ({ payload }) => {
-      if (stateRef.current && stateRef.current.hostId === localPlayerId) {
+      if (stateRef.current && stateRef.current.players.find(p => p.isHost)?.id === localPlayerId) {
         const state = JSON.parse(JSON.stringify(stateRef.current));
         if (state.status === 'waiting' && state.players.length < 4) {
           if (!state.players.find(p => p.id === payload.id)) {
@@ -414,7 +414,7 @@ export const UnoGameSection: React.FC = () => {
       <div 
         key={card.id}
         onClick={handleClick}
-        className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 border-white shadow-xl flex flex-col justify-between p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer hover:-translate-y-4 transition-transform z-10' : 'cursor-pointer opacity-90'}`}
+        className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 border-white shadow-xl flex flex-col justify-between p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer transition-transform' : 'cursor-pointer opacity-90 hover:opacity-100'}`}
       >
         <div className="text-white font-bold text-sm md:text-lg leading-none drop-shadow-md">{displayValue}</div>
         <div className="text-white font-black text-3xl md:text-4xl self-center bg-white/20 rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center transform -rotate-12 drop-shadow-lg shadow-inner">
@@ -573,20 +573,12 @@ export const UnoGameSection: React.FC = () => {
                     </h4>
                   </div>
                   
-                  <div className="flex flex-wrap justify-center gap-2 max-w-4xl">
+                  <div className="flex flex-row justify-center max-w-full overflow-visible -space-x-6 md:-space-x-10 px-4 py-8">
                     {localPlayer?.hand.map((card) => {
                       const isValid = isMyTurn && isValidPlay(card, gameState.topCard!, gameState.currentColor);
                       return (
-                        <div key={card.id} className={`relative ${colorPickerVisible?.cardId === card.id ? 'z-50' : 'z-10'}`}>
-                          {renderCard(card, isMyTurn, () => {
-                            if (!isValid) {
-                              // Maybe show a temporary error or just do nothing?
-                              // But if isMyTurn is true, it will call this.
-                              // Let's just make it playable only if isValid, but let's see.
-                            } else {
-                              handlePlayCard(card);
-                            }
-                          })}
+                        <div key={card.id} className={`relative transition-all duration-300 hover:z-[100] hover:-translate-y-6 ${colorPickerVisible?.cardId === card.id ? 'z-[100]' : 'z-10'}`}>
+                          {renderCard(card, isValid, () => handlePlayCard(card), isMyTurn)}
                           
                           {/* Color Picker for Wilds */}
                           {colorPickerVisible?.cardId === card.id && (
