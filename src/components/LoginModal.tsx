@@ -164,12 +164,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
               )}
             </button>
           </div>
-
-          <div className="mt-3 text-center">
-            <span className="text-[11px] text-slate-400">
-              Default Admin: <strong className="text-slate-600">admin</strong> / <strong className="text-slate-600">admin123</strong>
-            </span>
-          </div>
         </motion.div>
       </div>
     </AnimatePresence>
