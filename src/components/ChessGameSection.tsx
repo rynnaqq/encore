@@ -36,6 +36,7 @@ import { COUNTRIES } from '../data/countries';
 import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode, publishRoomToGlobalLobby } from '../lib/supabaseChess';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { AdminBadge, isAdminName } from './AdminBadge';
 
 type GameMode = 'ai' | 'pass' | 'online';
 type AIDifficulty = 'easy' | 'medium' | 'hard';
@@ -1464,11 +1465,20 @@ export const ChessGameSection: React.FC = () => {
                         : gameMode === 'ai'
                         ? playerColor === 'w'
                           ? `Bot (${difficulty})`
-                          : 'You'
+                          : (currentUser ? currentUser.username : 'You')
                         : isFlipped
                         ? 'Player 1 (White)'
                         : 'Player 2 (Black)'}
                     </span>
+                    {isAdminName(
+                      gameMode === 'online' && activeRoom
+                        ? isFlipped
+                          ? activeRoom.whitePlayer?.name
+                          : activeRoom.blackPlayer?.name
+                        : gameMode === 'ai' && playerColor !== 'w'
+                        ? currentUser?.username
+                        : null
+                    ) && <AdminBadge />}
                     {game.turn() === (isFlipped ? 'w' : 'b') && !game.isGameOver() && (
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                     )}
@@ -1557,12 +1567,21 @@ export const ChessGameSection: React.FC = () => {
                           : activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
                         : gameMode === 'ai'
                         ? playerColor === 'w'
-                          ? 'You'
+                          ? (currentUser ? currentUser.username : 'You')
                           : `Bot (${difficulty})`
                         : isFlipped
                         ? 'Player 2 (Black)'
                         : 'Player 1 (White)'}
                     </span>
+                    {isAdminName(
+                      gameMode === 'online' && activeRoom
+                        ? isFlipped
+                          ? activeRoom.blackPlayer?.name
+                          : activeRoom.whitePlayer?.name
+                        : gameMode === 'ai' && playerColor === 'w'
+                        ? currentUser?.username
+                        : null
+                    ) && <AdminBadge />}
                     {game.turn() === (isFlipped ? 'b' : 'w') && !game.isGameOver() && (
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                     )}

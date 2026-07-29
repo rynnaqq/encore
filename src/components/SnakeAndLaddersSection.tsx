@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '../context/AuthContext';
+import { AdminBadge, isAdminName } from './AdminBadge';
 
 const BOARD_SIZE = 10;
 const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
@@ -449,7 +450,10 @@ export const SnakeAndLaddersSection: React.FC = () => {
                     <User className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-bold text-slate-800">{p.name} {p.id === myId && '(You)'}</div>
+                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>{p.name} {p.id === myId && '(You)'}</span>
+                      {isAdminName(p.name) && <AdminBadge />}
+                    </div>
                     {p.id === room.hostId && <div className="text-xs font-bold text-[#E195AB]">Host</div>}
                   </div>
                 </div>
@@ -661,7 +665,10 @@ export const SnakeAndLaddersSection: React.FC = () => {
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: p.color }}>
                         <User className="w-4 h-4" />
                       </div>
-                      <div className="font-bold text-sm text-slate-800">{p.name} {p.id === myId && '(You)'}</div>
+                      <div className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                        <span>{p.name} {p.id === myId && '(You)'}</span>
+                        {isAdminName(p.name) && <AdminBadge />}
+                      </div>
                     </div>
                     <div className="text-xs font-mono font-bold text-slate-500">
                       Cell {p.position}

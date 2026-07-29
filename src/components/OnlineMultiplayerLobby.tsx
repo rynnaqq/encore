@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Hash, Trophy, Copy, Check, User, Activity, RefreshCw, AlertCircle, Database, Cloud } from 'lucide-react';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
+import { AdminBadge, isAdminName } from './AdminBadge';
 import { subscribeToGlobalLobby } from "../lib/supabaseChess";
 import { createPortal } from 'react-dom';
 
@@ -181,6 +182,7 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
             <div className="text-left">
               <div className="text-xs font-bold text-slate-800 flex items-center gap-1">
                 <span>{playerProfile.name || 'Player'}</span>
+                {isAdminName(playerProfile.name) && <AdminBadge />}
                 <Trophy className="w-3 h-3 text-amber-500" />
               </div>
               <div className="text-[10px] font-mono text-[#E195AB] font-bold">Rating: {playerProfile.rating}</div>
@@ -239,7 +241,10 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   {activeRoom.whitePlayer?.flag || '⚪'}
                 </div>
                 <div className="mt-3 text-center">
-                  <div className="font-extrabold text-sm text-slate-800">{activeRoom.whitePlayer?.name || 'Menunggu...'}</div>
+                  <div className="font-extrabold text-sm text-slate-800 flex items-center justify-center gap-1">
+                    <span>{activeRoom.whitePlayer?.name || 'Menunggu...'}</span>
+                    {isAdminName(activeRoom.whitePlayer?.name) && <AdminBadge />}
+                  </div>
                   <div className="text-[11px] font-bold text-slate-500">Putih</div>
                 </div>
                 {!activeRoom.whitePlayer && (
@@ -263,7 +268,10 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
                   {activeRoom.blackPlayer?.flag || '⚫'}
                 </div>
                 <div className="mt-3 text-center">
-                  <div className="font-extrabold text-sm text-slate-800">{activeRoom.blackPlayer?.name || 'Menunggu...'}</div>
+                  <div className="font-extrabold text-sm text-slate-800 flex items-center justify-center gap-1">
+                    <span>{activeRoom.blackPlayer?.name || 'Menunggu...'}</span>
+                    {isAdminName(activeRoom.blackPlayer?.name) && <AdminBadge />}
+                  </div>
                   <div className="text-[11px] font-bold text-slate-500">Hitam</div>
                 </div>
                 {!activeRoom.blackPlayer && (
