@@ -578,31 +578,69 @@ export const UnoGameSection: React.FC = () => {
                     {localPlayer?.hand.map((card) => {
                       const isValid = isMyTurn && isValidPlay(card, gameState.topCard!, gameState.currentColor);
                       return (
-                        <div key={card.id} className={`relative transition-transform duration-200 ${isMyTurn && isValid ? 'hover:-translate-y-2' : ''} ${colorPickerVisible?.cardId === card.id ? 'z-[50]' : 'z-10'}`}>
+                        <div key={card.id} className={`relative transition-transform duration-200 ${isMyTurn && isValid ? 'hover:-translate-y-2' : ''} z-10`}>
                           {renderCard(card, isValid, () => handlePlayCard(card), isMyTurn)}
-                          
-                          {/* Color Picker for Wilds */}
-                          {colorPickerVisible?.cardId === card.id && (
-                            <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-slate-800 p-2 rounded-xl shadow-2xl border border-slate-700 flex gap-2 z-50">
-                              {['Red', 'Blue', 'Green', 'Yellow'].map(c => (
-                                <button
-                                  key={c}
-                                  onClick={(e) => { e.stopPropagation(); handlePlayCard(card, c as Color); }}
-                                  className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white hover:scale-125 transition-transform ${
-                                    c === 'Red' ? 'bg-red-500' :
-                                    c === 'Blue' ? 'bg-blue-500' :
-                                    c === 'Green' ? 'bg-green-500' : 'bg-yellow-400'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          )}
                         </div>
                       );
                     })}
                     </div>
                   </div>
                 </div>
+
+                {/* Wild Card Color Selection Modal */}
+                {colorPickerVisible && localPlayer?.hand.find(c => c.id === colorPickerVisible.cardId) && (
+                  <div 
+                    className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
+                    onClick={() => setColorPickerVisible(null)}
+                  >
+                    <div 
+                      className="bg-slate-900 border-2 border-indigo-500/50 p-6 rounded-3xl shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-4 animate-in zoom-in-95 duration-150"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wider">
+                        <Sparkles className="w-4 h-4" />
+                        Pilih Warna
+                      </div>
+                      <h3 className="text-xl font-black text-white">Warna Kartu Wild</h3>
+                      <p className="text-slate-400 text-xs">Pilih warna untuk melanjutkan giliran</p>
+
+                      <div className="grid grid-cols-2 gap-3 w-full mt-2">
+                        {(['Red', 'Blue', 'Green', 'Yellow'] as Color[]).map((c) => {
+                          const bgMap = {
+                            Red: 'bg-red-500 hover:bg-red-400 border-red-300 text-white',
+                            Blue: 'bg-blue-500 hover:bg-blue-400 border-blue-300 text-white',
+                            Green: 'bg-green-500 hover:bg-green-400 border-green-300 text-white',
+                            Yellow: 'bg-yellow-400 hover:bg-yellow-300 border-yellow-200 text-slate-900',
+                          };
+                          const colorLabels = {
+                            Red: 'Merah',
+                            Blue: 'Biru',
+                            Green: 'Hijau',
+                            Yellow: 'Kuning',
+                          };
+                          const targetCard = localPlayer.hand.find(card => card.id === colorPickerVisible.cardId)!;
+                          return (
+                            <button
+                              key={c}
+                              onClick={() => handlePlayCard(targetCard, c)}
+                              className={`${bgMap[c]} border-2 font-black py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transform active:scale-95 transition-all text-sm tracking-wide`}
+                            >
+                              <div className="w-3.5 h-3.5 rounded-full bg-white/40 border border-white/60" />
+                              {colorLabels[c]}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => setColorPickerVisible(null)}
+                        className="text-slate-400 hover:text-white text-xs font-bold pt-1 underline"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
