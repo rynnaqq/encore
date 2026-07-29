@@ -114,8 +114,9 @@ export const UnoGameSection: React.FC = () => {
         if (state.status === 'waiting' && state.players.length < 4) {
           if (!state.players.find(p => p.id === payload.id)) {
             state.players.push({ id: payload.id, name: payload.name, hand: [], isHost: false });
-            state.logs.push(`${payload.name} joined the game.`);
+            
             setGameState(state);
+            stateRef.current = state;
             broadcastState(state, newChannel);
           }
         }
@@ -164,33 +165,33 @@ export const UnoGameSection: React.FC = () => {
       player.hand.splice(cardIndex, 1);
       state.topCard = card;
       state.currentColor = card.color !== 'Wild' ? card.color : payload.chosenColor;
-      state.logs.push(`${player.name} played ${card.color === 'Wild' ? 'Wild' : card.color + ' ' + card.value}`);
+      
 
       // Win check
       if (player.hand.length === 0) {
         state.status = 'finished';
         state.winnerId = player.id;
-        state.logs.push(`🎉 ${player.name} WON THE GAME!`);
+        
       } else {
         // Apply effects
         let skipNext = false;
         if (card.value === 'Skip') {
           skipNext = true;
-          state.logs.push(`Next player is skipped!`);
+          
         } else if (card.value === 'Reverse') {
           state.direction *= -1;
-          state.logs.push(`Direction reversed!`);
+          
           if (state.players.length === 2) skipNext = true; // In 2-player, reverse acts as skip
         } else if (card.value === 'DrawTwo') {
           const nextIndex = (state.currentTurn + state.direction + state.players.length) % state.players.length;
           drawCards(state, nextIndex, 2);
           skipNext = true;
-          state.logs.push(`${state.players[nextIndex].name} draws 2 and is skipped!`);
+          
         } else if (card.value === 'WildDrawFour') {
           const nextIndex = (state.currentTurn + state.direction + state.players.length) % state.players.length;
           drawCards(state, nextIndex, 4);
           skipNext = true;
-          state.logs.push(`${state.players[nextIndex].name} draws 4 and is skipped!`);
+          
         }
 
         // Advance turn
@@ -199,11 +200,12 @@ export const UnoGameSection: React.FC = () => {
       }
     } else if (payload.action === 'DRAW_CARD') {
       drawCards(state, state.currentTurn, 1);
-      state.logs.push(`${player.name} drew a card.`);
+      
       state.currentTurn = (state.currentTurn + state.direction + state.players.length) % state.players.length;
     }
 
     setGameState(state);
+    stateRef.current = state;
     broadcastState(state);
   };
 
@@ -211,7 +213,7 @@ export const UnoGameSection: React.FC = () => {
     for (let i = 0; i < count; i++) {
       if (state.deck.length === 0) {
         state.deck = generateDeck(); // Reshuffle
-        state.logs.push(`Deck reshuffled.`);
+        
       }
       state.players[pIndex].hand.push(state.deck.pop()!);
     }
@@ -242,10 +244,11 @@ export const UnoGameSection: React.FC = () => {
     state.status = 'playing';
     state.currentTurn = 0;
     state.direction = 1;
-    state.logs.push('Game started!');
+    
     state.winnerId = null;
 
     setGameState(state);
+    stateRef.current = state;
     broadcastState(state);
   };
 
@@ -384,7 +387,7 @@ export const UnoGameSection: React.FC = () => {
     );
   }
 
-  const renderCard = (card: Card, isPlayable = false, onClick?: () => void) => {
+  const renderCard = (card: Card, isPlayable = false, onClick?: () => void, isMyTurn = false) => {
     let bg = 'bg-slate-800';
     if (card.color === 'Red') bg = 'bg-red-500';
     if (card.color === 'Blue') bg = 'bg-blue-500';
@@ -398,11 +401,20 @@ export const UnoGameSection: React.FC = () => {
     if (card.value === 'Wild') displayValue = 'W';
     if (card.value === 'WildDrawFour') displayValue = '+4';
 
+    const handleClick = () => {
+      if (isPlayable && onClick) {
+        onClick();
+      } else if (isMyTurn && !isPlayable) {
+        setErrorMsg('Invalid card! Must match color or number. Draw a card if you have no playable cards.');
+        setTimeout(() => setErrorMsg(''), 3000);
+      }
+    };
+
     return (
       <div 
         key={card.id}
-        onClick={isPlayable ? onClick : undefined}
-        className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 border-white shadow-xl flex flex-col justify-between p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer hover:-translate-y-4 transition-transform z-10' : 'opacity-90'}`}
+        onClick={handleClick}
+        className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 border-white shadow-xl flex flex-col justify-between p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer hover:-translate-y-4 transition-transform z-10' : 'cursor-pointer opacity-90'}`}
       >
         <div className="text-white font-bold text-sm md:text-lg leading-none drop-shadow-md">{displayValue}</div>
         <div className="text-white font-black text-3xl md:text-4xl self-center bg-white/20 rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center transform -rotate-12 drop-shadow-lg shadow-inner">
@@ -566,7 +578,15 @@ export const UnoGameSection: React.FC = () => {
                       const isValid = isMyTurn && isValidPlay(card, gameState.topCard!, gameState.currentColor);
                       return (
                         <div key={card.id} className="relative">
-                          {renderCard(card, isValid, () => handlePlayCard(card))}
+                          {renderCard(card, isMyTurn, () => {
+                            if (!isValid) {
+                              // Maybe show a temporary error or just do nothing?
+                              // But if isMyTurn is true, it will call this.
+                              // Let's just make it playable only if isValid, but let's see.
+                            } else {
+                              handlePlayCard(card);
+                            }
+                          })}
                           
                           {/* Color Picker for Wilds */}
                           {colorPickerVisible?.cardId === card.id && (
