@@ -10,6 +10,7 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
 import { ChessGameSection } from './components/ChessGameSection';
+import { UnoGameSection } from './components/UnoGameSection';
 import { AdminPage } from './components/AdminPage';
 import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
 import { Footer } from './components/Footer';
@@ -132,6 +133,21 @@ function AnimatedRoutes({
               className="gpu-smooth"
             >
               <SnakeAndLaddersSection />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/uno"
+          element={
+            <motion.div
+              key="route-uno"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <UnoGameSection />
             </motion.div>
           }
         />
