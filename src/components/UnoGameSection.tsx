@@ -593,23 +593,10 @@ export const UnoGameSection: React.FC = () => {
             )}
           </div>
 
-          {/* Sidebar / Logs */}
+          {/* Sidebar */}
           <div className="w-full lg:w-80 bg-slate-950 border-l border-slate-800 flex flex-col">
-            <div className="p-4 border-b border-slate-800 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-indigo-400" />
-              <h3 className="font-bold text-white">Game Logs</h3>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {gameState.logs.map((log, i) => (
-                <div key={i} className="text-sm bg-slate-900 border border-slate-800 p-3 rounded-lg text-slate-300">
-                  {log}
-                </div>
-              ))}
-              <div id="logs-end" />
-            </div>
-            
             {/* Players List Sidebar */}
-            <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+            <div className="p-4 flex-1 overflow-y-auto bg-slate-900/50">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Players</h4>
               <div className="space-y-2">
                 {gameState.players.map((p, i) => (
