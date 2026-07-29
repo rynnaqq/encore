@@ -414,13 +414,13 @@ export const UnoGameSection: React.FC = () => {
       <div 
         key={card.id}
         onClick={handleClick}
-        className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 border-white shadow-xl flex flex-col justify-between p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer transition-transform' : 'cursor-pointer opacity-90 hover:opacity-100'}`}
+        className={`relative w-16 h-24 md:w-24 md:h-36 rounded-lg md:rounded-xl border-2 md:border-4 border-white shadow-xl flex flex-col justify-between p-1.5 md:p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer transition-transform' : 'cursor-pointer opacity-90 hover:opacity-100'}`}
       >
-        <div className="text-white font-bold text-sm md:text-lg leading-none drop-shadow-md">{displayValue}</div>
-        <div className="text-white font-black text-3xl md:text-4xl self-center bg-white/20 rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center transform -rotate-12 drop-shadow-lg shadow-inner">
+        <div className="text-white font-bold text-xs md:text-lg leading-none drop-shadow-md">{displayValue}</div>
+        <div className="text-white font-black text-xl md:text-4xl self-center bg-white/20 rounded-full w-9 h-9 md:w-16 md:h-16 flex items-center justify-center transform -rotate-12 drop-shadow-lg shadow-inner">
           {displayValue}
         </div>
-        <div className="text-white font-bold text-sm md:text-lg leading-none self-end transform rotate-180 drop-shadow-md">{displayValue}</div>
+        <div className="text-white font-bold text-xs md:text-lg leading-none self-end transform rotate-180 drop-shadow-md">{displayValue}</div>
       </div>
     );
   };
@@ -430,11 +430,11 @@ export const UnoGameSection: React.FC = () => {
   const isMyTurn = gameState.status === 'playing' && gameState.currentTurn === localPlayerIndex;
 
   return (
-    <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-24 md:pt-28 pb-4 md:pb-8 flex flex-col h-[100dvh]">
+    <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-16 md:pt-24 pb-4 md:pb-8 flex flex-col min-h-screen">
       <div className="bg-slate-900 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col flex-1">
         
         {/* Header */}
-        <div className="bg-slate-800 p-4 px-6 flex items-center justify-between border-b border-slate-700">
+        <div className="bg-slate-800 p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-slate-700 shrink-0">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 rounded-xl flex items-center justify-center transform rotate-12 shadow-lg border-2 border-white/20">
               <span className="text-white font-black text-xs -rotate-12">UNO</span>
@@ -456,9 +456,9 @@ export const UnoGameSection: React.FC = () => {
         </div>
 
         {/* Game Area */}
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0">
           {/* Main Board */}
-          <div className="flex-1 p-2 md:p-4 flex flex-col relative bg-emerald-900/40 overflow-hidden">
+          <div className="flex-1 p-2 md:p-4 flex flex-col justify-between relative bg-emerald-900/40 overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0">
             {/* Status Overlay */}
             {gameState.status === 'waiting' && (
               <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
@@ -507,32 +507,32 @@ export const UnoGameSection: React.FC = () => {
             {gameState.status === 'playing' && (
               <>
                 {/* Opponents Hands (Top) */}
-                <div className="flex justify-center gap-8 mb-auto opacity-80">
+                <div className="flex justify-center gap-4 md:gap-8 opacity-80 shrink-0 py-1">
                   {gameState.players.map((p, i) => {
                     if (p.id === localPlayerId) return null;
                     const isTurn = gameState.currentTurn === i;
                     return (
-                      <div key={p.id} className={`flex flex-col items-center ${isTurn ? 'scale-110' : 'scale-90'} transition-transform`}>
-                        <div className={`text-white font-bold mb-2 px-3 py-1 rounded-full text-sm ${isTurn ? 'bg-indigo-500' : 'bg-slate-800'}`}>
+                      <div key={p.id} className={`flex flex-col items-center ${isTurn ? 'scale-105' : 'scale-90'} transition-transform`}>
+                        <div className={`text-white font-bold mb-1 px-2.5 py-0.5 rounded-full text-xs md:text-sm ${isTurn ? 'bg-indigo-500' : 'bg-slate-800'}`}>
                           {p.name}
                         </div>
-                        <div className="flex -space-x-8">
+                        <div className="flex -space-x-6 md:-space-x-8">
                           {p.hand.map((_, idx) => (
-                            <div key={idx} className="w-12 h-20 bg-slate-800 border-2 border-slate-600 rounded-lg shadow-md flex items-center justify-center">
-                              <span className="text-slate-700 font-black text-xs">UNO</span>
+                            <div key={idx} className="w-8 h-12 md:w-12 md:h-20 bg-slate-800 border-2 border-slate-600 rounded-md md:rounded-lg shadow-md flex items-center justify-center">
+                              <span className="text-slate-600 font-black text-[9px] md:text-xs">UNO</span>
                             </div>
                           ))}
                         </div>
-                        <div className="mt-2 text-slate-300 font-bold text-xs">{p.hand.length} cards</div>
+                        <div className="mt-1 text-slate-300 font-bold text-[10px] md:text-xs">{p.hand.length} cards</div>
                       </div>
                     );
                   })}
                 </div>
 
                 {/* Center Deck & Top Card */}
-                <div className="flex flex-col items-center justify-center gap-4 my-auto py-4">
+                <div className="flex flex-col items-center justify-center gap-2 md:gap-4 my-2 md:my-auto shrink-0">
                   {/* Current Color Indicator (For Wilds) */}
-                  <div className={`px-6 py-2 rounded-full font-black text-white text-lg tracking-wider uppercase border-2 border-white/20 shadow-xl ${
+                  <div className={`px-4 md:px-6 py-1 md:py-2 rounded-full font-black text-white text-xs md:text-lg tracking-wider uppercase border-2 border-white/20 shadow-xl ${
                     gameState.currentColor === 'Red' ? 'bg-red-500' :
                     gameState.currentColor === 'Blue' ? 'bg-blue-500' :
                     gameState.currentColor === 'Green' ? 'bg-green-500' :
@@ -545,9 +545,9 @@ export const UnoGameSection: React.FC = () => {
                     {/* Draw Pile */}
                     <div 
                       onClick={isMyTurn ? handleDrawCard : undefined}
-                      className={`w-20 h-32 md:w-24 md:h-36 bg-slate-800 border-4 border-slate-700 rounded-xl shadow-2xl flex items-center justify-center ${isMyTurn ? 'cursor-pointer hover:border-indigo-400 hover:-translate-y-2 transition-all' : 'opacity-50'}`}
+                      className={`w-16 h-24 md:w-24 md:h-36 bg-slate-800 border-2 md:border-4 border-slate-700 rounded-lg md:rounded-xl shadow-2xl flex items-center justify-center ${isMyTurn ? 'cursor-pointer hover:border-indigo-400 hover:-translate-y-1 transition-all' : 'opacity-50'}`}
                     >
-                      <span className="text-slate-600 font-black text-xl md:text-2xl -rotate-12">UNO</span>
+                      <span className="text-slate-600 font-black text-sm md:text-2xl -rotate-12">UNO</span>
                     </div>
 
                     {/* Top Card */}
@@ -559,22 +559,22 @@ export const UnoGameSection: React.FC = () => {
                   </div>
                   
                   {/* Turn Indicator */}
-                  <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700">
-                    <span className="text-slate-300 font-bold text-sm">Direction:</span>
-                    <ArrowRight className={`w-5 h-5 text-indigo-400 transform transition-transform duration-500 ${gameState.direction === -1 ? 'rotate-180' : ''}`} />
+                  <div className="flex items-center gap-1.5 md:gap-2 bg-slate-800/80 backdrop-blur-sm px-3 py-1 md:px-4 md:py-2 rounded-full border border-slate-700">
+                    <span className="text-slate-300 font-bold text-xs md:text-sm">Direction:</span>
+                    <ArrowRight className={`w-4 h-4 md:w-5 md:h-5 text-indigo-400 transform transition-transform duration-500 ${gameState.direction === -1 ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
 
                 {/* Local Player Hand */}
-                <div className="mt-auto flex flex-col items-center w-full overflow-hidden">
-                  <div className="mb-2 md:mb-4">
-                    <h4 className={`font-black text-lg md:text-xl px-6 py-2 rounded-full shadow-lg border-2 ${isMyTurn ? 'bg-indigo-600 text-white border-indigo-400 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                <div className="shrink-0 flex flex-col items-center w-full mt-auto pt-2 bg-slate-950/80 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl sticky bottom-0 z-20">
+                  <div className="mb-1 md:mb-2">
+                    <h4 className={`font-black text-xs md:text-sm px-4 py-1 rounded-full shadow-lg border ${isMyTurn ? 'bg-indigo-600 text-white border-indigo-400 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
                       {isMyTurn ? 'YOUR TURN!' : 'Wait for your turn...'}
                     </h4>
                   </div>
                   
-                  <div className="w-full max-w-full overflow-x-auto pb-4 pt-4 px-2 scroll-smooth">
-                    <div className="flex flex-row justify-start w-max min-w-full gap-2 md:gap-4 px-4 pb-4 mx-auto">
+                  <div className="w-full max-w-full overflow-x-auto pb-3 pt-2 px-2 scroll-smooth">
+                    <div className="flex flex-row justify-start md:justify-center w-max min-w-full gap-2 md:gap-4 px-4 mx-auto">
                     {localPlayer?.hand.map((card) => {
                       const isValid = isMyTurn && isValidPlay(card, gameState.topCard!, gameState.currentColor);
                       return (
@@ -583,12 +583,12 @@ export const UnoGameSection: React.FC = () => {
                           
                           {/* Color Picker for Wilds */}
                           {colorPickerVisible?.cardId === card.id && (
-                            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-slate-800 p-2 rounded-xl shadow-2xl border border-slate-700 flex gap-2 z-50">
+                            <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-slate-800 p-2 rounded-xl shadow-2xl border border-slate-700 flex gap-2 z-50">
                               {['Red', 'Blue', 'Green', 'Yellow'].map(c => (
                                 <button
                                   key={c}
                                   onClick={(e) => { e.stopPropagation(); handlePlayCard(card, c as Color); }}
-                                  className={`w-8 h-8 rounded-full border-2 border-white hover:scale-125 transition-transform ${
+                                  className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white hover:scale-125 transition-transform ${
                                     c === 'Red' ? 'bg-red-500' :
                                     c === 'Blue' ? 'bg-blue-500' :
                                     c === 'Green' ? 'bg-green-500' : 'bg-yellow-400'
@@ -608,9 +608,9 @@ export const UnoGameSection: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="w-full lg:w-80 bg-slate-950 border-l border-slate-800 flex flex-col">
+          <div className="w-full lg:w-80 bg-slate-950 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col shrink-0">
             {/* Players List Sidebar */}
-            <div className="p-4 flex-1 overflow-y-auto bg-slate-900/50">
+            <div className="p-3 md:p-4 overflow-y-auto bg-slate-900/50 max-h-36 lg:max-h-none">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Players</h4>
               <div className="space-y-2">
                 {gameState.players.map((p, i) => (
