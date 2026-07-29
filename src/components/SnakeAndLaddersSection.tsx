@@ -106,15 +106,15 @@ export const SnakeAndLaddersSection: React.FC = () => {
       .on('broadcast', { event: 'sync_state' }, ({ payload }) => {
         setRoom(payload);
         if (payload.winnerId) setIsRolling(false);
+        if (payload.hostId === myId) setIsHost(true);
       })
       .on('broadcast', { event: 'join_request' }, ({ payload }) => {
-        if (hosting && roomRef.current) {
+        if (roomRef.current && roomRef.current.hostId === myId) {
           const currentRoom = { ...roomRef.current };
           if (currentRoom.players.length < 4 && !currentRoom.isStarted && !currentRoom.players.find(p => p.id === payload.id)) {
             currentRoom.players.push(payload);
             currentRoom.logs.push(`${payload.name} joined the room.`);
             setRoom(currentRoom);
-            // Must use new state for broadcast
             if (newChannel) {
               newChannel.send({ type: 'broadcast', event: 'sync_state', payload: currentRoom });
             }
@@ -122,28 +122,23 @@ export const SnakeAndLaddersSection: React.FC = () => {
         }
       })
       .on('broadcast', { event: 'action_roll' }, ({ payload }) => {
-        // Anyone can receive the roll animation
-        handleRemoteRoll(payload.roll, payload.playerId, newChannel, hosting);
+        handleRemoteRoll(payload.roll, payload.playerId, newChannel, roomRef.current?.hostId === myId);
       })
       .on('broadcast', { event: 'leave_request' }, ({ payload }) => {
-        if (hosting && roomRef.current) {
-           const currentRoom = { ...roomRef.current };
-           const idx = currentRoom.players.findIndex(p => p.id === payload.id);
-           if (idx !== -1) {
-             const leaver = currentRoom.players[idx];
-             currentRoom.players.splice(idx, 1);
-             currentRoom.logs.push(`${leaver.name} left the room.`);
-             if (currentRoom.isStarted && currentRoom.currentPlayerIndex >= currentRoom.players.length) {
-                currentRoom.currentPlayerIndex = 0;
-             }
-             setRoom(currentRoom);
-             if (newChannel) newChannel.send({ type: 'broadcast', event: 'sync_state', payload: currentRoom });
-           }
-        }
+        handlePlayerLeave(payload.id, newChannel);
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        leftPresences.forEach((p: any) => {
+          const leaverKey = p.key || p.id;
+          if (leaverKey) {
+            handlePlayerLeave(leaverKey, newChannel);
+          }
+        });
       });
 
     newChannel.subscribe((status, err) => {
       if (status === 'SUBSCRIBED') {
+        newChannel.track({ key: myId, id: myId, name: playerName, color: playerColor });
         if (hosting) {
           // Send initial state
           const initialState: SNLRoomState = {
@@ -236,6 +231,60 @@ export const SnakeAndLaddersSection: React.FC = () => {
       };
       setRoom(newRoom);
       broadcastState(newRoom);
+    }
+  };
+
+  const handlePlayerLeave = (leaverId: string, activeChannel: RealtimeChannel | null) => {
+    const currentRoom = roomRef.current;
+    if (!currentRoom) return;
+
+    const leaverIndex = currentRoom.players.findIndex(p => p.id === leaverId);
+    if (leaverIndex === -1) return;
+
+    const leaver = currentRoom.players[leaverIndex];
+    const remainingPlayers = currentRoom.players.filter(p => p.id !== leaverId);
+
+    let newTurnIndex = currentRoom.currentPlayerIndex;
+    if (remainingPlayers.length > 0) {
+      if (newTurnIndex === leaverIndex) {
+        newTurnIndex = leaverIndex % remainingPlayers.length;
+      } else if (newTurnIndex > leaverIndex) {
+        newTurnIndex = newTurnIndex - 1;
+      }
+    } else {
+      newTurnIndex = 0;
+    }
+
+    let winnerId = currentRoom.winnerId;
+    if (currentRoom.isStarted && remainingPlayers.length === 1 && !winnerId) {
+      winnerId = remainingPlayers[0].id;
+    }
+
+    let newHostId = currentRoom.hostId;
+    if (currentRoom.hostId === leaverId && remainingPlayers.length > 0) {
+      newHostId = remainingPlayers[0].id;
+    }
+
+    const updatedRoom: SNLRoomState = {
+      ...currentRoom,
+      hostId: newHostId,
+      players: remainingPlayers,
+      currentPlayerIndex: newTurnIndex,
+      winnerId,
+      logs: [...currentRoom.logs, `${leaver.name} left the room.`]
+    };
+
+    setRoom(updatedRoom);
+
+    const amIHostNow = newHostId === myId;
+    setIsHost(amIHostNow);
+
+    if (amIHostNow && activeChannel) {
+      activeChannel.send({
+        type: 'broadcast',
+        event: 'sync_state',
+        payload: updatedRoom,
+      });
     }
   };
 
@@ -659,7 +708,10 @@ export const SnakeAndLaddersSection: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Players</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Players ({room.players.length})</h4>
+                  <div className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Room: {room.roomId}</div>
+                </div>
                 {room.players.map((p, idx) => (
                   <div 
                     key={p.id}
@@ -684,27 +736,6 @@ export const SnakeAndLaddersSection: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="bg-white rounded-3xl p-6 border-2 border-[#FFCCE1] shadow-xl">
-               <div className="flex items-center justify-between mb-4">
-                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Game Log</h4>
-                 <div className="text-xs font-bold text-slate-400">Room: {room.roomId}</div>
-               </div>
-               <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                 <AnimatePresence>
-                   {[...room.logs].reverse().map((log, i) => (
-                     <motion.div
-                       key={i + log}
-                       initial={{ opacity: 0, x: -10 }}
-                       animate={{ opacity: 1, x: 0 }}
-                       className="text-xs font-medium text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100"
-                     >
-                       {log}
-                     </motion.div>
-                   ))}
-                 </AnimatePresence>
-               </div>
             </div>
             
             <button
@@ -738,7 +769,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
                 </div>
                 <h3 className="text-3xl font-black text-slate-800 mb-2">Winner!</h3>
                 <p className="text-lg font-bold text-slate-600 mb-8">
-                  <span style={{ color: winner.color }}>{winner.name}</span> has reached cell 100!
+                  <span style={{ color: winner.color }}>{winner.name}</span> {room.players.length === 1 ? 'wins! All other players left the game.' : 'has reached cell 100!'}
                 </p>
                 {isHost && (
                   <button

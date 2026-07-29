@@ -1722,45 +1722,6 @@ export const ChessGameSection: React.FC = () => {
               )}
             </div>
 
-            {/* Move History Log Panel */}
-            <div className="p-5 rounded-2xl bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] shadow-lg flex flex-col h-[280px]">
-              <div className="flex items-center justify-between pb-3 border-b border-[#FFCCE1] mb-3">
-                <div className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-[#E195AB]" />
-                  <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
-                    Move Log ({moveHistory.length})
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto pr-1 space-y-1.5 font-mono text-xs">
-                {moveHistory.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-slate-400 italic text-[11px]">
-                    No moves played yet.
-                  </div>
-                ) : (
-                  Array.from({ length: Math.ceil(moveHistory.length / 2) }).map((_, idx) => {
-                    const whiteMove = moveHistory[idx * 2];
-                    const blackMove = moveHistory[idx * 2 + 1];
-                    return (
-                      <div
-                        key={idx}
-                        className="grid grid-cols-7 items-center p-1.5 rounded-lg bg-[#FFF5D7]/60 border border-[#FFCCE1]/50 text-slate-700"
-                      >
-                        <span className="col-span-1 text-slate-400 font-bold">{idx + 1}.</span>
-                        <span className="col-span-3 font-semibold text-slate-800">
-                          {whiteMove ? whiteMove.san : ''}
-                        </span>
-                        <span className="col-span-3 font-semibold text-slate-600">
-                          {blackMove ? blackMove.san : ''}
-                        </span>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
           </div>
 
         </div>
