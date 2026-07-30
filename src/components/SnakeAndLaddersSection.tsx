@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName } from './AdminBadge';
+import { VictoryModal } from './VictoryModal';
 
 const BOARD_SIZE = 10;
 const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
@@ -750,45 +751,18 @@ export const SnakeAndLaddersSection: React.FC = () => {
       </div>
 
       {typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>
-          {winner && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="w-full max-w-sm p-8 rounded-3xl bg-white shadow-2xl border-2 border-[#FFCCE1] text-center"
-              >
-                <div className="w-20 h-20 mx-auto rounded-full bg-[#FFF5D7] flex items-center justify-center mb-6 border-4 border-[#E195AB] shadow-inner text-white" style={{ backgroundColor: winner.color }}>
-                  <Trophy className="w-10 h-10" />
-                </div>
-                <h3 className="text-3xl font-black text-slate-800 mb-2">Winner!</h3>
-                <p className="text-lg font-bold text-slate-600 mb-8">
-                  <span style={{ color: winner.color }}>{winner.name}</span> {room.players.length === 1 ? 'wins! All other players left the game.' : 'has reached cell 100!'}
-                </p>
-                {isHost && (
-                  <button
-                    onClick={handleResetGame}
-                    className="w-full py-4 rounded-xl bg-[#E195AB] text-white font-extrabold text-lg hover:bg-[#d88299] hover:scale-105 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2 mb-3"
-                  >
-                    <RotateCcw className="w-5 h-5" /> Play Again
-                  </button>
-                )}
-                <button
-                  onClick={handleLeaveRoom}
-                  className="w-full py-4 rounded-xl bg-white text-slate-700 font-bold text-lg hover:bg-slate-50 border-2 border-slate-200 transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  <Settings className="w-5 h-5" /> Leave Room
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
+        <VictoryModal
+          isOpen={!!winner}
+          winnerName={winner?.name || ''}
+          winnerColor={winner?.color || '#E195AB'}
+          subtitle={room && room.players.length === 1 ? 'Menang karena semua pemain lain keluar ruangan!' : 'Berhasil melewati tangga dan mencapai petak 100!'}
+          gameTitle="Ular Tangga Multiplayer"
+          isHost={isHost}
+          onPlayAgain={handleResetGame}
+          onLeave={handleLeaveRoom}
+          playAgainText="Main Lagi"
+          leaveText="Keluar dari Room"
+        />,
         document.body
       )}
     </section>

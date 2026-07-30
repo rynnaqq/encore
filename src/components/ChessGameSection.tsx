@@ -37,6 +37,7 @@ import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode, publ
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName } from './AdminBadge';
+import { VictoryModal } from './VictoryModal';
 
 type GameMode = 'ai' | 'pass' | 'online';
 type AIDifficulty = 'easy' | 'medium' | 'hard';
@@ -1845,73 +1846,42 @@ export const ChessGameSection: React.FC = () => {
 
         {/* Game Result Modal */}
         {typeof document !== 'undefined' && createPortal(
-          <AnimatePresence>
-            {gameResult && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
-              >
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
-                >
-                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center text-[#E195AB]">
-                    <Trophy className="w-8 h-8" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="font-sans font-extrabold text-2xl text-slate-800">
-                      Game Over!
-                    </h3>
-                    <p className="text-base font-bold text-[#E195AB] leading-relaxed">
-                      {gameResult}
-                    </p>
-                  </div>
-                  <div className="pt-3 flex flex-col gap-3">
-                    <button
-                      onClick={() => {
-                        resetGame();
-                        if (gameMode === 'online') {
-                          if (supabaseHandlerRef.current) {
-                            supabaseHandlerRef.current.requestRematch();
-                          }
-                          if (socket && activeRoom) {
-                            socket.emit('request_rematch', { roomId: activeRoom.roomId });
-                          }
-                        }
-                      }}
-                      className="w-full py-3 rounded-2xl bg-[#E195AB] text-white font-bold text-sm hover:bg-[#d88299] transition-all shadow-md cursor-pointer"
-                    >
-                      Play Again / Rematch
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (gameMode === 'online') {
-                          if (supabaseHandlerRef.current) {
-                            supabaseHandlerRef.current.leaveRoom();
-                            supabaseHandlerRef.current = null;
-                          }
-                          if (socket && activeRoom) {
-                            socket.emit('leave_room', { roomId: activeRoom.roomId });
-                          }
-                          setActiveRoom(null);
-                          setYourSide(null);
-                        }
-                        resetGame();
-                        setGameResult(null);
-                      }}
-                      className="w-full py-3 rounded-2xl bg-white text-slate-700 border-2 border-slate-200 font-bold text-sm hover:bg-slate-50 transition-all cursor-pointer"
-                    >
-                      Keluar ke Lobby
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>,
+          <VictoryModal
+            isOpen={!!gameResult}
+            winnerName={gameResult || 'Game Over'}
+            winnerColor="#E195AB"
+            subtitle="Pertandingan catur telah selesai!"
+            gameTitle="Catur Multiplayer"
+            isHost={true}
+            onPlayAgain={() => {
+              resetGame();
+              if (gameMode === 'online') {
+                if (supabaseHandlerRef.current) {
+                  supabaseHandlerRef.current.requestRematch();
+                }
+                if (socket && activeRoom) {
+                  socket.emit('request_rematch', { roomId: activeRoom.roomId });
+                }
+              }
+            }}
+            onLeave={() => {
+              if (gameMode === 'online') {
+                if (supabaseHandlerRef.current) {
+                  supabaseHandlerRef.current.leaveRoom();
+                  supabaseHandlerRef.current = null;
+                }
+                if (socket && activeRoom) {
+                  socket.emit('leave_room', { roomId: activeRoom.roomId });
+                }
+                setActiveRoom(null);
+                setYourSide(null);
+              }
+              resetGame();
+              setGameResult(null);
+            }}
+            playAgainText="Main Lagi / Rematch"
+            leaveText="Keluar ke Lobby"
+          />,
           document.body
         )}
       </div>

@@ -6,6 +6,7 @@ import { GameState, Card, Player, Color, generateDeck, isValidPlay } from '../li
 import { Copy, Play, UserPlus, Users, ArrowRight, MessageSquare, ShieldAlert, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName } from './AdminBadge';
+import { VictoryModal } from './VictoryModal';
 
 export const UnoGameSection: React.FC = () => {
   const { currentUser, openLoginModal } = useAuth();
@@ -363,10 +364,10 @@ export const UnoGameSection: React.FC = () => {
       key: Date.now(),
     });
 
-    // 3.5 seconds timer before shrinking away and penalizing
+    // 1 second timer before shrinking away and penalizing
     unoTimerRef.current = setTimeout(() => {
       handleUnoTimeout();
-    }, 3500);
+    }, 1000);
   };
 
   const handleUnoClick = () => {
@@ -695,17 +696,18 @@ export const UnoGameSection: React.FC = () => {
             )}
 
             {gameState.status === 'finished' && (
-              <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-50">
-                <div className="text-8xl mb-6 animate-bounce">🏆</div>
-                <h3 className="text-4xl font-black text-white mb-2">
-                  {gameState.players.find(p => p.id === gameState.winnerId)?.name} WINS!
-                </h3>
-                {isHost && (
-                  <button onClick={handleStartGame} className="mt-8 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-indigo-600/30">
-                    PLAY AGAIN
-                  </button>
-                )}
-              </div>
+              <VictoryModal
+                isOpen={true}
+                winnerName={gameState.players.find(p => p.id === gameState.winnerId)?.name || 'Player'}
+                winnerColor="#f59e0b"
+                subtitle="Telah berhasil menghabiskan seluruh kartu & menjadi Juara UNO!"
+                gameTitle="UNO Multiplayer"
+                isHost={isHost}
+                onPlayAgain={handleStartGame}
+                onLeave={handleLeaveRoom}
+                playAgainText="Main Lagi"
+                leaveText="Keluar dari Room"
+              />
             )}
 
             {/* Play Area */}
@@ -878,33 +880,67 @@ export const UnoGameSection: React.FC = () => {
       {/* Interactive Shrinking UNO Button */}
       <AnimatePresence>
         {unoButton && (
-          <motion.div
-            key={unoButton.key}
-            initial={{ scale: 1.3, opacity: 1 }}
-            animate={{ scale: 0, opacity: 0.1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 3.5, ease: 'linear' }}
-            style={{
-              position: 'fixed',
-              top: `${unoButton.top}%`,
-              left: `${unoButton.left}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-            className="z-[99999] pointer-events-auto"
-          >
-            <button
-              onClick={handleUnoClick}
-              className="relative group w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-red-500 via-red-600 to-rose-700 border-4 border-yellow-300 shadow-[0_0_35px_rgba(250,204,21,0.9)] flex flex-col items-center justify-center active:scale-95 transition-transform cursor-pointer overflow-hidden"
+          <>
+            {/* Screen edge warning flash */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.1, 0.4] }}
+              exit={{ opacity: 0 }}
+              transition={{ repeat: Infinity, duration: 0.2 }}
+              className="fixed inset-0 pointer-events-none z-[99990] border-8 border-red-500/60 rounded-xl shadow-[inset_0_0_50px_rgba(239,68,68,0.5)]"
+            />
+
+            <motion.div
+              key={unoButton.key}
+              initial={{ scale: 1.5, opacity: 1 }}
+              animate={{ scale: 0.15, opacity: 0.2 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 1, ease: 'easeIn' }}
+              style={{
+                position: 'fixed',
+                top: `${unoButton.top}%`,
+                left: `${unoButton.left}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+              className="z-[99999] pointer-events-auto flex items-center justify-center"
             >
-              <span className="text-yellow-200 font-black text-2xl sm:text-3xl tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] -rotate-6 group-hover:scale-110 transition-transform select-none">
-                UNO!
-              </span>
-              <span className="text-[10px] font-bold text-white uppercase tracking-widest mt-0.5 select-none">
-                TEKAN SAYA!
-              </span>
-              <div className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping pointer-events-none" />
-            </button>
-          </motion.div>
+              {/* Outer Pulsing Shockwave Ring */}
+              <motion.div
+                animate={{ scale: [1, 2.2], opacity: [0.9, 0] }}
+                transition={{ repeat: Infinity, duration: 0.35, ease: 'easeOut' }}
+                className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-yellow-400 bg-red-500/30 pointer-events-none"
+              />
+
+              <button
+                onClick={handleUnoClick}
+                className="relative group w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-red-500 via-amber-500 to-rose-600 border-4 border-yellow-300 shadow-[0_0_60px_rgba(239,68,68,1),0_0_30px_rgba(250,204,21,1)] flex flex-col items-center justify-center active:scale-90 transition-transform cursor-pointer overflow-hidden animate-bounce"
+              >
+                {/* SVG Countdown Ring */}
+                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none p-1">
+                  <motion.circle
+                    cx="50%"
+                    cy="50%"
+                    r="45%"
+                    className="stroke-yellow-300 fill-none"
+                    strokeWidth="6"
+                    strokeDasharray="280"
+                    initial={{ strokeDashoffset: 0 }}
+                    animate={{ strokeDashoffset: 280 }}
+                    transition={{ duration: 1, ease: 'linear' }}
+                  />
+                </svg>
+
+                <span className="text-yellow-200 font-black text-3xl sm:text-4xl tracking-tighter drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] -rotate-6 group-hover:scale-110 transition-transform select-none">
+                  UNO!
+                </span>
+                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-black/40 border border-yellow-400/60 select-none animate-pulse">
+                  ⚡ 1 DETIK!
+                </span>
+
+                <div className="absolute inset-0 rounded-full border-4 border-white/50 animate-ping pointer-events-none" />
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
