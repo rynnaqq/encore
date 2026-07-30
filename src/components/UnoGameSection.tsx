@@ -59,6 +59,23 @@ export const UnoGameSection: React.FC = () => {
     stateRef.current = gameState;
   }, [gameState]);
 
+  // Interactive UNO Button State & Timers
+  const unoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [unoButton, setUnoButton] = useState<{
+    top: number;
+    left: number;
+    key: number;
+  } | null>(null);
+  const [unoToast, setUnoToast] = useState<{ message: string; type: 'success' | 'penalty' } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (unoTimerRef.current) {
+        clearTimeout(unoTimerRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     return () => {
       if (channel) supabase?.removeChannel(channel);
@@ -257,7 +274,8 @@ export const UnoGameSection: React.FC = () => {
     if (state.status !== 'playing' || state.winnerId) return;
 
     const playerIndex = state.players.findIndex(p => p.id === payload.playerId);
-    if (playerIndex !== state.currentTurn) return; // Not their turn
+    if (playerIndex === -1) return;
+    if (payload.action !== 'UNO_PENALTY' && playerIndex !== state.currentTurn) return; // Not their turn
     
     const player = state.players[playerIndex];
 
@@ -309,6 +327,10 @@ export const UnoGameSection: React.FC = () => {
       drawCards(state, state.currentTurn, 1);
       
       state.currentTurn = (state.currentTurn + state.direction + state.players.length) % state.players.length;
+    } else if (payload.action === 'UNO_PENALTY') {
+      drawCards(state, playerIndex, 1);
+      if (!state.logs) state.logs = [];
+      state.logs.push(`${player.name} terlambat memencet UNO (+1 kartu).`);
     }
 
     setGameState(state);
@@ -323,6 +345,68 @@ export const UnoGameSection: React.FC = () => {
         
       }
       state.players[pIndex].hand.push(state.deck.pop()!);
+    }
+  };
+
+  const triggerUnoButton = () => {
+    if (unoTimerRef.current) {
+      clearTimeout(unoTimerRef.current);
+    }
+
+    // Random position on screen (top: 25% - 75%, left: 20% - 75%)
+    const randomTop = Math.floor(Math.random() * 50) + 25;
+    const randomLeft = Math.floor(Math.random() * 55) + 20;
+
+    setUnoButton({
+      top: randomTop,
+      left: randomLeft,
+      key: Date.now(),
+    });
+
+    // 3.5 seconds timer before shrinking away and penalizing
+    unoTimerRef.current = setTimeout(() => {
+      handleUnoTimeout();
+    }, 3500);
+  };
+
+  const handleUnoClick = () => {
+    if (unoTimerRef.current) {
+      clearTimeout(unoTimerRef.current);
+      unoTimerRef.current = null;
+    }
+    setUnoButton(null);
+    setUnoToast({
+      message: '🎉 TERIAK UNO! Kamu berhasil memencet tombol tepat waktu!',
+      type: 'success',
+    });
+    setTimeout(() => {
+      setUnoToast(null);
+    }, 3000);
+  };
+
+  const handleUnoTimeout = () => {
+    if (unoTimerRef.current) {
+      clearTimeout(unoTimerRef.current);
+      unoTimerRef.current = null;
+    }
+    setUnoButton(null);
+    setUnoToast({
+      message: '⚠️ TERLAMBAT MEMENCET UNO! Kamu mendapat hukuman +1 kartu!',
+      type: 'penalty',
+    });
+    setTimeout(() => {
+      setUnoToast(null);
+    }, 4000);
+
+    const payload = { playerId: localPlayerId, action: 'UNO_PENALTY' };
+    if (isHost) {
+      processAction(payload);
+    } else if (channel) {
+      channel.send({
+        type: 'broadcast',
+        event: 'PLAYER_ACTION',
+        payload
+      });
     }
   };
 
@@ -369,6 +453,13 @@ export const UnoGameSection: React.FC = () => {
     }
 
     setColorPickerVisible(null);
+
+    // If player currently has 2 cards, playing this card reduces count to 1 -> Trigger shrinking UNO button!
+    const myPlayer = gameState.players.find(p => p.id === localPlayerId);
+    if (myPlayer && myPlayer.hand.length === 2) {
+      triggerUnoButton();
+    }
+
     const payload = { playerId: localPlayerId, action: 'PLAY_CARD', cardId: card.id, chosenColor };
     
     if (isHost) {
@@ -783,6 +874,61 @@ export const UnoGameSection: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Interactive Shrinking UNO Button */}
+      <AnimatePresence>
+        {unoButton && (
+          <motion.div
+            key={unoButton.key}
+            initial={{ scale: 1.3, opacity: 1 }}
+            animate={{ scale: 0, opacity: 0.1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 3.5, ease: 'linear' }}
+            style={{
+              position: 'fixed',
+              top: `${unoButton.top}%`,
+              left: `${unoButton.left}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+            className="z-[99999] pointer-events-auto"
+          >
+            <button
+              onClick={handleUnoClick}
+              className="relative group w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-red-500 via-red-600 to-rose-700 border-4 border-yellow-300 shadow-[0_0_35px_rgba(250,204,21,0.9)] flex flex-col items-center justify-center active:scale-95 transition-transform cursor-pointer overflow-hidden"
+            >
+              <span className="text-yellow-200 font-black text-2xl sm:text-3xl tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] -rotate-6 group-hover:scale-110 transition-transform select-none">
+                UNO!
+              </span>
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest mt-0.5 select-none">
+                TEKAN SAYA!
+              </span>
+              <div className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping pointer-events-none" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* UNO Status Toast */}
+      <AnimatePresence>
+        {unoToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-[99999] pointer-events-none px-4"
+          >
+            <div
+              className={`px-6 py-3 rounded-2xl font-black text-sm sm:text-base shadow-2xl border-2 flex items-center gap-2 backdrop-blur-md ${
+                unoToast.type === 'success'
+                  ? 'bg-emerald-600/95 text-white border-emerald-300 shadow-emerald-500/30'
+                  : 'bg-rose-600/95 text-white border-rose-300 shadow-rose-500/30'
+              }`}
+            >
+              <span>{unoToast.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
