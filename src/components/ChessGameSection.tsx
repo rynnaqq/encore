@@ -271,6 +271,9 @@ export const ChessGameSection: React.FC = () => {
     if (room.isGameOver && room.gameResult) {
       playAudioEffect('gameover');
       alert(room.gameResult);
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('chess_active_session');
+      }
       if (supabaseHandlerRef.current) {
         supabaseHandlerRef.current.leaveRoom();
         supabaseHandlerRef.current = null;
@@ -312,6 +315,10 @@ export const ChessGameSection: React.FC = () => {
       const supaCreds = getSupabaseCredentials();
       if (!supaCreds.isConfigured) return;
 
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('chess_active_session', JSON.stringify({ roomId: code, isJoining, opts }));
+      }
+
       if (supabaseHandlerRef.current) {
         supabaseHandlerRef.current.leaveRoom();
         supabaseHandlerRef.current = null;
@@ -329,6 +336,9 @@ export const ChessGameSection: React.FC = () => {
           else if (side === 'w') setIsFlipped(false);
         },
         onError: (err) => {
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('chess_active_session');
+          }
           alert(err);
           if (window.location.search.includes('room=')) {
             const url = new URL(window.location.href);
@@ -349,14 +359,35 @@ export const ChessGameSection: React.FC = () => {
   // Promotion state
   const [promotionPending, setPromotionPending] = useState<{ from: Square; to: Square } | null>(null);
 
-  // Auto-detect room query param on load
+  // Auto-reconnect on mount if active session or query param exists
+  const chessReconnectRef = useRef(false);
   useEffect(() => {
+    if (chessReconnectRef.current) return;
+    chessReconnectRef.current = true;
+
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room');
     if (roomParam) {
       setGameMode('online');
+      handleJoinSupabaseRoom(roomParam, true);
+      return;
     }
-  }, []);
+
+    if (typeof window !== 'undefined') {
+      const savedSessionStr = sessionStorage.getItem('chess_active_session');
+      if (savedSessionStr) {
+        try {
+          const session = JSON.parse(savedSessionStr);
+          if (session && session.roomId) {
+            setGameMode('online');
+            handleJoinSupabaseRoom(session.roomId, session.isJoining, session.opts);
+          }
+        } catch (e) {
+          console.error('Failed to restore Chess session', e);
+        }
+      }
+    }
+  }, [handleJoinSupabaseRoom]);
 
   // Handle board orientation automatically when changing side
   useEffect(() => {

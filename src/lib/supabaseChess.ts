@@ -83,6 +83,31 @@ export function subscribeSupabaseChessRoom({
     ],
   };
 
+  const disconnectTimers: Record<string, NodeJS.Timeout> = {};
+
+  const handleLeaverTimeout = (leaverId: string, leaverName: string, winnerSide: 'w' | 'b', winnerName: string) => {
+    delete disconnectTimers[leaverId];
+    if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
+      currentRoomState.isGameOver = true;
+      currentRoomState.winner = winnerSide;
+      const resultText = `🎉 ${leaverName} terputus dari permainan! Selamat kepada ${winnerName} atas kemenangannya!`;
+      currentRoomState.gameResult = resultText;
+      currentRoomState.messages.push({
+        id: `sys-${Date.now()}`,
+        senderName: 'System',
+        text: `🏆 ${leaverName} terputus dari room. Selamat kepada ${winnerName}, Anda menang!`,
+        timestamp: Date.now(),
+        isSystem: true,
+      });
+      onRoomUpdate({ ...currentRoomState });
+      channel.send({
+        type: 'broadcast',
+        event: 'SYNC_STATE',
+        payload: currentRoomState,
+      });
+    }
+  };
+
   // Helper to resolve player seats based on presence
   const updatePlayersFromPresence = (presenceState: Record<string, any[]>) => {
     const presentUsers: Array<PlayerInfo & { sidePreference?: string; joinedAt?: number }> = [];
@@ -102,41 +127,40 @@ export function subscribeSupabaseChessRoom({
     const whiteStillPresent = prevWhite ? presentUsers.some((u) => u.id === prevWhite.id) : false;
     const blackStillPresent = prevBlack ? presentUsers.some((u) => u.id === prevBlack.id) : false;
 
-    let white: PlayerInfo | null = whiteStillPresent ? prevWhite : null;
-    let black: PlayerInfo | null = blackStillPresent ? prevBlack : null;
-
-    // Check if player disconnected during active game
-    if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
-      if (prevWhite && !whiteStillPresent) {
-        currentRoomState.isGameOver = true;
-        currentRoomState.winner = 'b';
+    if (prevWhite) {
+      if (whiteStillPresent) {
+        if (disconnectTimers[prevWhite.id]) {
+          clearTimeout(disconnectTimers[prevWhite.id]);
+          delete disconnectTimers[prevWhite.id];
+        }
+      } else if (currentRoomState.isStarted && !currentRoomState.isGameOver && !disconnectTimers[prevWhite.id]) {
+        const leaverId = prevWhite.id;
         const leaverName = prevWhite.name;
         const winnerName = prevBlack?.name || 'Black Player';
-        const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
-        currentRoomState.gameResult = resultText;
-        currentRoomState.messages.push({
-          id: `sys-${Date.now()}`,
-          senderName: 'System',
-          text: `🏆 ${leaverName} left the room. Congratulations to ${winnerName}, you win!`,
-          timestamp: Date.now(),
-          isSystem: true,
-        });
-      } else if (prevBlack && !blackStillPresent) {
-        currentRoomState.isGameOver = true;
-        currentRoomState.winner = 'w';
-        const leaverName = prevBlack.name;
-        const winnerName = prevWhite?.name || 'White Player';
-        const resultText = `🎉 ${leaverName} left the game! Congratulations to ${winnerName} on the victory!`;
-        currentRoomState.gameResult = resultText;
-        currentRoomState.messages.push({
-          id: `sys-${Date.now()}`,
-          senderName: 'System',
-          text: `🏆 ${leaverName} left the room. Congratulations to ${winnerName}, you win!`,
-          timestamp: Date.now(),
-          isSystem: true,
-        });
+        disconnectTimers[leaverId] = setTimeout(() => {
+          handleLeaverTimeout(leaverId, leaverName, 'b', winnerName);
+        }, 10000);
       }
     }
+
+    if (prevBlack) {
+      if (blackStillPresent) {
+        if (disconnectTimers[prevBlack.id]) {
+          clearTimeout(disconnectTimers[prevBlack.id]);
+          delete disconnectTimers[prevBlack.id];
+        }
+      } else if (currentRoomState.isStarted && !currentRoomState.isGameOver && !disconnectTimers[prevBlack.id]) {
+        const leaverId = prevBlack.id;
+        const leaverName = prevBlack.name;
+        const winnerName = prevWhite?.name || 'White Player';
+        disconnectTimers[leaverId] = setTimeout(() => {
+          handleLeaverTimeout(leaverId, leaverName, 'w', winnerName);
+        }, 10000);
+      }
+    }
+
+    let white: PlayerInfo | null = (prevWhite && (whiteStillPresent || disconnectTimers[prevWhite.id])) ? prevWhite : null;
+    let black: PlayerInfo | null = (prevBlack && (blackStillPresent || disconnectTimers[prevBlack.id])) ? prevBlack : null;
 
     const spectators: PlayerInfo[] = [];
 
@@ -427,8 +451,12 @@ export function subscribeSupabaseChessRoom({
       });
     },
     leaveRoom: () => {
+      const myId = playerProfile.id || playerProfile.name;
+      if (myId && disconnectTimers[myId]) {
+        clearTimeout(disconnectTimers[myId]);
+        delete disconnectTimers[myId];
+      }
       if (currentRoomState.isStarted && !currentRoomState.isGameOver) {
-        const myId = playerProfile.id || playerProfile.name;
         const leaverSide =
           currentRoomState.whitePlayer?.id === myId || currentRoomState.whitePlayer?.name === playerProfile.name
             ? 'w'

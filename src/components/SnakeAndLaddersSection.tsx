@@ -55,7 +55,16 @@ export const SnakeAndLaddersSection: React.FC = () => {
   
   // Setup state
   const availableColors = ['#E195AB', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
-  const [myId] = useState(() => Math.random().toString(36).substring(2, 10)); // Unique ID for this client
+  const [myId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('snl_player_id');
+      if (saved) return saved;
+      const newId = `snl_p_${Math.random().toString(36).substring(2, 10)}`;
+      sessionStorage.setItem('snl_player_id', newId);
+      return newId;
+    }
+    return `snl_p_${Math.random().toString(36).substring(2, 10)}`;
+  });
   const [playerName, setPlayerName] = useState(() => currentUser ? currentUser.username : 'Player ' + Math.floor(Math.random() * 100));
 
   useEffect(() => {
@@ -77,7 +86,15 @@ export const SnakeAndLaddersSection: React.FC = () => {
   
   // References to handle host logic
   const roomRef = useRef<SNLRoomState | null>(null);
+  const leaveTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   roomRef.current = room;
+
+  // Cache room state
+  useEffect(() => {
+    if (room && typeof window !== 'undefined') {
+      sessionStorage.setItem('snl_saved_state_' + room.roomId, JSON.stringify(room));
+    }
+  }, [room]);
 
   // Sync room state when we are host
   const broadcastState = (stateToBroadcast: SNLRoomState) => {
@@ -90,7 +107,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
     }
   };
 
-  const initChannel = (roomId: string, hosting: boolean) => {
+  const initChannel = (roomId: string, hosting: boolean, initialHostState?: SNLRoomState) => {
     if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
        setErrorMsg('Multiplayer credentials not configured in Settings.');
        return null;
@@ -112,10 +129,23 @@ export const SnakeAndLaddersSection: React.FC = () => {
       .on('broadcast', { event: 'join_request' }, ({ payload }) => {
         if (roomRef.current && roomRef.current.hostId === myId) {
           const currentRoom = { ...roomRef.current };
-          if (currentRoom.players.length < 4 && !currentRoom.isStarted && !currentRoom.players.find(p => p.id === payload.id)) {
+          const existingPlayer = currentRoom.players.find(p => p.id === payload.id);
+          if (existingPlayer) {
+            // Reconnecting player!
+            existingPlayer.name = payload.name;
+            existingPlayer.color = payload.color || existingPlayer.color;
+            setRoom(currentRoom);
+            if (newChannel) {
+              newChannel.send({ type: 'broadcast', event: 'sync_state', payload: currentRoom });
+            }
+          } else if (currentRoom.players.length < 4 && !currentRoom.isStarted) {
             currentRoom.players.push(payload);
             currentRoom.logs.push(`${payload.name} joined the room.`);
             setRoom(currentRoom);
+            if (newChannel) {
+              newChannel.send({ type: 'broadcast', event: 'sync_state', payload: currentRoom });
+            }
+          } else {
             if (newChannel) {
               newChannel.send({ type: 'broadcast', event: 'sync_state', payload: currentRoom });
             }
@@ -126,13 +156,32 @@ export const SnakeAndLaddersSection: React.FC = () => {
         handleRemoteRoll(payload.roll, payload.playerId, newChannel, roomRef.current?.hostId === myId);
       })
       .on('broadcast', { event: 'leave_request' }, ({ payload }) => {
-        handlePlayerLeave(payload.id, newChannel);
+        if (payload && payload.id) {
+          if (leaveTimersRef.current[payload.id]) {
+            clearTimeout(leaveTimersRef.current[payload.id]);
+            delete leaveTimersRef.current[payload.id];
+          }
+          handlePlayerLeave(payload.id, newChannel);
+        }
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         leftPresences.forEach((p: any) => {
           const leaverKey = p.key || p.id;
-          if (leaverKey) {
-            handlePlayerLeave(leaverKey, newChannel);
+          if (leaverKey && leaverKey !== myId) {
+            if (leaveTimersRef.current[leaverKey]) clearTimeout(leaveTimersRef.current[leaverKey]);
+            leaveTimersRef.current[leaverKey] = setTimeout(() => {
+              handlePlayerLeave(leaverKey, newChannel);
+              delete leaveTimersRef.current[leaverKey];
+            }, 10000);
+          }
+        });
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        newPresences.forEach((p: any) => {
+          const joinerKey = p.key || p.id;
+          if (joinerKey && leaveTimersRef.current[joinerKey]) {
+            clearTimeout(leaveTimersRef.current[joinerKey]);
+            delete leaveTimersRef.current[joinerKey];
           }
         });
       });
@@ -141,8 +190,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
       if (status === 'SUBSCRIBED') {
         newChannel.track({ key: myId, id: myId, name: playerName, color: playerColor });
         if (hosting) {
-          // Send initial state
-          const initialState: SNLRoomState = {
+          const initialState: SNLRoomState = initialHostState || {
             roomId,
             hostId: myId,
             players: [{ id: myId, name: playerName, color: playerColor, position: 1 }],
@@ -152,7 +200,6 @@ export const SnakeAndLaddersSection: React.FC = () => {
             logs: ['Room created. Waiting for players...']
           };
           setRoom(initialState);
-          // Wait a tick before broadcasting
           setTimeout(() => {
              newChannel.send({ type: 'broadcast', event: 'sync_state', payload: initialState });
           }, 500);
@@ -164,7 +211,6 @@ export const SnakeAndLaddersSection: React.FC = () => {
             payload: { id: myId, name: playerName, color: playerColor, position: 1 }
           });
           
-          // Timeout if no response is received
           setTimeout(() => {
             if (!roomRef.current) {
               supabase.removeChannel(newChannel);
@@ -198,6 +244,9 @@ export const SnakeAndLaddersSection: React.FC = () => {
     const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     setIsHost(true);
     setSetupMode('create');
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('snl_active_session', JSON.stringify({ roomId: newRoomId, isHost: true }));
+    }
     initChannel(newRoomId, true);
   };
 
@@ -208,9 +257,44 @@ export const SnakeAndLaddersSection: React.FC = () => {
     }
     if (!joinRoomId) return;
     setIsHost(false);
-    initChannel(joinRoomId.toUpperCase(), false);
+    const targetRoomId = joinRoomId.toUpperCase();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('snl_active_session', JSON.stringify({ roomId: targetRoomId, isHost: false }));
+    }
+    initChannel(targetRoomId, false);
     setSetupMode('create'); // Go to lobby waiting
   };
+
+  // Auto-reconnect on mount if session saved
+  const snlReconnectRef = useRef(false);
+  useEffect(() => {
+    if (snlReconnectRef.current) return;
+    snlReconnectRef.current = true;
+
+    if (typeof window !== 'undefined') {
+      const savedSessionStr = sessionStorage.getItem('snl_active_session');
+      if (savedSessionStr) {
+        try {
+          const session = JSON.parse(savedSessionStr);
+          if (session && session.roomId) {
+            setIsHost(session.isHost);
+            setSetupMode('create');
+            let savedState: SNLRoomState | undefined = undefined;
+            if (session.isHost) {
+              const savedStateStr = sessionStorage.getItem('snl_saved_state_' + session.roomId);
+              if (savedStateStr) {
+                savedState = JSON.parse(savedStateStr);
+                setRoom(savedState);
+              }
+            }
+            initChannel(session.roomId, session.isHost, savedState);
+          }
+        } catch (e) {
+          console.error("Failed to restore Snakes & Ladders session", e);
+        }
+      }
+    }
+  }, []);
 
   const handleStartGame = () => {
     if (isHost && room && channel && room.players.length > 1) {
@@ -290,6 +374,10 @@ export const SnakeAndLaddersSection: React.FC = () => {
   };
 
   const handleLeaveRoom = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('snl_active_session');
+      if (room) sessionStorage.removeItem('snl_saved_state_' + room.roomId);
+    }
     if (channel) {
       if (!isHost) {
         channel.send({ type: 'broadcast', event: 'leave_request', payload: { id: myId } });

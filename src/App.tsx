@@ -1,5 +1,5 @@
 import { FloatingBackground } from './components/FloatingBackground';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';

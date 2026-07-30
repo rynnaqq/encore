@@ -56,8 +56,13 @@ export const UnoGameSection: React.FC = () => {
 
   // Host Only Ref to always have latest state in callbacks
   const stateRef = useRef<GameState | null>(null);
+  const leaveTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+
   useEffect(() => {
     stateRef.current = gameState;
+    if (gameState && typeof window !== 'undefined') {
+      sessionStorage.setItem('uno_saved_state_' + gameState.roomId, JSON.stringify(gameState));
+    }
   }, [gameState]);
 
   // Interactive UNO Button State & Timers
@@ -152,6 +157,10 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const handleLeaveRoom = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('uno_active_session');
+      if (gameState) sessionStorage.removeItem('uno_saved_state_' + gameState.roomId);
+    }
     if (channel && gameState) {
       channel.send({
         type: 'broadcast',
@@ -190,7 +199,9 @@ export const UnoGameSection: React.FC = () => {
       hostId: localPlayerId
     };
     setGameState(initialState);
-    
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('uno_active_session', JSON.stringify({ roomId: newRoomId, isHost: true }));
+    }
     joinChannel(newRoomId, initialState);
   };
 
@@ -202,7 +213,11 @@ export const UnoGameSection: React.FC = () => {
     if (!supabase) return setErrorMsg('Supabase not configured');
     if (!playerName.trim() || !joinRoomId.trim()) return setErrorMsg('Name and Room ID required');
     setIsHost(false);
-    joinChannel(joinRoomId.toUpperCase());
+    const targetRoomId = joinRoomId.toUpperCase();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('uno_active_session', JSON.stringify({ roomId: targetRoomId, isHost: false }));
+    }
+    joinChannel(targetRoomId);
   };
 
   const joinChannel = (roomId: string, initialHostState?: GameState) => {
@@ -219,16 +234,23 @@ export const UnoGameSection: React.FC = () => {
     });
 
     newChannel.on('broadcast', { event: 'JOIN_REQUEST' }, ({ payload }) => {
-      if (stateRef.current && stateRef.current.players.find(p => p.isHost)?.id === localPlayerId) {
+      if (stateRef.current && stateRef.current.hostId === localPlayerId) {
         const state = JSON.parse(JSON.stringify(stateRef.current));
-        if (state.status === 'waiting' && state.players.length < 4) {
-          if (!state.players.find(p => p.id === payload.id)) {
-            state.players.push({ id: payload.id, name: payload.name, hand: [], isHost: false });
-            
-            setGameState(state);
-            stateRef.current = state;
-            broadcastState(state, newChannel);
-          }
+        const existingPlayer = state.players.find((p: Player) => p.id === payload.id);
+        if (existingPlayer) {
+          // Reconnecting player!
+          existingPlayer.name = payload.name;
+          setGameState(state);
+          stateRef.current = state;
+          broadcastState(state, newChannel);
+        } else if (state.status === 'waiting' && state.players.length < 4) {
+          state.players.push({ id: payload.id, name: payload.name, hand: [], isHost: false });
+          setGameState(state);
+          stateRef.current = state;
+          broadcastState(state, newChannel);
+        } else {
+          // Send state to reconnecting/spectating client
+          broadcastState(state, newChannel);
         }
       }
     });
@@ -241,14 +263,33 @@ export const UnoGameSection: React.FC = () => {
 
     newChannel.on('broadcast', { event: 'LEAVE_REQUEST' }, ({ payload }) => {
       if (payload.playerId) {
+        if (leaveTimersRef.current[payload.playerId]) {
+          clearTimeout(leaveTimersRef.current[payload.playerId]);
+          delete leaveTimersRef.current[payload.playerId];
+        }
         handlePlayerLeave(payload.playerId, newChannel);
       }
     });
 
     newChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
       leftPresences.forEach((presence: any) => {
-        if (presence.id) {
-          handlePlayerLeave(presence.id, newChannel);
+        const id = presence.id || presence.key;
+        if (id && id !== localPlayerId) {
+          if (leaveTimersRef.current[id]) clearTimeout(leaveTimersRef.current[id]);
+          leaveTimersRef.current[id] = setTimeout(() => {
+            handlePlayerLeave(id, newChannel);
+            delete leaveTimersRef.current[id];
+          }, 10000);
+        }
+      });
+    });
+
+    newChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
+      newPresences.forEach((presence: any) => {
+        const id = presence.id || presence.key;
+        if (id && leaveTimersRef.current[id]) {
+          clearTimeout(leaveTimersRef.current[id]);
+          delete leaveTimersRef.current[id];
         }
       });
     });
@@ -257,18 +298,51 @@ export const UnoGameSection: React.FC = () => {
       if (status === 'SUBSCRIBED') {
         await newChannel.track({ id: localPlayerId, name: playerName });
         if (!initialHostState) {
-          // I am a client joining
+          // I am a client joining or reconnecting
           newChannel.send({
             type: 'broadcast',
             event: 'JOIN_REQUEST',
             payload: { id: localPlayerId, name: playerName }
           });
+        } else {
+          // I am host restoring or creating room, broadcast state
+          broadcastState(initialHostState, newChannel);
         }
       }
     });
 
     setChannel(newChannel);
   };
+
+  // Auto-reconnect on mount if session saved
+  const unoReconnectRef = useRef(false);
+  useEffect(() => {
+    if (unoReconnectRef.current) return;
+    unoReconnectRef.current = true;
+
+    if (typeof window !== 'undefined' && supabase) {
+      const savedSessionStr = sessionStorage.getItem('uno_active_session');
+      if (savedSessionStr) {
+        try {
+          const session = JSON.parse(savedSessionStr);
+          if (session && session.roomId) {
+            setIsHost(session.isHost);
+            let savedState: GameState | undefined = undefined;
+            if (session.isHost) {
+              const savedStateStr = sessionStorage.getItem('uno_saved_state_' + session.roomId);
+              if (savedStateStr) {
+                savedState = JSON.parse(savedStateStr);
+                setGameState(savedState);
+              }
+            }
+            joinChannel(session.roomId, savedState);
+          }
+        } catch (e) {
+          console.error("Failed to restore UNO session", e);
+        }
+      }
+    }
+  }, [supabase]);
 
   const processAction = (payload: any, activeChannel = channel) => {
     let state = JSON.parse(JSON.stringify(stateRef.current!));
@@ -505,22 +579,22 @@ export const UnoGameSection: React.FC = () => {
   if (!isUnlocked) {
     return (
       <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full mx-auto text-center">
-          <ShieldAlert className="w-14 h-14 text-rose-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-black text-white mb-2">Akses Pengembang Required</h2>
-          <p className="text-slate-400 text-sm mb-6">Game ini masih dalam akses terbatas. Masukkan PIN pengembang untuk melanjutkan.</p>
+        <div className="bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
+          <ShieldAlert className="w-14 h-14 text-[#E195AB] mx-auto mb-4" />
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Akses Pengembang Required</h2>
+          <p className="text-slate-600 text-sm mb-6">Game ini masih dalam akses terbatas. Masukkan PIN pengembang untuk melanjutkan.</p>
           <form onSubmit={handleUnlock}>
             <input
               type="password"
               placeholder="Masukkan PIN Pengembang"
               value={pin}
               onChange={(e) => { setPin(e.target.value); setPinError(''); }}
-              className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 font-bold text-slate-200 focus:border-rose-500 mb-4 outline-none text-center"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 bg-slate-50 font-bold text-slate-800 mb-4 outline-none text-center"
             />
-            {pinError && <p className="text-rose-400 text-xs font-bold mb-4">{pinError}</p>}
+            {pinError && <p className="text-rose-500 text-xs font-bold mb-4">{pinError}</p>}
             <button
               type="submit"
-              className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition-all cursor-pointer"
+              className="w-full bg-[#E195AB] hover:bg-[#d88299] text-white font-bold py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
             >
               Buka Game
             </button>
@@ -533,43 +607,43 @@ export const UnoGameSection: React.FC = () => {
   if (!gameState) {
     return (
       <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full mx-auto text-center">
+        <div className="bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
           {/* Authentic UNO Badge */}
-          <div className="w-20 h-20 bg-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-5 transform -rotate-6 border-2 border-white/90 shadow-md">
-            <span className="text-amber-300 font-black text-3xl tracking-tighter drop-shadow">UNO</span>
+          <div className="w-20 h-20 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-5 transform -rotate-6 border-4 border-[#FFF5D7] shadow-lg">
+            <span className="text-[#FFF5D7] font-black text-3xl tracking-tighter drop-shadow">UNO</span>
           </div>
-          <h2 className="text-2xl font-black text-white mb-1">UNO Multiplayer</h2>
-          <p className="text-slate-400 text-xs mb-6">Bermain kartu UNO bersama teman secara real-time</p>
+          <h2 className="text-2xl font-black text-slate-800 mb-1">UNO Multiplayer</h2>
+          <p className="text-slate-600 text-xs mb-6">Bermain kartu UNO bersama teman secara real-time</p>
           
           {errorMsg && (
-             <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-xl text-xs font-bold mb-4">
+             <div className="bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-xl text-xs font-bold mb-4">
                {errorMsg}
              </div>
           )}
           
           <div className="mb-4 text-left">
-            <label className="block text-xs font-bold text-slate-400 mb-1.5">Nama Pemain</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5">Nama Pemain</label>
             <input
               type="text"
               value={playerName}
               disabled
               readOnly
-              className="w-full px-4 py-3 rounded-xl border border-slate-800 bg-slate-950 font-bold text-slate-400 cursor-not-allowed outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 font-bold text-slate-600 cursor-not-allowed outline-none text-sm"
             />
           </div>
 
           <button
             onClick={handleCreateRoom}
-            className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3.5 rounded-xl mb-4 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+            className="w-full bg-[#E195AB] hover:bg-[#d88299] text-white font-bold py-3.5 rounded-xl mb-4 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
           >
             <Sparkles className="w-4 h-4" />
             <span>Buat Room Baru</span>
           </button>
           
           <div className="relative flex items-center py-2 mb-4">
-            <div className="flex-grow border-t border-slate-800"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-500 font-bold text-xs uppercase tracking-wider">atau</span>
-            <div className="flex-grow border-t border-slate-800"></div>
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink-0 mx-4 text-slate-400 font-bold text-xs uppercase tracking-wider">atau</span>
+            <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
           <div className="flex gap-2">
@@ -578,12 +652,12 @@ export const UnoGameSection: React.FC = () => {
               placeholder="Kode Room"
               value={joinRoomId}
               onChange={(e) => setJoinRoomId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 font-mono font-bold text-slate-200 uppercase outline-none focus:border-rose-500 text-sm"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white font-mono font-bold text-slate-800 uppercase outline-none focus:border-[#E195AB] text-sm"
               maxLength={6}
             />
             <button
               onClick={handleJoinRoom}
-              className="bg-slate-800 hover:bg-slate-750 text-white font-bold px-6 rounded-xl border border-slate-700 transition-all cursor-pointer text-sm"
+              className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm"
             >
               Masuk
             </button>
@@ -615,7 +689,7 @@ export const UnoGameSection: React.FC = () => {
       cardBg = 'bg-amber-400 border-amber-200';
       textColor = 'text-slate-950';
       centerTextColor = 'text-amber-500';
-    } else if (card.color === 'Black') {
+    } else if (card.color === 'Wild') {
       cardBg = 'bg-slate-900 border-slate-700';
       textColor = 'text-white';
       centerTextColor = 'text-slate-900';
@@ -656,7 +730,7 @@ export const UnoGameSection: React.FC = () => {
 
         {/* Center Oval Emblem */}
         <div className="self-center w-10 h-14 md:w-14 md:h-20 bg-white rounded-[50%] flex items-center justify-center transform -rotate-[24deg] shadow-md border border-black/10">
-          {card.color === 'Black' ? (
+          {card.color === 'Wild' ? (
             <div className="grid grid-cols-2 gap-0.5 w-6 h-6 md:w-9 md:h-9 rotate-[24deg]">
               <div className="bg-rose-500 rounded-tl" />
               <div className="bg-blue-500 rounded-tr" />
@@ -684,25 +758,25 @@ export const UnoGameSection: React.FC = () => {
 
   return (
     <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-24 sm:pt-28 md:pt-32 pb-4 md:pb-8 flex flex-col min-h-screen">
-      <div className="bg-slate-950 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col flex-1">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border-2 border-[#FFCCE1] flex flex-col flex-1">
         
         {/* Header */}
-        <div className="bg-slate-900 p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div className="bg-[#FFF5D7] p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-[#FFCCE1] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-rose-600 rounded-xl flex items-center justify-center transform -rotate-3 border border-white/80 shadow-sm">
-              <span className="text-amber-300 font-black text-xs">UNO</span>
+            <div className="w-9 h-9 bg-[#E195AB] rounded-xl flex items-center justify-center transform -rotate-3 border-2 border-white shadow-sm">
+              <span className="text-[#FFF5D7] font-black text-xs">UNO</span>
             </div>
             <div>
-              <h2 className="text-white font-bold text-base md:text-lg leading-tight">UNO Multiplayer</h2>
-              <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+              <h2 className="text-slate-800 font-extrabold text-base md:text-lg leading-tight">UNO Multiplayer</h2>
+              <div className="flex items-center gap-1.5 text-slate-600 text-xs font-medium">
                 <span>Kode Room:</span>
-                <span className="bg-slate-950 border border-slate-800 px-2 py-0.5 rounded font-mono text-white font-bold select-all">{gameState.roomId}</span>
+                <span className="bg-white border border-[#FFCCE1] px-2 py-0.5 rounded font-mono text-[#E195AB] font-bold select-all shadow-2xs">{gameState.roomId}</span>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-             <button onClick={handleLeaveRoom} className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-lg font-bold text-xs border border-slate-700 transition-colors cursor-pointer">
+             <button onClick={handleLeaveRoom} className="px-3.5 py-1.5 bg-[#E195AB]/10 hover:bg-[#E195AB]/20 text-[#E195AB] rounded-lg font-bold text-xs border border-[#FFCCE1] transition-colors cursor-pointer">
                Keluar
              </button>
           </div>
@@ -711,19 +785,19 @@ export const UnoGameSection: React.FC = () => {
         {/* Game Area */}
         <div className="flex flex-col lg:flex-row flex-1 min-h-0">
           {/* Main Felt Board */}
-          <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-[#0d2218] overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
+          <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-[#FFF5D7]/30 border-b lg:border-b-0 border-[#FFCCE1] overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
             {/* Status Overlay */}
             {gameState.status === 'waiting' && (
-              <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center">
-                <Users className="w-12 h-12 text-slate-400 mb-3" />
-                <h3 className="text-2xl font-black text-white mb-1">Menunggu Pemain Lain</h3>
-                <p className="text-slate-400 text-sm mb-6 font-medium">{gameState.players.length} / 4 Pemain Terhubung</p>
+              <div className="absolute inset-0 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center">
+                <Users className="w-12 h-12 text-[#E195AB] mb-3" />
+                <h3 className="text-2xl font-black text-slate-800 mb-1">Menunggu Pemain Lain</h3>
+                <p className="text-slate-600 text-sm mb-6 font-medium">{gameState.players.length} / 4 Pemain Terhubung</p>
                 
                 <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-md">
                   {gameState.players.map((p, i) => (
-                    <div key={i} className="bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl flex items-center gap-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
-                      <span className="text-white font-bold text-sm flex items-center gap-1.5">
+                    <div key={i} className="bg-white border-2 border-[#FFCCE1] px-4 py-2.5 rounded-xl flex items-center gap-2.5 shadow-sm">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-slate-800 font-bold text-sm flex items-center gap-1.5">
                         <span>{p.name} {p.id === localPlayerId ? '(Anda)' : ''}</span>
                         {isAdminName(p.name) && <AdminBadge />}
                       </span>
@@ -732,15 +806,15 @@ export const UnoGameSection: React.FC = () => {
                 </div>
 
                 {isHost && gameState.players.length >= 2 && (
-                  <button onClick={handleStartGame} className="bg-rose-600 hover:bg-rose-500 text-white px-8 py-3.5 rounded-xl font-black text-base transition-all shadow-lg cursor-pointer">
+                  <button onClick={handleStartGame} className="bg-[#E195AB] hover:bg-[#d88299] text-white px-8 py-3.5 rounded-xl font-black text-base transition-all shadow-lg cursor-pointer">
                     MULAI PERMAINAN
                   </button>
                 )}
                 {isHost && gameState.players.length < 2 && (
-                  <p className="text-amber-400 font-bold bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl text-xs">Minimal 2 pemain untuk memulai permainan.</p>
+                  <p className="text-amber-700 font-bold bg-[#FFF5D7] border border-[#FFCCE1] px-4 py-2 rounded-xl text-xs">Minimal 2 pemain untuk memulai permainan.</p>
                 )}
                 {!isHost && (
-                  <p className="text-slate-400 font-bold bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl text-xs">Menunggu host memulai permainan...</p>
+                  <p className="text-slate-600 font-bold bg-[#FFF5D7] border border-[#FFCCE1] px-4 py-2 rounded-xl text-xs">Menunggu host memulai permainan...</p>
                 )}
               </div>
             )}
@@ -749,7 +823,7 @@ export const UnoGameSection: React.FC = () => {
               <VictoryModal
                 isOpen={true}
                 winnerName={gameState.players.find(p => p.id === gameState.winnerId)?.name || 'Player'}
-                winnerColor="#f59e0b"
+                winnerColor="#E195AB"
                 subtitle="Telah berhasil menghabiskan seluruh kartu & menjadi Juara UNO!"
                 gameTitle="UNO Multiplayer"
                 isHost={isHost}
@@ -770,18 +844,22 @@ export const UnoGameSection: React.FC = () => {
                     const isTurn = gameState.currentTurn === i;
                     return (
                       <div key={p.id} className={`flex flex-col items-center transition-all ${isTurn ? 'scale-105 opacity-100' : 'scale-90 opacity-75'}`}>
-                        <div className={`text-white font-bold mb-1.5 px-3 py-0.5 rounded-full text-xs flex items-center gap-1.5 border ${isTurn ? 'bg-amber-400 text-slate-950 border-amber-300 font-black' : 'bg-slate-900/90 border-slate-800 text-slate-300'}`}>
+                        <div className={`font-bold mb-1.5 px-3 py-0.5 rounded-full text-xs flex items-center gap-1.5 border ${
+                          isTurn 
+                            ? 'bg-[#E195AB] text-white border-[#E195AB] font-black shadow-md' 
+                            : 'bg-white border-[#FFCCE1] text-slate-700'
+                        }`}>
                           <span>{p.name}</span>
                           {isAdminName(p.name) && <AdminBadge />}
                         </div>
                         <div className="flex -space-x-5 md:-space-x-7">
                           {p.hand.map((_, idx) => (
-                            <div key={idx} className="w-8 h-12 md:w-11 md:h-18 bg-rose-700 border-2 border-white rounded-lg shadow-md flex items-center justify-center">
-                              <span className="text-amber-300 font-black text-[9px] md:text-xs tracking-tighter transform -rotate-12 select-none">UNO</span>
+                            <div key={idx} className="w-8 h-12 md:w-11 md:h-18 bg-[#E195AB] border-2 border-white rounded-lg shadow-md flex items-center justify-center">
+                              <span className="text-[#FFF5D7] font-black text-[9px] md:text-xs tracking-tighter transform -rotate-12 select-none">UNO</span>
                             </div>
                           ))}
                         </div>
-                        <div className="mt-1 text-emerald-200/80 font-bold text-[10px] md:text-xs">{p.hand.length} kartu</div>
+                        <div className="mt-1 text-slate-600 font-bold text-[10px] md:text-xs">{p.hand.length} kartu</div>
                       </div>
                     );
                   })}
@@ -791,16 +869,16 @@ export const UnoGameSection: React.FC = () => {
                 <div className="flex flex-col items-center justify-center gap-3 md:gap-4 my-2 md:my-auto shrink-0">
                   {/* Current Active Color Indicator */}
                   {gameState.currentColor && (
-                    <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-slate-950/80 border border-white/20 text-xs font-bold text-slate-200">
-                      <span className="text-slate-400 uppercase tracking-wider text-[10px]">Warna Aktif:</span>
+                    <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-white/90 border-2 border-[#FFCCE1] text-xs font-bold text-slate-800 shadow-sm">
+                      <span className="text-slate-500 uppercase tracking-wider text-[10px]">Warna Aktif:</span>
                       <div className="flex items-center gap-1.5 font-black">
-                        <div className={`w-3 h-3 rounded-full ${
+                        <div className={`w-3.5 h-3.5 rounded-full ${
                           gameState.currentColor === 'Red' ? 'bg-rose-500' :
                           gameState.currentColor === 'Blue' ? 'bg-blue-500' :
                           gameState.currentColor === 'Green' ? 'bg-emerald-500' :
                           gameState.currentColor === 'Yellow' ? 'bg-amber-400' : 'bg-slate-400'
                         }`} />
-                        <span>{
+                        <span className="text-slate-800">{
                           gameState.currentColor === 'Red' ? 'Merah' :
                           gameState.currentColor === 'Blue' ? 'Biru' :
                           gameState.currentColor === 'Green' ? 'Hijau' :
@@ -815,15 +893,15 @@ export const UnoGameSection: React.FC = () => {
                     <div className="flex flex-col items-center gap-1">
                       <div 
                         onClick={isMyTurn ? handleDrawCard : undefined}
-                        className={`w-16 h-24 md:w-24 md:h-36 bg-rose-700 border-2 md:border-3 border-white rounded-xl shadow-xl flex flex-col items-center justify-center relative overflow-hidden transition-all ${
-                          isMyTurn ? 'cursor-pointer hover:-translate-y-1 hover:ring-2 hover:ring-amber-300/80' : 'opacity-70'
+                        className={`w-16 h-24 md:w-24 md:h-36 bg-[#E195AB] border-2 md:border-3 border-white rounded-xl shadow-xl flex flex-col items-center justify-center relative overflow-hidden transition-all ${
+                          isMyTurn ? 'cursor-pointer hover:-translate-y-1 hover:ring-4 hover:ring-[#E195AB]/50' : 'opacity-80'
                         }`}
                       >
-                        <div className="w-10 h-16 md:w-14 md:h-22 bg-white/10 rounded-[50%] flex items-center justify-center transform -rotate-12 border border-white/20">
-                          <span className="text-amber-300 font-black text-sm md:text-xl transform -rotate-12 tracking-tighter drop-shadow select-none">UNO</span>
+                        <div className="w-10 h-16 md:w-14 md:h-22 bg-white/20 rounded-[50%] flex items-center justify-center transform -rotate-12 border border-white/40">
+                          <span className="text-[#FFF5D7] font-black text-sm md:text-xl transform -rotate-12 tracking-tighter drop-shadow select-none">UNO</span>
                         </div>
                       </div>
-                      <span className="text-[11px] font-bold text-emerald-200/80">Dek Ambil</span>
+                      <span className="text-[11px] font-bold text-slate-600">Dek Ambil</span>
                     </div>
 
                     {/* Discard Pile (Top Card) */}
@@ -833,24 +911,24 @@ export const UnoGameSection: React.FC = () => {
                           {renderCard(gameState.topCard)}
                         </div>
                       )}
-                      <span className="text-[11px] font-bold text-emerald-200/80">Kartu Buang</span>
+                      <span className="text-[11px] font-bold text-slate-600">Kartu Buang</span>
                     </div>
                   </div>
                   
                   {/* Turn Direction */}
-                  <div className="flex items-center gap-2 bg-slate-950/70 px-3.5 py-1 rounded-full border border-white/10 text-xs font-medium text-slate-300">
+                  <div className="flex items-center gap-2 bg-white px-3.5 py-1 rounded-full border border-[#FFCCE1] text-xs font-bold text-slate-700 shadow-2xs">
                     <span>Arah Putaran:</span>
-                    <ArrowRight className={`w-3.5 h-3.5 text-amber-400 transform transition-transform duration-500 ${gameState.direction === -1 ? 'rotate-180' : ''}`} />
+                    <ArrowRight className={`w-3.5 h-3.5 text-[#E195AB] transform transition-transform duration-500 ${gameState.direction === -1 ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
 
                 {/* Local Player Hand Bar */}
-                <div className="shrink-0 flex flex-col items-center w-full mt-auto pt-2 pb-1 bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl sticky bottom-0 z-20">
+                <div className="shrink-0 flex flex-col items-center w-full mt-auto pt-2 pb-1 bg-white/90 backdrop-blur-md rounded-2xl border-2 border-[#FFCCE1] shadow-xl sticky bottom-0 z-20">
                   <div className="mb-1.5">
                     <h4 className={`font-black text-xs px-4 py-1 rounded-full border transition-all ${
                       isMyTurn 
-                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm' 
-                        : 'bg-slate-900 text-slate-400 border-slate-800'
+                        ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm animate-pulse' 
+                        : 'bg-[#FFF5D7] text-slate-700 border-[#FFCCE1]'
                     }`}>
                       {isMyTurn ? '⚡ GILIRAN ANDA!' : 'Menunggu giliran pemain lain...'}
                     </h4>
@@ -873,27 +951,27 @@ export const UnoGameSection: React.FC = () => {
                 {/* Wild Card Color Selection Modal */}
                 {colorPickerVisible && localPlayer?.hand.find(c => c.id === colorPickerVisible.cardId) && (
                   <div 
-                    className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
                     onClick={() => setColorPickerVisible(null)}
                   >
                     <div 
-                      className="bg-slate-900 border border-slate-700 p-6 rounded-3xl shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3 animate-in zoom-in-95 duration-150"
+                      className="bg-white border-2 border-[#FFCCE1] p-6 rounded-3xl shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3 animate-in zoom-in-95 duration-150"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-[#E195AB] font-bold text-xs uppercase tracking-wider">
                         <Sparkles className="w-4 h-4" />
                         Pilih Warna Kartu
                       </div>
-                      <h3 className="text-lg font-black text-white">Kartu Wild / Bebas</h3>
-                      <p className="text-slate-400 text-xs">Pilih warna untuk giliran berikutnya</p>
+                      <h3 className="text-lg font-black text-slate-800">Kartu Wild / Bebas</h3>
+                      <p className="text-slate-600 text-xs">Pilih warna untuk giliran berikutnya</p>
 
                       <div className="grid grid-cols-2 gap-2.5 w-full mt-1">
                         {(['Red', 'Blue', 'Green', 'Yellow'] as Color[]).map((c) => {
                           const bgMap = {
-                            Red: 'bg-rose-600 hover:bg-rose-500 text-white',
-                            Blue: 'bg-blue-600 hover:bg-blue-500 text-white',
-                            Green: 'bg-emerald-600 hover:bg-emerald-500 text-white',
-                            Yellow: 'bg-amber-400 hover:bg-amber-300 text-slate-950',
+                            Red: 'bg-rose-500 hover:bg-rose-600 text-white',
+                            Blue: 'bg-blue-500 hover:bg-blue-600 text-white',
+                            Green: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+                            Yellow: 'bg-amber-400 hover:bg-amber-500 text-slate-900',
                           };
                           const colorLabels = {
                             Red: 'Merah',
@@ -917,7 +995,7 @@ export const UnoGameSection: React.FC = () => {
 
                       <button
                         onClick={() => setColorPickerVisible(null)}
-                        className="text-slate-400 hover:text-white text-xs font-bold pt-1 cursor-pointer"
+                        className="text-slate-500 hover:text-slate-800 text-xs font-bold pt-1 cursor-pointer"
                       >
                         Batal
                       </button>
@@ -929,21 +1007,21 @@ export const UnoGameSection: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="w-full lg:w-72 bg-slate-950 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col shrink-0">
+          <div className="w-full lg:w-72 bg-[#FFF5D7]/40 border-t lg:border-t-0 lg:border-l border-[#FFCCE1] flex flex-col shrink-0">
             {/* Players List Sidebar */}
-            <div className="p-4 overflow-y-auto bg-slate-900/40 max-h-40 lg:max-h-none">
-              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3">Daftar Pemain</h4>
+            <div className="p-4 overflow-y-auto max-h-40 lg:max-h-none">
+              <h4 className="text-[11px] font-black text-[#E195AB] uppercase tracking-wider mb-3">Daftar Pemain</h4>
               <div className="space-y-2">
                 {gameState.players.map((p, i) => (
-                  <div key={p.id} className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+                  <div key={p.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-[#FFCCE1] shadow-2xs">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${gameState.currentTurn === i && gameState.status === 'playing' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`}></div>
-                      <span className={`font-bold text-xs ${p.id === localPlayerId ? 'text-rose-400 font-extrabold' : 'text-slate-200'} flex items-center gap-1.5`}>
+                      <div className={`w-2 h-2 rounded-full ${gameState.currentTurn === i && gameState.status === 'playing' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                      <span className={`font-bold text-xs ${p.id === localPlayerId ? 'text-[#E195AB] font-extrabold' : 'text-slate-700'} flex items-center gap-1.5`}>
                         <span>{p.name} {p.id === localPlayerId ? '(Anda)' : ''}</span>
                         {isAdminName(p.name) && <AdminBadge />}
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-300 bg-slate-950 border border-slate-800 px-2 py-0.5 rounded-md">{p.hand.length} 🃏</span>
+                    <span className="text-xs font-bold text-slate-700 bg-[#FFF5D7] border border-[#FFCCE1] px-2 py-0.5 rounded-md">{p.hand.length} 🃏</span>
                   </div>
                 ))}
               </div>
@@ -973,13 +1051,13 @@ export const UnoGameSection: React.FC = () => {
               initial={{ scale: 1.8, opacity: 1 }}
               animate={{ scale: 0, opacity: 0 }}
               transition={{ duration: 1, ease: 'linear' }}
-              className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-amber-300 bg-amber-400/20 pointer-events-none"
+              className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#FFCCE1] bg-[#FFF5D7]/50 pointer-events-none"
             />
 
             {/* Simple Circular UNO Button */}
             <button
               onClick={handleUnoClick}
-              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-black text-2xl sm:text-3xl shadow-2xl border-4 border-white flex items-center justify-center cursor-pointer active:scale-90 transition-transform select-none"
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#E195AB] hover:bg-[#d88299] text-white font-black text-2xl sm:text-3xl shadow-2xl border-4 border-white flex items-center justify-center cursor-pointer active:scale-90 transition-transform select-none"
             >
               <span className="drop-shadow-md tracking-wider -rotate-6">UNO!</span>
             </button>
