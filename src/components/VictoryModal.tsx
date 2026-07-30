@@ -112,72 +112,54 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
         {/* Modal Card */}
         <motion.div
-          initial={{ scale: 0.7, opacity: 0, y: 50 }}
+          initial={{ scale: 0.85, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 30 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="relative max-w-lg w-full bg-slate-900/95 border-2 border-amber-500/40 p-6 sm:p-8 rounded-3xl shadow-[0_0_80px_rgba(245,158,11,0.35)] text-center overflow-hidden flex flex-col items-center"
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          className="relative max-w-md w-full bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl text-center overflow-hidden flex flex-col items-center z-10"
         >
-          {/* Top glowing banner highlight */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/30 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Crown & Trophy Visual */}
-          <div className="relative mb-6">
+          {/* Trophy Visual Badge */}
+          <div className="relative mb-5">
             <motion.div
-              animate={{ y: [-4, 4, -4], rotate: [-2, 2, -2] }}
-              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-              className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 p-0.5 shadow-[0_0_40px_rgba(245,158,11,0.6)] flex items-center justify-center transform border-4 border-yellow-200"
+              animate={{ y: [-3, 3, -3] }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+              className="relative z-10 w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center"
             >
-              <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent" />
-                <Trophy className="w-14 h-14 sm:w-16 sm:h-16 text-yellow-400 drop-shadow-[0_4px_12px_rgba(250,204,21,0.8)]" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-b from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Trophy className="w-12 h-12 sm:w-14 sm:h-14 text-slate-950" />
               </div>
             </motion.div>
 
             {/* Crown icon on top */}
             <motion.div
-              initial={{ scale: 0, y: 10 }}
+              initial={{ scale: 0, y: 8 }}
               animate={{ scale: 1, y: 0 }}
-              transition={{ delay: 0.2, type: 'spring' }}
-              className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 bg-gradient-to-r from-yellow-300 to-amber-400 p-2 rounded-full shadow-lg border-2 border-white text-slate-950"
+              transition={{ delay: 0.15, type: 'spring' }}
+              className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20 bg-amber-400 p-1.5 rounded-full shadow-md border-2 border-slate-900 text-slate-950"
             >
-              <Crown className="w-6 h-6 sm:w-7 sm:h-7 fill-amber-950 stroke-amber-950" />
-            </motion.div>
-
-            {/* Sparkles side icons */}
-            <motion.div
-              animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.7, 1, 0.7] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="absolute -left-6 top-1/2 text-yellow-300"
-            >
-              <Sparkles className="w-6 h-6" />
-            </motion.div>
-            <motion.div
-              animate={{ scale: [1.2, 0.8, 1.2], opacity: [1, 0.7, 1] }}
-              transition={{ repeat: Infinity, duration: 1.8 }}
-              className="absolute -right-6 top-1/3 text-amber-400"
-            >
-              <Star className="w-6 h-6 fill-amber-400" />
+              <Crown className="w-5 h-5 fill-slate-950" />
             </motion.div>
           </div>
 
           {/* Game Tag */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold text-xs uppercase tracking-widest mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs uppercase tracking-wider mb-2">
             <Medal className="w-3.5 h-3.5" />
             <span>{gameTitle}</span>
           </div>
 
           {/* Main Victory Title */}
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-500 drop-shadow-[0_2px_10px_rgba(245,158,11,0.4)] mb-3">
-            VICTORY!
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-2">
+            KEMENANGAN!
           </h2>
 
           {/* Winner Name Box */}
-          <div className="w-full bg-slate-950/80 border border-amber-500/30 rounded-2xl p-4 my-2 flex flex-col items-center shadow-inner">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Pemenang Utama</span>
+          <div className="w-full bg-slate-950/70 border border-slate-800 rounded-2xl p-4 my-2 flex flex-col items-center">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pemenang Juara</span>
             <div 
-              className="text-2xl sm:text-3xl font-black tracking-wide drop-shadow-md flex items-center justify-center gap-2"
+              className="text-2xl sm:text-3xl font-black tracking-wide flex items-center justify-center gap-2"
               style={{ color: winnerColor || '#f59e0b' }}
             >
               <span>{winnerName}</span>
@@ -187,19 +169,19 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
           {/* Subtitle / Details */}
           {subtitle && (
-            <p className="text-slate-300 text-sm sm:text-base font-medium mt-2 mb-6 max-w-xs leading-relaxed">
+            <p className="text-slate-400 text-xs sm:text-sm font-medium mt-1 mb-5 max-w-xs leading-relaxed">
               {subtitle}
             </p>
           )}
 
           {/* Action Buttons */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-2 border-t border-slate-800">
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2 pt-4 border-t border-slate-800/80">
             {isHost && onPlayAgain && (
               <button
                 onClick={onPlayAgain}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-base shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
-                <RotateCcw className="w-5 h-5 stroke-[2.5]" />
+                <RotateCcw className="w-4 h-4" />
                 <span>{playAgainText}</span>
               </button>
             )}
@@ -207,11 +189,11 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             {onLeave && (
               <button
                 onClick={onLeave}
-                className={`w-full py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-base border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold text-sm border border-slate-700/60 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
                   !isHost || !onPlayAgain ? 'col-span-full' : ''
                 }`}
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
                 <span>{leaveText}</span>
               </button>
             )}
