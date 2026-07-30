@@ -591,12 +591,33 @@ export const UnoGameSection: React.FC = () => {
   }
 
   const renderCard = (card: Card, isPlayable = false, onClick?: () => void, isMyTurn = false) => {
-    let bg = 'bg-slate-800';
-    if (card.color === 'Red') bg = 'bg-red-500';
-    if (card.color === 'Blue') bg = 'bg-blue-500';
-    if (card.color === 'Green') bg = 'bg-green-500';
-    if (card.color === 'Yellow') bg = 'bg-yellow-400';
-    
+    let cardBg = 'bg-slate-900 border-slate-700';
+    let textColor = 'text-white';
+    let ovalBg = 'bg-white';
+    let centerTextColor = 'text-slate-900';
+
+    if (card.color === 'Red') {
+      cardBg = 'bg-rose-600 border-rose-400';
+      textColor = 'text-white';
+      centerTextColor = 'text-rose-600';
+    } else if (card.color === 'Blue') {
+      cardBg = 'bg-blue-600 border-blue-400';
+      textColor = 'text-white';
+      centerTextColor = 'text-blue-600';
+    } else if (card.color === 'Green') {
+      cardBg = 'bg-emerald-600 border-emerald-400';
+      textColor = 'text-white';
+      centerTextColor = 'text-emerald-600';
+    } else if (card.color === 'Yellow') {
+      cardBg = 'bg-amber-400 border-amber-200';
+      textColor = 'text-slate-950';
+      centerTextColor = 'text-amber-500';
+    } else if (card.color === 'Black') {
+      cardBg = 'bg-slate-900 border-slate-700';
+      textColor = 'text-white';
+      centerTextColor = 'text-slate-900';
+    }
+
     let displayValue: string = card.value;
     if (card.value === 'Reverse') displayValue = '⇌';
     if (card.value === 'Skip') displayValue = '⊘';
@@ -608,22 +629,48 @@ export const UnoGameSection: React.FC = () => {
       if (isPlayable && onClick) {
         onClick();
       } else if (isMyTurn && !isPlayable) {
-        setErrorMsg('Invalid card! Must match color or number. Draw a card if you have no playable cards.');
+        setErrorMsg('Kartu tidak cocok! Pilih kartu dengan warna atau angka yang sama.');
         setTimeout(() => setErrorMsg(''), 3000);
       }
     };
 
     return (
-      <div 
+      <div
         key={card.id}
         onClick={handleClick}
-        className={`relative w-16 h-24 md:w-24 md:h-36 rounded-lg md:rounded-xl border-2 md:border-4 border-white shadow-xl flex flex-col justify-between p-1.5 md:p-2 flex-shrink-0 select-none ${bg} ${isPlayable ? 'cursor-pointer transition-transform' : 'cursor-pointer opacity-90 hover:opacity-100'}`}
+        className={`relative w-16 h-24 md:w-24 md:h-36 rounded-xl md:rounded-2xl border-2 md:border-[3px] border-white shadow-lg flex flex-col justify-between p-1.5 md:p-2.5 flex-shrink-0 select-none transition-all duration-200 ${cardBg} ${
+          isPlayable
+            ? 'cursor-pointer hover:-translate-y-3 hover:shadow-2xl ring-2 ring-yellow-300/80 z-20'
+            : isMyTurn
+            ? 'cursor-pointer opacity-80 hover:opacity-100'
+            : 'opacity-90'
+        }`}
       >
-        <div className="text-white font-bold text-xs md:text-lg leading-none drop-shadow-md">{displayValue}</div>
-        <div className="text-white font-black text-xl md:text-4xl self-center bg-white/20 rounded-full w-9 h-9 md:w-16 md:h-16 flex items-center justify-center transform -rotate-12 drop-shadow-lg shadow-inner">
+        {/* Corner Value Top-Left */}
+        <div className={`font-black text-xs md:text-base leading-none tracking-tight ${textColor} drop-shadow-sm`}>
           {displayValue}
         </div>
-        <div className="text-white font-bold text-xs md:text-lg leading-none self-end transform rotate-180 drop-shadow-md">{displayValue}</div>
+
+        {/* Center Oval Emblem */}
+        <div className="self-center w-10 h-14 md:w-14 md:h-20 bg-white rounded-[50%] flex items-center justify-center transform -rotate-[24deg] shadow-md border border-black/10">
+          {card.color === 'Black' ? (
+            <div className="grid grid-cols-2 gap-0.5 w-6 h-6 md:w-9 md:h-9 rotate-[24deg]">
+              <div className="bg-rose-500 rounded-tl" />
+              <div className="bg-blue-500 rounded-tr" />
+              <div className="bg-amber-400 rounded-bl" />
+              <div className="bg-emerald-500 rounded-br" />
+            </div>
+          ) : (
+            <span className={`font-black text-lg md:text-3xl rotate-[24deg] ${centerTextColor}`}>
+              {displayValue}
+            </span>
+          )}
+        </div>
+
+        {/* Corner Value Bottom-Right */}
+        <div className={`font-black text-xs md:text-base leading-none tracking-tight self-end rotate-180 ${textColor} drop-shadow-sm`}>
+          {displayValue}
+        </div>
       </div>
     );
   };
