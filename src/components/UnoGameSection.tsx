@@ -880,67 +880,35 @@ export const UnoGameSection: React.FC = () => {
       {/* Interactive Shrinking UNO Button */}
       <AnimatePresence>
         {unoButton && (
-          <>
-            {/* Screen edge warning flash */}
+          <motion.div
+            key={unoButton.key}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            style={{
+              position: 'fixed',
+              top: `${unoButton.top}%`,
+              left: `${unoButton.left}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+            className="z-[99999] pointer-events-auto flex items-center justify-center"
+          >
+            {/* Shrinking Ring Circle */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.4, 0.1, 0.4] }}
-              exit={{ opacity: 0 }}
-              transition={{ repeat: Infinity, duration: 0.2 }}
-              className="fixed inset-0 pointer-events-none z-[99990] border-8 border-red-500/60 rounded-xl shadow-[inset_0_0_50px_rgba(239,68,68,0.5)]"
+              initial={{ scale: 1.8, opacity: 1 }}
+              animate={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 1, ease: 'linear' }}
+              className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-yellow-300 bg-yellow-400/20 pointer-events-none"
             />
 
-            <motion.div
-              key={unoButton.key}
-              initial={{ scale: 1.5, opacity: 1 }}
-              animate={{ scale: 0.15, opacity: 0.2 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 1, ease: 'easeIn' }}
-              style={{
-                position: 'fixed',
-                top: `${unoButton.top}%`,
-                left: `${unoButton.left}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-              className="z-[99999] pointer-events-auto flex items-center justify-center"
+            {/* Simple Circular UNO Button */}
+            <button
+              onClick={handleUnoClick}
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 text-white font-black text-2xl sm:text-3xl shadow-[0_0_30px_rgba(239,68,68,0.7)] border-4 border-white flex items-center justify-center cursor-pointer active:scale-90 transition-transform select-none"
             >
-              {/* Outer Pulsing Shockwave Ring */}
-              <motion.div
-                animate={{ scale: [1, 2.2], opacity: [0.9, 0] }}
-                transition={{ repeat: Infinity, duration: 0.35, ease: 'easeOut' }}
-                className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-yellow-400 bg-red-500/30 pointer-events-none"
-              />
-
-              <button
-                onClick={handleUnoClick}
-                className="relative group w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-red-500 via-amber-500 to-rose-600 border-4 border-yellow-300 shadow-[0_0_60px_rgba(239,68,68,1),0_0_30px_rgba(250,204,21,1)] flex flex-col items-center justify-center active:scale-90 transition-transform cursor-pointer overflow-hidden animate-bounce"
-              >
-                {/* SVG Countdown Ring */}
-                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none p-1">
-                  <motion.circle
-                    cx="50%"
-                    cy="50%"
-                    r="45%"
-                    className="stroke-yellow-300 fill-none"
-                    strokeWidth="6"
-                    strokeDasharray="280"
-                    initial={{ strokeDashoffset: 0 }}
-                    animate={{ strokeDashoffset: 280 }}
-                    transition={{ duration: 1, ease: 'linear' }}
-                  />
-                </svg>
-
-                <span className="text-yellow-200 font-black text-3xl sm:text-4xl tracking-tighter drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] -rotate-6 group-hover:scale-110 transition-transform select-none">
-                  UNO!
-                </span>
-                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-black/40 border border-yellow-400/60 select-none animate-pulse">
-                  ⚡ 1 DETIK!
-                </span>
-
-                <div className="absolute inset-0 rounded-full border-4 border-white/50 animate-ping pointer-events-none" />
-              </button>
-            </motion.div>
-          </>
+              <span className="drop-shadow-lg tracking-wider -rotate-6">UNO!</span>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
