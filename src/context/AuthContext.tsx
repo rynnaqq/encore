@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username is already taken' };
     }
 
-    const isFirstAdmin = cleanUsername.toLowerCase() === 'adminkawaaii' || cleanUsername.toLowerCase() === 'admin';
+    const isFirstAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
     const newAccount: StoredUserAccount = {
       username: cleanUsername,
       password,

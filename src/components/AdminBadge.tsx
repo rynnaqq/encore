@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 
-const adminUsernamesSet = new Set<string>(['adminkawaaii', 'admin']);
+const adminUsernamesSet = new Set<string>(['adminkawaaii']);
 
 export const registerAdminUsername = (username?: string | null) => {
   if (username) {
@@ -16,7 +16,7 @@ export const registerAdminUsernames = (usernames: string[]) => {
 export const isAdminName = (name?: string | null): boolean => {
   if (!name) return false;
   const clean = name.trim().toLowerCase();
-  return adminUsernamesSet.has(clean) || clean === 'adminkawaaii' || clean === 'admin';
+  return adminUsernamesSet.has(clean) || clean === 'adminkawaaii';
 };
 
 export const AdminBadge: React.FC<{ className?: string }> = ({ className = '' }) => {

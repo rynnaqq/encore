@@ -30,10 +30,7 @@ export const AdminPage: React.FC = () => {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    let res = login('AdminKawaaii', adminPassword);
-    if (!res.success) {
-      res = login('admin', adminPassword);
-    }
+    const res = login('AdminKawaaii', adminPassword);
     if (!res.success) {
       alert(res.message || 'Password Admin salah!');
     }
@@ -111,7 +108,7 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleDeleteUserClick = (targetUsername: string) => {
-    if (targetUsername.toLowerCase() === 'admin' || targetUsername.toLowerCase() === 'adminkawaaii') {
+    if (targetUsername.toLowerCase() === 'adminkawaaii') {
       alert('User admin utama tidak dapat dihapus!');
       return;
     }
