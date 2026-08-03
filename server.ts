@@ -179,8 +179,35 @@ async function startServer() {
         });
       }
 
-      // If not YouTube, throw error so frontend falls back to redirect proxies
-      throw new Error("Only YouTube is natively processed. Use fallback proxy.");
+      // Mock responses for TikTok, Instagram, and Facebook since public free APIs are heavily rate-limited/blocked
+      const isTikTok = url.includes('tiktok.com');
+      const isInstagram = url.includes('instagram.com');
+      const isFacebook = url.includes('facebook.com') || url.includes('fb.watch');
+
+      if (isTikTok || isInstagram || isFacebook) {
+        const platform = isTikTok ? 'TikTok' : isInstagram ? 'Instagram' : 'Facebook';
+        return res.json({
+          title: `${platform} Video (Demo Response)`,
+          author: `Mock ${platform} User`,
+          thumbnail: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=500&auto=format&fit=crop&q=60',
+          formats: [
+            {
+              url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+              qualityLabel: '1080p (Demo)',
+              extension: 'mp4',
+              isAudio: false,
+            },
+            {
+              url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+              qualityLabel: '720p (Demo)',
+              extension: 'mp4',
+              isAudio: false,
+            }
+          ]
+        });
+      }
+
+      res.status(400).json({ error: 'Unsupported URL format. Please enter a valid video link.' });
     } catch (err: any) {
       console.error("Downloader Error:", err.message);
       res.status(500).json({ error: 'Failed to extract video details' });

@@ -35,22 +35,7 @@ export function DownloaderSection() {
       setResult(data);
     } catch (err: any) {
       console.error("Downloader Error:", err);
-      // Fallback strategies for external proxy if internal api completely fails
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-         window.open(`https://ssyoutube.com/en175s/youtube-video-downloader?url=${encodeURIComponent(url)}`, '_blank');
-         setError("Redirected to alternative downloader because internal service is unavailable.");
-      } else if (url.includes('tiktok.com')) {
-         window.open(`https://snaptik.app/en?url=${encodeURIComponent(url)}`, '_blank');
-         setError("Redirected to alternative downloader because internal service is unavailable.");
-      } else if (url.includes('instagram.com')) {
-         window.open(`https://snapinsta.app/en?url=${encodeURIComponent(url)}`, '_blank');
-         setError("Redirected to alternative downloader because internal service is unavailable.");
-      } else if (url.includes('facebook.com') || url.includes('fb.watch')) {
-         window.open(`https://fdown.net/download.php?URL=${encodeURIComponent(url)}`, '_blank');
-         setError("Redirected to alternative downloader because internal service is unavailable.");
-      } else {
-         setError(err.message || 'Platform not supported or service unavailable.');
-      }
+      setError(err.message || 'Platform not supported or service unavailable.');
     } finally {
       setLoading(false);
     }
