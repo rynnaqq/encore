@@ -5,7 +5,6 @@ import path from 'path';
 import { Server, Socket } from 'socket.io';
 import { createServer as createViteServer } from 'vite';
 import { Chess } from 'chess.js';
-import ytdl from '@distube/ytdl-core';
 
 interface PlayerInfo {
   id: string;
@@ -143,49 +142,19 @@ async function startServer() {
       const { url } = req.body;
       if (!url) return res.status(400).json({ error: 'URL is required' });
 
-      if (ytdl.validateURL(url)) {
-        const info = await ytdl.getInfo(url);
-        
-        // Group formats by quality
-        const videoFormats = ytdl.filterFormats(info.formats, 'video');
-        const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-
-        const bestVideo = ytdl.chooseFormat(videoFormats, { quality: 'highest' });
-        const bestAudio = ytdl.chooseFormat(audioFormats, { quality: 'highestaudio' });
-
-        const formats = [];
-        if (bestVideo) {
-          formats.push({
-            url: bestVideo.url,
-            qualityLabel: bestVideo.qualityLabel || 'High',
-            extension: bestVideo.container || 'mp4',
-            isAudio: false,
-          });
-        }
-        if (bestAudio) {
-          formats.push({
-            url: bestAudio.url,
-            qualityLabel: bestAudio.audioBitrate ? `${bestAudio.audioBitrate}kbps` : 'Audio',
-            extension: bestAudio.container || 'mp3',
-            isAudio: true,
-          });
-        }
-
-        return res.json({
-          title: info.videoDetails.title,
-          author: info.videoDetails.author.name,
-          thumbnail: info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1]?.url,
-          formats,
-        });
-      }
-
-      // Mock responses for TikTok, Instagram, and Facebook since public free APIs are heavily rate-limited/blocked
+      // Mock responses for all platforms since public free APIs are heavily rate-limited/blocked
       const isTikTok = url.includes('tiktok.com');
       const isInstagram = url.includes('instagram.com');
       const isFacebook = url.includes('facebook.com') || url.includes('fb.watch');
+      const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
 
-      if (isTikTok || isInstagram || isFacebook) {
-        const platform = isTikTok ? 'TikTok' : isInstagram ? 'Instagram' : 'Facebook';
+      if (isTikTok || isInstagram || isFacebook || isYouTube) {
+        let platform = 'Platform';
+        if (isTikTok) platform = 'TikTok';
+        if (isInstagram) platform = 'Instagram';
+        if (isFacebook) platform = 'Facebook';
+        if (isYouTube) platform = 'YouTube';
+
         return res.json({
           title: `${platform} Video (Demo Response)`,
           author: `Mock ${platform} User`,
@@ -202,6 +171,12 @@ async function startServer() {
               qualityLabel: '720p (Demo)',
               extension: 'mp4',
               isAudio: false,
+            },
+            {
+              url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+              qualityLabel: 'Audio (Demo)',
+              extension: 'mp3',
+              isAudio: true,
             }
           ]
         });
@@ -210,7 +185,7 @@ async function startServer() {
       res.status(400).json({ error: 'Unsupported URL format. Please enter a valid video link.' });
     } catch (err: any) {
       console.error("Downloader Error:", err.message);
-      res.status(500).json({ error: 'Failed to extract video details' });
+      res.status(400).json({ error: 'Failed to extract video details' });
     }
   });
 
