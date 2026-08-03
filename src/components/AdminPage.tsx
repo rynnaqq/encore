@@ -350,7 +350,7 @@ export const AdminPage: React.FC = () => {
                           {new Date(u.createdAt).toLocaleDateString('id-ID')}
                         </td>
                         <td className="py-3.5 px-3 text-right">
-                          {u.username.toLowerCase() !== 'admin' ? (
+                          {u.username.toLowerCase() !== 'adminkawaaii' ? (
                             <button
                               onClick={() => handleDeleteUserClick(u.username)}
                               className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-colors"
