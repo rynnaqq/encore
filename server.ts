@@ -5,6 +5,7 @@ import path from 'path';
 import { Server, Socket } from 'socket.io';
 import { createServer as createViteServer } from 'vite';
 import { Chess } from 'chess.js';
+import ytdl from '@distube/ytdl-core';
 
 interface PlayerInfo {
   id: string;
@@ -134,6 +135,56 @@ async function startServer() {
       blackPlayer: r.blackPlayer ? { name: r.blackPlayer.name, country: r.blackPlayer.country, flag: r.blackPlayer.flag } : null,
     }));
     res.json(publicRooms);
+  });
+
+  // Downloader API
+  app.post('/api/download', async (req, res) => {
+    try {
+      const { url } = req.body;
+      if (!url) return res.status(400).json({ error: 'URL is required' });
+
+      if (ytdl.validateURL(url)) {
+        const info = await ytdl.getInfo(url);
+        
+        // Group formats by quality
+        const videoFormats = ytdl.filterFormats(info.formats, 'video');
+        const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+
+        const bestVideo = ytdl.chooseFormat(videoFormats, { quality: 'highest' });
+        const bestAudio = ytdl.chooseFormat(audioFormats, { quality: 'highestaudio' });
+
+        const formats = [];
+        if (bestVideo) {
+          formats.push({
+            url: bestVideo.url,
+            qualityLabel: bestVideo.qualityLabel || 'High',
+            extension: bestVideo.container || 'mp4',
+            isAudio: false,
+          });
+        }
+        if (bestAudio) {
+          formats.push({
+            url: bestAudio.url,
+            qualityLabel: bestAudio.audioBitrate ? `${bestAudio.audioBitrate}kbps` : 'Audio',
+            extension: bestAudio.container || 'mp3',
+            isAudio: true,
+          });
+        }
+
+        return res.json({
+          title: info.videoDetails.title,
+          author: info.videoDetails.author.name,
+          thumbnail: info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1]?.url,
+          formats,
+        });
+      }
+
+      // If not YouTube, throw error so frontend falls back to redirect proxies
+      throw new Error("Only YouTube is natively processed. Use fallback proxy.");
+    } catch (err: any) {
+      console.error("Downloader Error:", err.message);
+      res.status(500).json({ error: 'Failed to extract video details' });
+    }
   });
 
   // Timer interval for updating clocks

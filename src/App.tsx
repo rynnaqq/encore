@@ -19,6 +19,8 @@ import { LoginModal } from './components/LoginModal';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { DownloaderSection } from './components/DownloaderSection';
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -43,6 +45,29 @@ function ProtectedGameRoute({ children, targetPath }: { children: React.ReactNod
   }, [currentUser, navigate, openLoginModal, targetPath]);
 
   if (!currentUser) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
+function ProtectedAdminRoute({ children, targetPath }: { children: React.ReactNode; targetPath: string }) {
+  const { currentUser, openLoginModal } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/', { replace: true });
+      openLoginModal(() => {
+        navigate(targetPath);
+      });
+    } else if (currentUser.role !== 'admin') {
+      alert("Akses Ditolak: Hanya Admin yang dapat mengakses halaman ini.");
+      navigate('/', { replace: true });
+    }
+  }, [currentUser, navigate, openLoginModal, targetPath]);
+
+  if (!currentUser || currentUser.role !== 'admin') {
     return null;
   }
 
@@ -96,6 +121,23 @@ function AnimatedRoutes({
               <AboutSection onOpenModal={handleOpenAboutModal} />
               <CommentSection />
             </motion.div>
+          }
+        />
+        <Route
+          path="/downloader"
+          element={
+            <ProtectedAdminRoute targetPath="/downloader">
+              <motion.div
+                key="route-downloader"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <DownloaderSection />
+              </motion.div>
+            </ProtectedAdminRoute>
           }
         />
         <Route
