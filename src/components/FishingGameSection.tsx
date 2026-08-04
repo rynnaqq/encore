@@ -8,7 +8,7 @@ type GameState = 'idle' | 'preparing' | 'casting' | 'waiting' | 'biting' | 'reel
 type TimeOfDay = 'pagi' | 'senja' | 'malam';
 
 interface FloatingText {
-  id: number;
+  id: string;
   text: string;
   x: number;
   y: number;
@@ -104,7 +104,7 @@ export const FishingGameSection: React.FC = () => {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('pagi');
   const [isPerfectCast, setIsPerfectCast] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [splashes, setSplashes] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [splashes, setSplashes] = useState<{ id: string; x: number; y: number }[]>([]);
   const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -159,7 +159,7 @@ export const FishingGameSection: React.FC = () => {
   };
 
   const triggerFloatingText = (text: string, x: number, y: number, color = '#facc15') => {
-    const id = Date.now() + Math.random();
+    const id = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     setFloatingTexts(prev => [...prev, { id, text, x, y, color }]);
     setTimeout(() => {
       setFloatingTexts(prev => prev.filter(item => item.id !== id));
@@ -297,7 +297,7 @@ export const FishingGameSection: React.FC = () => {
   }, []);
 
   const triggerSplash = (x: number, y: number) => {
-    const id = Date.now() + Math.random();
+    const id = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     setSplashes(s => [...s, { id, x, y }]);
     setTimeout(() => {
       setSplashes(s => s.filter(p => p.id !== id));
@@ -574,74 +574,80 @@ export const FishingGameSection: React.FC = () => {
       </style>
 
       {/* Top Header Navigation & Stats */}
-      <div className="absolute top-4 left-4 right-4 z-[200] flex flex-wrap items-start justify-between gap-2 pointer-events-none">
-        <button
-          onClick={() => navigate('/')}
-          className="pointer-events-auto bg-amber-100 text-slate-900 border-[4px] border-black px-4 py-2 hover:bg-amber-200 flex items-center gap-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-[10px] font-bold mt-0.5">BACK</span>
-        </button>
+      <div className="absolute top-4 left-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none">
+        {/* Top Row: Back Button & Controls */}
+        <div className="flex justify-between items-start gap-2">
+          <button
+            onClick={() => navigate('/')}
+            className="pointer-events-auto bg-amber-100 text-slate-900 border-[4px] border-black px-3 py-1.5 sm:px-4 sm:py-2 hover:bg-amber-200 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">BACK</span>
+          </button>
 
-        {/* Time of Day Switcher & Stats */}
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 pointer-events-auto">
-          {/* Time Selector */}
-          <div className="bg-amber-100 border-[4px] border-black p-1 flex items-center gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+          {/* Controls */}
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pointer-events-auto">
+            {/* Time Selector */}
+            <div className="bg-amber-100 border-[4px] border-black p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+              <button
+                onClick={() => setTimeOfDay('pagi')}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
+                title="Pagi (Day)"
+              >
+                <Sun className="w-3.5 h-3.5 text-amber-700" />
+              </button>
+              <button
+                onClick={() => setTimeOfDay('senja')}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
+                title="Senja (Sunset)"
+              >
+                <Flame className="w-3.5 h-3.5 text-orange-800" />
+              </button>
+              <button
+                onClick={() => setTimeOfDay('malam')}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
+                title="Malam (Night)"
+              >
+                <Moon className="w-3.5 h-3.5 text-amber-300" />
+              </button>
+            </div>
+
             <button
-              onClick={() => setTimeOfDay('pagi')}
-              className={`p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
-              title="Pagi (Day)"
+              onClick={toggleFullscreen}
+              className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             >
-              <Sun className="w-3.5 h-3.5 text-amber-700" />
+              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
+
             <button
-              onClick={() => setTimeOfDay('senja')}
-              className={`p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
-              title="Senja (Sunset)"
+              onClick={() => setIsJournalOpen(true)}
+              className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              title="Fishing Journal"
             >
-              <Flame className="w-3.5 h-3.5 text-orange-800" />
+              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
             </button>
+
             <button
-              onClick={() => setTimeOfDay('malam')}
-              className={`p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
-              title="Malam (Night)"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
             >
-              <Moon className="w-3.5 h-3.5 text-amber-300" />
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />}
             </button>
           </div>
+        </div>
 
-          <button
-            onClick={toggleFullscreen}
-            className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-
-          <button
-            onClick={() => setIsJournalOpen(true)}
-            className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-            title="Fishing Journal"
-          >
-            <BookOpen className="w-4 h-4 text-blue-700" />
-          </button>
-
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-          >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-red-600" />}
-          </button>
-
-          <div className="bg-amber-100 text-slate-900 border-[4px] border-black px-3.5 py-2 flex items-center gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-            <Trophy className="w-4 h-4 text-amber-600" />
-            <span className="text-[10px] font-bold">PTS: <span className="text-blue-600">{score}</span></span>
+        {/* Bottom Row: Stats */}
+        <div className="flex justify-end pointer-events-none">
+          <div className="bg-amber-100 text-slate-900 border-[4px] border-black px-2.5 py-1.5 sm:px-3.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] pointer-events-auto">
+            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
+            <span className="text-[9px] sm:text-[10px] font-bold">PTS: <span className="text-blue-600">{score}</span></span>
             <span className="text-slate-400">|</span>
-            <span className="text-[10px] font-bold">FISH: <span className="text-emerald-700">{caughtCount}</span></span>
+            <span className="text-[9px] sm:text-[10px] font-bold">FISH: <span className="text-emerald-700">{caughtCount}</span></span>
             {combo > 1 && (
               <>
                 <span className="text-slate-400">|</span>
-                <span className="text-[10px] font-black text-rose-600 animate-pulse flex items-center gap-0.5">
+                <span className="text-[9px] sm:text-[10px] font-black text-rose-600 animate-pulse flex items-center gap-0.5">
                   🔥 x{combo}
                 </span>
               </>
@@ -1176,7 +1182,7 @@ export const FishingGameSection: React.FC = () => {
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -40, opacity: 0 }}
-              className="absolute top-[80px] sm:top-[100px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-40 pointer-events-none"
+              className="absolute top-[110px] sm:top-[120px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-[250] pointer-events-none"
             >
               <div className="flex justify-between items-center mb-2 font-black text-xs text-slate-900">
                 <span>POWER LEMPARAN</span>
@@ -1202,7 +1208,7 @@ export const FishingGameSection: React.FC = () => {
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -40, opacity: 0 }}
-              className="absolute top-[80px] sm:top-[100px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-40 pointer-events-none"
+              className="absolute top-[110px] sm:top-[120px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-[250] pointer-events-none"
             >
               <div className="flex justify-between items-center mb-2 font-black text-xs text-blue-700 animate-pulse">
                 <span>TARIK! TAP FAST!</span>
