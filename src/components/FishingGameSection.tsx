@@ -111,7 +111,8 @@ export const FishingGameSection: React.FC = () => {
   const [discoveredSpecies, setDiscoveredSpecies] = useState<string[]>([]);
   const [isJournalOpen, setIsJournalOpen] = useState(false);
 
-  const waterSurfaceY = canvasHeight - 220;
+  const waterHeight = Math.max(260, Math.floor(canvasHeight * 0.45));
+  const waterSurfaceY = canvasHeight - waterHeight + 10;
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -201,7 +202,7 @@ export const FishingGameSection: React.FC = () => {
     };
     animId = requestAnimationFrame(updateRodTipPos);
     return () => cancelAnimationFrame(animId);
-  }, []);
+  }, [canvasHeight]);
 
   // Audio synthesis for retro sound effects
   const playSound = (type: 'cast' | 'splash' | 'bite' | 'tap' | 'caught' | 'escape' | 'reeling' | 'release') => {
@@ -354,7 +355,7 @@ export const FishingGameSection: React.FC = () => {
       setCastProgress(progress);
 
       const currentX = startX + (targetX - startX) * progress;
-      const peakY = Math.min(startY - 80, 120);
+      const peakY = Math.min(startY - 140, startY - (targetX - startX) * 0.4);
       const currentY = (1 - progress) * (1 - progress) * startY + 2 * (1 - progress) * progress * peakY + progress * progress * waterSurfaceY;
 
       setBobberPos({ x: currentX, y: currentY });
@@ -367,7 +368,7 @@ export const FishingGameSection: React.FC = () => {
         triggerSplash(targetX, waterSurfaceY);
 
         if (perfect) {
-          triggerFloatingText('PERFECT CAST! ⭐', targetX, 340, '#facc15');
+          triggerFloatingText('PERFECT CAST! ⭐', targetX, waterSurfaceY - 40, '#facc15');
         }
 
         setGameState('waiting');
@@ -573,7 +574,7 @@ export const FishingGameSection: React.FC = () => {
       </style>
 
       {/* Top Header Navigation & Stats */}
-      <div className="absolute top-4 left-4 right-4 z-[200] flex items-center justify-between pointer-events-none">
+      <div className="absolute top-4 left-4 right-4 z-[200] flex flex-wrap items-start justify-between gap-2 pointer-events-none">
         <button
           onClick={() => navigate('/')}
           className="pointer-events-auto bg-amber-100 text-slate-900 border-[4px] border-black px-4 py-2 hover:bg-amber-200 flex items-center gap-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
@@ -583,7 +584,7 @@ export const FishingGameSection: React.FC = () => {
         </button>
 
         {/* Time of Day Switcher & Stats */}
-        <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 pointer-events-auto">
           {/* Time Selector */}
           <div className="bg-amber-100 border-[4px] border-black p-1 flex items-center gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
             <button
@@ -667,42 +668,42 @@ export const FishingGameSection: React.FC = () => {
           {/* Sky Gradient Bands according to Time of Day */}
           {timeOfDay === 'pagi' && (
             <>
-              <div className="absolute top-0 inset-x-0 h-[65px] bg-[#0284c7]" />
-              <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#38bdf8]" />
-              <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#7dd3fc]" />
-              <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#bae6fd]" />
-              <div className="absolute top-[285px] inset-x-0 bottom-[230px] bg-[#e0f2fe]" />
+              <div className="absolute top-0 inset-x-0 bg-[#0284c7]" style={{ bottom: waterHeight + 285 }} />
+              <div className="absolute inset-x-0 h-[70px] bg-[#38bdf8]" style={{ bottom: waterHeight + 215 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#7dd3fc]" style={{ bottom: waterHeight + 140 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#bae6fd]" style={{ bottom: waterHeight + 65 }} />
+              <div className="absolute inset-x-0 h-[65px] bg-[#e0f2fe]" style={{ bottom: waterHeight }} />
             </>
           )}
 
           {timeOfDay === 'senja' && (
             <>
-              <div className="absolute top-0 inset-x-0 h-[65px] bg-[#431407]" />
-              <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#7c2d12]" />
-              <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#c2410c]" />
-              <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#f97316]" />
-              <div className="absolute top-[285px] inset-x-0 bottom-[230px] bg-[#fdba74]" />
+              <div className="absolute top-0 inset-x-0 bg-[#431407]" style={{ bottom: waterHeight + 285 }} />
+              <div className="absolute inset-x-0 h-[70px] bg-[#7c2d12]" style={{ bottom: waterHeight + 215 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#c2410c]" style={{ bottom: waterHeight + 140 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#f97316]" style={{ bottom: waterHeight + 65 }} />
+              <div className="absolute inset-x-0 h-[65px] bg-[#fdba74]" style={{ bottom: waterHeight }} />
             </>
           )}
 
           {timeOfDay === 'malam' && (
             <>
-              <div className="absolute top-0 inset-x-0 h-[65px] bg-[#020617]" />
-              <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#0f172a]" />
-              <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#1e1b4b]" />
-              <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#312e81]" />
-              <div className="absolute top-[285px] inset-x-0 bottom-[230px] bg-[#4338ca]" />
+              <div className="absolute top-0 inset-x-0 bg-[#020617]" style={{ bottom: waterHeight + 285 }} />
+              <div className="absolute inset-x-0 h-[70px] bg-[#0f172a]" style={{ bottom: waterHeight + 215 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#1e1b4b]" style={{ bottom: waterHeight + 140 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#312e81]" style={{ bottom: waterHeight + 65 }} />
+              <div className="absolute inset-x-0 h-[65px] bg-[#4338ca]" style={{ bottom: waterHeight }} />
 
               {/* Twinkling Stars */}
-              <div className="absolute top-8 left-12 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-              <div className="absolute top-16 left-64 w-2 h-2 bg-amber-200 rounded-full animate-pulse" />
-              <div className="absolute top-10 right-96 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }} />
-              <div className="absolute top-20 right-48 w-2 h-2 bg-amber-100 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+              <div className="absolute left-12 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ bottom: waterHeight + 230 }} />
+              <div className="absolute left-64 w-2 h-2 bg-amber-200 rounded-full animate-pulse" style={{ bottom: waterHeight + 210 }} />
+              <div className="absolute right-96 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s', bottom: waterHeight + 220 }} />
+              <div className="absolute right-48 w-2 h-2 bg-amber-100 rounded-full animate-pulse" style={{ animationDelay: '0.5s', bottom: waterHeight + 170 }} />
             </>
           )}
 
           {/* Sun / Moon Graphic */}
-          <div className="absolute top-[30px] right-[70px]">
+          <div className="absolute right-[70px]" style={{ bottom: waterHeight + 170 }}>
             {timeOfDay === 'malam' ? (
               <div className="relative">
                 <div className="w-[52px] h-[52px] bg-[#FEF08A] rounded-full border-[4px] border-[#FDE047] shadow-[0_0_30px_rgba(254,240,138,0.8)]" />
@@ -724,7 +725,8 @@ export const FishingGameSection: React.FC = () => {
           <motion.div
             animate={{ x: [-140, 880] }}
             transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-[30px] left-0 opacity-90"
+            className="absolute left-0 opacity-90"
+            style={{ bottom: waterHeight + 190 }}
           >
             <div className="relative">
               <div className="w-[75px] h-[16px] bg-white absolute top-0 left-[20px]" />
@@ -736,7 +738,8 @@ export const FishingGameSection: React.FC = () => {
           <motion.div
             animate={{ x: [-160, 860] }}
             transition={{ duration: 42, repeat: Infinity, ease: 'linear', delay: 10 }}
-            className="absolute top-[85px] left-0 opacity-80"
+            className="absolute left-0 opacity-80"
+            style={{ bottom: waterHeight + 140 }}
           >
             <div className="relative">
               <div className="w-[55px] h-[14px] bg-white absolute top-0 left-[15px]" />
@@ -749,13 +752,14 @@ export const FishingGameSection: React.FC = () => {
           <motion.div
             animate={{ x: [-60, 860], y: [0, -12, 0] }}
             transition={{ x: { duration: 20, repeat: Infinity, ease: 'linear' }, y: { duration: 2, repeat: Infinity, ease: 'easeInOut' } }}
-            className="absolute top-[75px] left-0 text-slate-700 text-[10px] font-bold"
+            className="absolute left-0 text-slate-700 text-[10px] font-bold"
+            style={{ bottom: waterHeight + 150 }}
           >
             v v
           </motion.div>
 
           {/* ================= MOUNTAINS & LANDSCAPE ================= */}
-          <div className="absolute bottom-[230px] left-0 w-full h-[140px]">
+          <div className="absolute left-0 w-full h-[140px]" style={{ bottom: waterHeight }}>
             <svg width="800" height="140" className="absolute bottom-0 inset-x-0" shapeRendering="crispEdges">
               {/* Far Mountain 1 */}
               <polygon points="30,140 120,35 210,140" fill="#475569" />
@@ -782,7 +786,7 @@ export const FishingGameSection: React.FC = () => {
           </div>
 
           {/* Pier Grass Slope (Left side) */}
-          <div className="absolute bottom-[220px] left-0 w-[220px] h-[65px] bg-[#15803d] border-b-[6px] border-[#166534]">
+          <div className="absolute left-0 w-[220px] h-[65px] bg-[#15803d] border-b-[6px] border-[#166534]" style={{ bottom: waterHeight - 10 }}>
             <div className="absolute top-0 inset-x-0 h-[8px] bg-[#22c55e]" />
             <div className="absolute top-[35px] inset-x-0 bottom-0 bg-[#78350f] border-t-[4px] border-[#92400e]" />
             <div className="absolute top-[4px] left-[35px] w-[6px] h-[6px] bg-yellow-300" />
@@ -791,7 +795,7 @@ export const FishingGameSection: React.FC = () => {
           </div>
 
           {/* ================= WATER & UNDERWATER ================= */}
-          <div className="absolute bottom-0 left-0 w-full h-[230px] bg-gradient-to-b from-[#0284c7] via-[#0369a1] to-[#0f172a] overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-[#0284c7] via-[#0369a1] to-[#0f172a] overflow-hidden" style={{ height: waterHeight }}>
             {/* Animated Waves Layer */}
             <div className="absolute top-0 inset-x-0 h-[10px] bg-[#38bdf8]/90 flex overflow-hidden">
               <div className="w-[832px] h-full flex animate-water">
@@ -861,7 +865,12 @@ export const FishingGameSection: React.FC = () => {
           </div>
 
           {/* ================= PIER & FISHERMAN ================= */}
-          <div className="absolute bottom-[200px] left-0 w-[230px] h-[32px] bg-[#78350f] border-y-[4px] border-[#451a03] shadow-[0_6px_0_rgba(0,0,0,0.4)]">
+          <div className="absolute left-0 w-[230px] h-[32px] bg-[#78350f] border-y-[4px] border-[#451a03] shadow-[0_6px_0_rgba(0,0,0,0.4)]" style={{ bottom: waterHeight - 30 }}>
+            {/* Pier vertical supports going into water */}
+            <div className="absolute top-full left-[20px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
+            <div className="absolute top-full left-[110px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
+            <div className="absolute top-full left-[200px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
+            
             <div className="absolute top-0 bottom-0 left-[45px] w-[3px] bg-[#451a03]" />
             <div className="absolute top-0 bottom-0 left-[90px] w-[3px] bg-[#451a03]" />
             <div className="absolute top-0 bottom-0 left-[135px] w-[3px] bg-[#451a03]" />
@@ -890,7 +899,7 @@ export const FishingGameSection: React.FC = () => {
           </div>
 
           {/* Fisherman Character */}
-          <div className="absolute bottom-[225px] left-[105px] z-10">
+          <div className="absolute left-[105px] z-10" style={{ bottom: waterHeight - 5 }}>
             {/* Wooden Stool */}
             <div className="absolute bottom-[0px] left-[10px] w-[28px] h-[18px] bg-[#451a03] border-[2px] border-black">
               <div className="absolute top-[18px] left-[2px] w-[4px] h-[20px] bg-[#451a03]" />
@@ -939,7 +948,7 @@ export const FishingGameSection: React.FC = () => {
 
           {/* ================= FISHING LINE ================= */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
-            <svg width="800" height="600" className="absolute inset-0 pointer-events-none z-15" shapeRendering="geometricPrecision">
+            <svg width="800" height={canvasHeight} className="absolute inset-0 pointer-events-none z-15" shapeRendering="geometricPrecision">
               <path
                 d={
                   gameState === 'reeling'
@@ -1038,57 +1047,78 @@ export const FishingGameSection: React.FC = () => {
               className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-50 p-4 font-mono"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="bg-amber-100 border-[6px] border-black p-4 sm:p-6 w-full max-w-[500px] text-slate-900 shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative max-h-[550px] flex flex-col mt-4">
+              <div className="bg-[#5c3a21] border-[6px] border-black p-2 sm:p-4 w-full max-w-[650px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative h-[85vh] max-h-[600px] flex flex-col mt-4 rounded-sm">
+                {/* Book spine line */}
+                <div className="hidden sm:block absolute top-0 bottom-0 left-1/2 w-[6px] bg-black/40 z-0 -translate-x-1/2 shadow-inner" />
+                
+                {/* Close button */}
                 <button
                   onClick={() => setIsJournalOpen(false)}
-                  className="absolute top-2 right-2 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] z-10"
+                  className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-30 transition-transform active:scale-95"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
 
-                <div className="bg-blue-600 text-white border-[4px] border-black py-2 px-4 -mt-8 sm:-mt-10 mx-auto inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-10 mb-4 shrink-0">
-                  <h2 className="text-[16px] sm:text-[18px] font-black text-yellow-300 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" /> FISHING JOURNAL
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4 shrink-0">
-                  <div className="bg-sky-200 border-[3px] border-black p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                    <div className="text-[9px] font-bold text-slate-700 mb-1">TOTAL CATCHES</div>
-                    <div className="text-xl font-black text-sky-900">{caughtCount}</div>
+                {/* Inner Pages */}
+                <div className="bg-[#fef3c7] border-[4px] border-black flex-1 overflow-hidden flex flex-col sm:flex-row relative z-10 shadow-inner">
+                  {/* Left Page: Stats */}
+                  <div className="flex-none h-[180px] sm:h-auto sm:flex-1 p-3 sm:p-5 flex flex-col border-b-[4px] sm:border-b-0 sm:border-r-[4px] border-black/20 bg-[#fef3c7]">
+                    <div className="flex items-center gap-2 text-slate-800 mb-4 sm:mb-6 border-b-[2px] border-black/20 pb-2 sm:pb-3">
+                      <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" /> 
+                      <h2 className="text-[14px] sm:text-[18px] font-black">MY JOURNAL</h2>
+                    </div>
+                    
+                    <div className="flex flex-row sm:flex-col gap-3 sm:gap-5 mb-2">
+                      <div className="flex-1 bg-sky-200 border-[3px] border-black p-2 sm:p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)] transform sm:-rotate-1">
+                        <div className="text-[8px] sm:text-[9px] font-bold text-slate-700 mb-1">TOTAL CATCHES</div>
+                        <div className="text-lg sm:text-xl font-black text-sky-900">{caughtCount}</div>
+                      </div>
+                      <div className="flex-1 bg-amber-300 border-[3px] border-black p-2 sm:p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)] transform sm:rotate-1">
+                        <div className="text-[8px] sm:text-[9px] font-bold text-slate-700 mb-1">LIFETIME SCORE</div>
+                        <div className="text-lg sm:text-xl font-black text-amber-900">{score}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-auto hidden sm:block">
+                      <div className="text-[10px] font-bold text-slate-400 text-center">PAGE 1</div>
+                    </div>
                   </div>
-                  <div className="bg-amber-300 border-[3px] border-black p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                    <div className="text-[9px] font-bold text-slate-700 mb-1">LIFETIME SCORE</div>
-                    <div className="text-xl font-black text-amber-900">{score}</div>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto bg-amber-50 border-[3px] border-black p-3 shadow-inner custom-scrollbar min-h-0">
-                  <div className="text-[10px] font-bold mb-3 flex justify-between items-center text-slate-800">
-                    <span>SPECIES DISCOVERED</span>
-                    <span className="bg-blue-600 text-white px-2 py-0.5 border-2 border-black">{discoveredSpecies.length} / {FISH_DATABASE.length}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {FISH_DATABASE.map(fish => {
-                      const isDiscovered = discoveredSpecies.includes(fish.id);
-                      return (
-                        <div key={fish.id} className={`border-[3px] border-black p-2 flex items-center gap-3 ${isDiscovered ? 'bg-white' : 'bg-slate-300 opacity-60 grayscale'}`}>
-                          <div className="w-10 h-10 shrink-0 bg-sky-100 border-2 border-black flex items-center justify-center overflow-hidden">
-                            {isDiscovered ? (
-                              <FishGraphic id={fish.id} size={30} />
-                            ) : (
-                              <div className="text-slate-500 font-bold">?</div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[9px] font-black truncate text-slate-900 mb-1">{isDiscovered ? fish.name : 'Unknown'}</div>
-                            <div className="text-[7px] font-bold px-1.5 py-0.5 inline-block border border-black text-slate-800" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
-                              {isDiscovered ? fish.rarity : '???'}
+                  
+                  {/* Right Page: Species List */}
+                  <div className="flex-1 sm:flex-[1.4] p-3 sm:p-5 flex flex-col bg-[#fdf8e7] relative min-h-0">
+                    <div className="text-[9px] sm:text-[10px] font-bold mb-3 flex justify-between items-center text-slate-800 border-b-[2px] border-black/20 pb-2 shrink-0">
+                      <span>SPECIES DISCOVERED</span>
+                      <span className="bg-blue-600 text-white px-2 py-0.5 border-2 border-black drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">{discoveredSpecies.length} / {FISH_DATABASE.length}</span>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 min-h-0 pb-4">
+                      <div className="flex flex-col gap-2.5">
+                        {FISH_DATABASE.map(fish => {
+                          const isDiscovered = discoveredSpecies.includes(fish.id);
+                          return (
+                            <div key={fish.id} className={`border-[3px] border-black p-2 flex items-center gap-3 shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${isDiscovered ? 'bg-white' : 'bg-slate-300 opacity-60 grayscale'}`}>
+                              <div className="w-10 h-10 shrink-0 bg-sky-100 border-2 border-black flex items-center justify-center overflow-hidden">
+                                {isDiscovered ? (
+                                  <FishGraphic id={fish.id} size={30} />
+                                ) : (
+                                  <div className="text-slate-500 font-bold">?</div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[9px] font-black truncate text-slate-900 mb-1">{isDiscovered ? fish.name : 'Unknown'}</div>
+                                <div className="text-[7px] font-bold px-1.5 py-0.5 inline-block border border-black text-slate-800" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
+                                  {isDiscovered ? fish.rarity : '???'}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="absolute bottom-2 inset-x-0 hidden sm:block">
+                      <div className="text-[10px] font-bold text-slate-400 text-center">PAGE 2</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1146,7 +1176,7 @@ export const FishingGameSection: React.FC = () => {
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -40, opacity: 0 }}
-              className="absolute top-[40px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-40 pointer-events-none"
+              className="absolute top-[80px] sm:top-[100px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-40 pointer-events-none"
             >
               <div className="flex justify-between items-center mb-2 font-black text-xs text-slate-900">
                 <span>POWER LEMPARAN</span>
@@ -1172,7 +1202,7 @@ export const FishingGameSection: React.FC = () => {
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -40, opacity: 0 }}
-              className="absolute top-[40px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-40 pointer-events-none"
+              className="absolute top-[80px] sm:top-[100px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-40 pointer-events-none"
             >
               <div className="flex justify-between items-center mb-2 font-black text-xs text-blue-700 animate-pulse">
                 <span>TARIK! TAP FAST!</span>

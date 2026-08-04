@@ -276,14 +276,18 @@ function MainLayout() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
+  const isFullscreenGame = location.pathname === '/fishing';
+
   return (
     <>
       <ScrollToTop />
-      <Navbar
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        onOpenAboutModal={handleOpenAboutModal}
-      />
+      {!isFullscreenGame && (
+        <Navbar
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          onOpenAboutModal={handleOpenAboutModal}
+        />
+      )}
       <main>
         <AnimatedRoutes handleOpenAboutModal={handleOpenAboutModal} />
       </main>
@@ -298,7 +302,7 @@ function MainLayout() {
         isOpen={isChangelogModalOpen}
         onClose={handleCloseChangelog}
       />
-      <Footer />
+      {!isFullscreenGame && <Footer />}
     </>
   );
 }
