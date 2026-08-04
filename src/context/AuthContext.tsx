@@ -29,6 +29,7 @@ interface AuthContextType {
   addUser: (username: string, password: string, role: 'user' | 'admin') => { success: boolean; message?: string };
   deleteUser: (username: string) => { success: boolean; message?: string };
   updateUserRole: (username: string, role: 'user' | 'admin') => { success: boolean; message?: string };
+  changePassword: (oldPassword: string, newPassword: string) => { success: boolean; message?: string };
 }
 
 const STORAGE_USERS_KEY = 'app_users_v3';
@@ -289,6 +290,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true };
   };
 
+  const changePassword = (oldPassword: string, newPassword: string) => {
+    if (!currentUser) return { success: false, message: 'Not logged in' };
+
+    const account = storedAccounts.find(
+      (acc) => acc.username.toLowerCase() === currentUser.username.toLowerCase()
+    );
+
+    if (!account) return { success: false, message: 'Account not found' };
+
+    let isPasswordValid = false;
+    if (account.password && (account.password.startsWith('$2a$') || account.password.startsWith('$2b$'))) {
+      isPasswordValid = bcrypt.compareSync(oldPassword, account.password);
+    } else {
+      isPasswordValid = account.password === oldPassword;
+    }
+
+    if (!isPasswordValid) return { success: false, message: 'Incorrect old password' };
+
+    if (!newPassword || newPassword.length < 4) {
+      return { success: false, message: 'New password must be at least 4 characters' };
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    const updatedAccount = { ...account, password: hashedPassword };
+
+    setStoredAccounts((prev) =>
+      prev.map((a) => (a.username.toLowerCase() === updatedAccount.username.toLowerCase() ? updatedAccount : a))
+    );
+    saveUserToSupabase(updatedAccount);
+
+    return { success: true };
+  };
+
   const users: User[] = storedAccounts.map((acc) => ({
     username: acc.username,
     role: acc.role,
@@ -309,6 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addUser,
         deleteUser,
         updateUserRole,
+        changePassword,
       }}
     >
       {children}

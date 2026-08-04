@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, ArrowUpRight, User as UserIcon, Shield, LogOut, LogIn } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LoginModal } from './LoginModal';
+import { ProfileModal } from './ProfileModal';
 
 interface NavbarProps {
   activeSection: string;
@@ -18,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const { currentUser, logout, openLoginModal } = useAuth();
   const navigate = useNavigate();
@@ -115,12 +116,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => {
-                      if (currentUser.role === 'admin') navigate('/admin');
+                      setIsProfileModalOpen(true);
                     }}
                     className={`px-3 py-1.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition-all ${
                       currentUser.role === 'admin'
                         ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200 cursor-pointer'
-                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 cursor-pointer'
                     }`}
                   >
                     {currentUser.role === 'admin' ? (
@@ -226,6 +227,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
     </>
   );
 };
