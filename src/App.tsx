@@ -19,8 +19,6 @@ import { LoginModal } from './components/LoginModal';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
-import { DownloaderSection } from './components/DownloaderSection';
-
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -121,23 +119,6 @@ function AnimatedRoutes({
               <AboutSection onOpenModal={handleOpenAboutModal} />
               <CommentSection />
             </motion.div>
-          }
-        />
-        <Route
-          path="/downloader"
-          element={
-            <ProtectedAdminRoute targetPath="/downloader">
-              <motion.div
-                key="route-downloader"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="gpu-smooth"
-              >
-                <DownloaderSection />
-              </motion.div>
-            </ProtectedAdminRoute>
           }
         />
         <Route

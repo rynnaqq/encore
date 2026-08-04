@@ -136,59 +136,6 @@ async function startServer() {
     res.json(publicRooms);
   });
 
-  // Downloader API
-  app.post('/api/download', async (req, res) => {
-    try {
-      const { url } = req.body;
-      if (!url) return res.status(400).json({ error: 'URL is required' });
-
-      // Mock responses for all platforms since public free APIs are heavily rate-limited/blocked
-      const isTikTok = url.includes('tiktok.com');
-      const isInstagram = url.includes('instagram.com');
-      const isFacebook = url.includes('facebook.com') || url.includes('fb.watch');
-      const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
-
-      if (isTikTok || isInstagram || isFacebook || isYouTube) {
-        let platform = 'Platform';
-        if (isTikTok) platform = 'TikTok';
-        if (isInstagram) platform = 'Instagram';
-        if (isFacebook) platform = 'Facebook';
-        if (isYouTube) platform = 'YouTube';
-
-        return res.json({
-          title: `${platform} Video (Demo Response)`,
-          author: `Mock ${platform} User`,
-          thumbnail: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=500&auto=format&fit=crop&q=60',
-          formats: [
-            {
-              url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-              qualityLabel: '1080p (Demo)',
-              extension: 'mp4',
-              isAudio: false,
-            },
-            {
-              url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-              qualityLabel: '720p (Demo)',
-              extension: 'mp4',
-              isAudio: false,
-            },
-            {
-              url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-              qualityLabel: 'Audio (Demo)',
-              extension: 'mp3',
-              isAudio: true,
-            }
-          ]
-        });
-      }
-
-      res.status(400).json({ error: 'Unsupported URL format. Please enter a valid video link.' });
-    } catch (err: any) {
-      console.error("Downloader Error:", err.message);
-      res.status(400).json({ error: 'Failed to extract video details' });
-    }
-  });
-
   // Timer interval for updating clocks
   setInterval(() => {
     const now = Date.now();

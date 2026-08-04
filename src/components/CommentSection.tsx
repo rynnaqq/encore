@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName } from './AdminBadge';
@@ -59,6 +59,7 @@ export const CommentSection: React.FC = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [authError, setAuthError] = useState('');
   const [text, setText] = useState('');
@@ -393,14 +394,23 @@ export const CommentSection: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-600 mb-1">Password</label>
-                  <input
-                    type="password"
-                    placeholder="Your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 pr-12 py-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

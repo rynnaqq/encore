@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Lock, LogIn, UserPlus, Shield, X, AlertCircle } from 'lucide-react';
+import { User, Lock, LogIn, UserPlus, Shield, X, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
@@ -127,13 +128,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
               <div className="relative">
                 <Lock className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Masukkan password"
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold focus:bg-white focus:border-[#E195AB] focus:ring-4 focus:ring-pink-100 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-12 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-bold focus:bg-white focus:border-[#E195AB] focus:ring-4 focus:ring-pink-100 outline-none transition-all text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 

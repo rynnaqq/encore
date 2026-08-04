@@ -34,7 +34,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   if (currentUser?.role === 'admin') {
-    navItems.push({ id: 'downloader', label: 'Video Downloader', path: '/downloader' });
     navItems.push({ id: 'admin', label: 'Admin Page', path: '/admin' });
   }
 

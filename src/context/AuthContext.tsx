@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import bcrypt from 'bcryptjs';
 import { LoginModal } from '../components/LoginModal';
 import {
   fetchUsersFromSupabase,
@@ -135,10 +136,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Password verification against account password
-    const isPasswordValid = account.password === password;
+    let isPasswordValid = false;
+    let needsHashing = false;
+
+    if (account.password && (account.password.startsWith('$2a$') || account.password.startsWith('$2b$'))) {
+      isPasswordValid = bcrypt.compareSync(password, account.password);
+    } else {
+      isPasswordValid = account.password === password;
+      if (isPasswordValid) {
+        needsHashing = true;
+      }
+    }
 
     if (!isPasswordValid) {
       return { success: false, message: 'Incorrect password' };
+    }
+
+    if (needsHashing) {
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const updatedAccount = { ...account, password: hashedPassword };
+      setStoredAccounts((prev) =>
+        prev.map((a) => (a.username.toLowerCase() === updatedAccount.username.toLowerCase() ? updatedAccount : a))
+      );
+      saveUserToSupabase(updatedAccount);
     }
 
     const userObj: User = {
@@ -171,9 +191,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const isFirstAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
+    const hashedPassword = bcrypt.hashSync(password, 10);
     const newAccount: StoredUserAccount = {
       username: cleanUsername,
-      password,
+      password: hashedPassword,
       role: isFirstAdmin ? 'admin' : 'user',
       createdAt: Date.now(),
     };
@@ -213,9 +234,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'User already exists' };
     }
 
+    const hashedPassword = bcrypt.hashSync(password, 10);
     const newAccount: StoredUserAccount = {
       username: cleanUsername,
-      password,
+      password: hashedPassword,
       role,
       createdAt: Date.now(),
     };
@@ -242,17 +264,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserRole = (username: string, role: 'user' | 'admin') => {
+    let accountToUpdate: StoredUserAccount | undefined;
+
     setStoredAccounts((prev) =>
       prev.map((acc) => {
         if (acc.username.toLowerCase() === username.toLowerCase()) {
-          return { ...acc, role };
+          const updated = { ...acc, role };
+          accountToUpdate = updated;
+          return updated;
         }
         return acc;
       })
     );
 
     // Update asynchronously in Supabase database
-    updateUserRoleInSupabase(username, role);
+    if (accountToUpdate) {
+      updateUserRoleInSupabase(username, role, accountToUpdate.password);
+    }
 
     if (currentUser?.username.toLowerCase() === username.toLowerCase()) {
       setCurrentUser({ ...currentUser, role });

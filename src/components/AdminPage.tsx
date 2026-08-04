@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
-import { Trash2, Users, MessageSquare, Shield, KeyRound, UserPlus, Search, LogOut, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Trash2, Users, MessageSquare, Shield, KeyRound, UserPlus, Search, LogOut, CheckCircle2, AlertCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { useAuth, User } from '../context/AuthContext';
 
 interface Comment {
@@ -15,6 +15,7 @@ export const AdminPage: React.FC = () => {
   const { currentUser, users, addUser, deleteUser, updateUserRole, login, logout } = useAuth();
   
   const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'comments' | 'system'>('users');
@@ -23,6 +24,7 @@ export const AdminPage: React.FC = () => {
   // Add user modal / state
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newRole, setNewRole] = useState<'user' | 'admin'>('user');
   const [userActionMsg, setUserActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -138,18 +140,27 @@ export const AdminPage: React.FC = () => {
             Masukan password admin untuk mengakses kontrol universal
           </p>
           
-          <div className="mb-6">
+          <div className="mb-6 relative">
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
               Password Admin
             </label>
-            <input
-              type="password"
-              required
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-sm"
-              placeholder="Masukkan password admin"
-            />
+            <div className="relative">
+              <input
+                type={showAdminPassword ? "text" : "password"}
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full pl-4 pr-12 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-sm"
+                placeholder="Masukkan password admin"
+              />
+              <button
+                type="button"
+                onClick={() => setShowAdminPassword(!showAdminPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+              >
+                {showAdminPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"
@@ -261,14 +272,23 @@ export const AdminPage: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Masukkan password"
-                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Masukkan password"
+                      className="w-full pl-4 pr-12 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
