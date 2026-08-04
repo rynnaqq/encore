@@ -988,8 +988,8 @@ export const FishingGameSection: React.FC = () => {
                   <span className="text-[8px] font-black text-yellow-300 tracking-tighter">PERFECT</span>
                 </div>
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-red-600 transition-all duration-75 ease-linear"
-                  style={{ width: `${power}%` }}
+                  className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-red-600"
+                  style={{ width: `${Math.max(0, Math.min(100, power))}%` }}
                 />
               </div>
               <p className="text-[9px] font-bold text-slate-600 text-center mt-2">LEPAS LAYAR UNTUK MELEMPAR KAIL</p>
@@ -1010,8 +1010,8 @@ export const FishingGameSection: React.FC = () => {
               </div>
               <div className="w-full h-[26px] bg-slate-900 border-[3px] border-black p-1 relative">
                 <div
-                  className="h-full bg-blue-500 transition-all duration-75 ease-linear"
-                  style={{ width: `${reelProgress}%` }}
+                  className="h-full bg-blue-500"
+                  style={{ width: `${Math.max(0, Math.min(100, reelProgress))}%` }}
                 />
               </div>
             </motion.div>
