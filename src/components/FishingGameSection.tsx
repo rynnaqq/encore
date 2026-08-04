@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Fish, AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { FishGraphic } from './FishGraphic';
 
 type GameState = 'idle' | 'preparing' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'caught' | 'escaped';
@@ -86,12 +87,252 @@ const getRandomFish = (): FishType => {
   }
 };
 
+const FishingJournal: React.FC<{
+  score: number;
+  caughtCount: number;
+  discoveredSpecies: string[];
+  onClose: () => void;
+}> = ({ score, caughtCount, discoveredSpecies, onClose }) => {
+  const [spread, setSpread] = useState(0);
+  const [flippingState, setFlippingState] = useState<{isFlipping: boolean, dir: number, prevSpread: number, nextSpread: number} | null>(null);
+
+  const speciesPagesCount = Math.ceil(FISH_DATABASE.length / 6);
+  const totalPages = 1 + speciesPagesCount;
+  const totalSpreads = Math.ceil(totalPages / 2);
+
+  const getPageContent = (pageIndex: number) => {
+    if (pageIndex === 0) {
+      return (
+        <div key={`page-${pageIndex}`} className="flex-1 flex flex-col h-full relative" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, rgba(0,0,0,0.06) 24px)" }}>
+          {/* Subtle watermarks/stamps */}
+          <div className="absolute top-10 right-4 w-16 h-16 border-[3px] border-red-800/30 rounded-full flex items-center justify-center transform rotate-12 pointer-events-none">
+            <div className="text-red-800/30 font-black text-[10px] tracking-widest text-center leading-tight mt-1">OFFICIAL<br/>RECORD</div>
+          </div>
+
+          <div className="flex items-center gap-2 text-slate-800 mb-6 border-b-[3px] border-slate-800/20 pb-3 pt-2 relative z-10">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-amber-900" /> 
+            <h2 className="text-[14px] sm:text-[18px] font-black font-serif tracking-widest text-amber-950">MY JOURNAL</h2>
+          </div>
+          
+          <div className="flex flex-col gap-4 sm:gap-6 mb-2 mt-4 px-2 relative z-10">
+            <div className="bg-[#fefce8] border-[2px] border-slate-300 p-3 sm:p-4 text-center shadow-md transform -rotate-2 relative">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-white/50 border border-slate-200/50 shadow-sm" />
+              <div className="text-[9px] sm:text-[10px] font-bold text-slate-500 mb-1 tracking-widest">TOTAL CATCHES</div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-800 font-serif">{caughtCount}</div>
+            </div>
+            
+            <div className="bg-[#fefce8] border-[2px] border-slate-300 p-3 sm:p-4 text-center shadow-md transform rotate-1 relative">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-white/50 border border-slate-200/50 shadow-sm" />
+              <div className="text-[9px] sm:text-[10px] font-bold text-slate-500 mb-1 tracking-widest">LIFETIME SCORE</div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-800 font-serif">{score}</div>
+            </div>
+          </div>
+          
+          <div className="mt-auto pt-2">
+            <div className="text-[10px] font-bold text-slate-500/70 text-center font-serif">PAGE {pageIndex + 1}</div>
+          </div>
+        </div>
+      );
+    }
+
+    const speciesStartIndex = (pageIndex - 1) * 6;
+    if (speciesStartIndex >= FISH_DATABASE.length) {
+      return (
+        <div key={`page-${pageIndex}`} className="flex-1 flex flex-col h-full relative" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, rgba(0,0,0,0.06) 24px)" }}>
+           <div className="mt-auto pt-2 relative z-10">
+            <div className="text-[10px] font-bold text-slate-500/70 text-center font-serif">PAGE {pageIndex + 1}</div>
+          </div>
+        </div>
+      );
+    }
+
+    const pageSpecies = FISH_DATABASE.slice(speciesStartIndex, speciesStartIndex + 6);
+
+    return (
+      <div key={`page-${pageIndex}`} className="flex-1 flex flex-col h-full relative" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, rgba(0,0,0,0.06) 24px)" }}>
+        {pageIndex === 1 && (
+          <div className="text-[9px] sm:text-[10px] font-bold font-serif mb-3 flex justify-between items-center text-slate-800 border-b-[3px] border-slate-800/20 pb-2 pt-2 shrink-0 relative z-10 tracking-widest">
+            <span>SPECIES LOG</span>
+            <span className="bg-amber-800 text-[#f4ebd0] px-2 py-0.5 border border-amber-900 shadow-sm">{discoveredSpecies.length} / {FISH_DATABASE.length}</span>
+          </div>
+        )}
+        
+        <div className="flex-1 flex flex-col gap-3 relative z-10 pt-2">
+          {pageSpecies.map((fish, index) => {
+            const isDiscovered = discoveredSpecies.includes(fish.id);
+            const rotation = index % 2 === 0 ? 'rotate-1' : '-rotate-1';
+            return (
+              <div key={fish.id} className={`relative bg-white border-[2px] border-slate-300 p-1.5 sm:p-2 flex items-center gap-2 sm:gap-3 shadow-sm transform ${rotation} ${isDiscovered ? '' : 'grayscale opacity-60'}`}>
+                {/* Tape */}
+                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 bg-white/40 backdrop-blur-sm border border-slate-200/50 shadow-[0_1px_2px_rgba(0,0,0,0.1)] transform -rotate-2" />
+                
+                <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 bg-sky-50 border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
+                  {isDiscovered ? (
+                    <FishGraphic id={fish.id} size={24} />
+                  ) : (
+                    <div className="text-slate-400 font-serif font-black text-lg">?</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[8px] sm:text-[10px] font-black truncate text-slate-800 mb-0.5 font-serif">{isDiscovered ? fish.name : 'Unknown'}</div>
+                  <div className="text-[6px] sm:text-[7px] font-bold px-1.5 py-0.5 inline-block border border-slate-800 text-slate-900 shadow-[1px_1px_0_0_rgba(0,0,0,0.5)] tracking-wider" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
+                    {isDiscovered ? fish.rarity : '???'}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div className="mt-auto pt-2 relative z-10">
+          <div className="text-[10px] font-bold text-slate-500/70 text-center font-serif">PAGE {pageIndex + 1}</div>
+        </div>
+      </div>
+    );
+  };
+
+  const pages = Array.from({ length: totalSpreads * 2 }).map((_, i) => getPageContent(i));
+
+  const handleNext = () => {
+    if (flippingState || spread >= totalSpreads - 1) return;
+    setFlippingState({ isFlipping: true, dir: 1, prevSpread: spread, nextSpread: spread + 1 });
+  };
+
+  const handlePrev = () => {
+    if (flippingState || spread <= 0) return;
+    setFlippingState({ isFlipping: true, dir: -1, prevSpread: spread, nextSpread: spread - 1 });
+  };
+
+  const handleAnimationComplete = () => {
+    if (flippingState) {
+      setSpread(flippingState.nextSpread);
+      setFlippingState(null);
+    }
+  };
+
+  const currentLeft = pages[spread * 2];
+  const currentRight = pages[spread * 2 + 1];
+
+  let staticLeft = currentLeft;
+  let staticRight = currentRight;
+
+  if (flippingState) {
+    if (flippingState.dir === 1) {
+      staticLeft = pages[flippingState.prevSpread * 2];
+      staticRight = pages[flippingState.nextSpread * 2 + 1];
+    } else {
+      staticLeft = pages[flippingState.nextSpread * 2];
+      staticRight = pages[flippingState.prevSpread * 2 + 1];
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-[300] p-2 sm:p-4 font-mono"
+      style={{ perspective: '2000px' }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="bg-[#4a2e1b] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#5c3a21] to-[#3a2010] border-[6px] border-black p-2 sm:p-4 w-full max-w-[700px] shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative h-[85vh] max-h-[550px] flex flex-col rounded-sm rounded-r-2xl">
+        {/* Golden borders for leather cover */}
+        <div className="absolute inset-1.5 sm:inset-2.5 border-[2px] border-[#d4af37] opacity-50 pointer-events-none rounded-r-xl border-dashed" />
+        <div className="absolute inset-2.5 sm:inset-4 border-[1px] border-[#d4af37] opacity-30 pointer-events-none rounded-r-lg" />
+
+        {/* Paper edges for depth on the right */}
+        <div className="absolute top-8 bottom-8 -right-[12px] w-[12px] bg-[#d1c395] border-y-[4px] border-r-[4px] border-black rounded-r-md z-[-1]" />
+        <div className="absolute top-6 bottom-6 -right-[6px] w-[6px] bg-[#e5d9b1] border-y-[4px] border-r-[4px] border-black rounded-r-md z-[0]" />
+
+        {/* Bookmark Ribbon */}
+        <div className="absolute -top-1 right-[20%] w-6 sm:w-8 h-24 sm:h-32 bg-red-700 border-x-2 border-b-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] z-10 origin-top" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
+
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-[350] transition-transform active:scale-95"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex-1 bg-black p-[4px] relative flex shadow-inner z-20 mt-4 sm:mt-2">
+          <div className="flex-1 flex bg-[#fef3c7] relative" style={{ transformStyle: 'preserve-3d' }}>
+            {/* Static Left Page */}
+            <div className="w-1/2 h-full absolute left-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-r-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col">
+              {staticLeft}
+            </div>
+
+            {/* Static Right Page */}
+            <div className="w-1/2 h-full absolute right-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-l-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col">
+              {staticRight}
+            </div>
+
+            {/* Flipping Page */}
+            {flippingState && (
+              <motion.div
+                initial={{ rotateY: flippingState.dir === 1 ? 0 : -180 }}
+                animate={{ rotateY: flippingState.dir === 1 ? -180 : 0 }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+                onAnimationComplete={handleAnimationComplete}
+                className="absolute top-0 w-1/2 h-full right-0 z-20 origin-left shadow-[0_0_20px_rgba(0,0,0,0.4)]"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Front Side */}
+                <div 
+                  className="absolute inset-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-l-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col"
+                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                >
+                  {flippingState.dir === 1 ? pages[flippingState.prevSpread * 2 + 1] : pages[flippingState.nextSpread * 2 + 1]}
+                </div>
+                {/* Back Side */}
+                <div 
+                  className="absolute inset-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-r-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col" 
+                  style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                >
+                  {flippingState.dir === 1 ? pages[flippingState.nextSpread * 2] : pages[flippingState.prevSpread * 2]}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Center Spine Shadow */}
+            <div className="absolute top-0 bottom-0 left-1/2 w-[24px] bg-gradient-to-r from-transparent via-black/30 to-transparent -translate-x-1/2 z-30 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="absolute bottom-4 inset-x-0 flex justify-between px-6 sm:px-10 z-[320] pointer-events-none">
+          {spread > 0 ? (
+            <button 
+              onClick={handlePrev} 
+              disabled={!!flippingState}
+              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100"
+            >
+              &lt; PREV
+            </button>
+          ) : <div />}
+          {spread < totalSpreads - 1 ? (
+            <button 
+              onClick={handleNext} 
+              disabled={!!flippingState}
+              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100"
+            >
+              NEXT &gt;
+            </button>
+          ) : <div />}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export const FishingGameSection: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  
   const [gameState, setGameState] = useState<GameState>('idle');
   const [power, setPower] = useState(0);
   const [reelProgress, setReelProgress] = useState(0);
   const [fish, setFish] = useState<FishType | null>(null);
+  const currentFishRef = useRef<FishType | null>(null);
   const [fishStats, setFishStats] = useState<{ weight: string; length: string } | null>(null);
   const [bobberPos, setBobberPos] = useState({ x: 400, y: 380 });
   const [castProgress, setCastProgress] = useState(0);
@@ -110,6 +351,47 @@ export const FishingGameSection: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<string[]>([]);
   const [isJournalOpen, setIsJournalOpen] = useState(false);
+
+  const [activeUser, setActiveUser] = useState<string | null>(null);
+
+  // Load user data
+  useEffect(() => {
+    if (currentUser) {
+      const savedData = localStorage.getItem(`fishing_data_${currentUser.username}`);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          setScore(parsed.score || 0);
+          setCaughtCount(parsed.caughtCount || 0);
+          setDiscoveredSpecies(parsed.discoveredSpecies || []);
+        } catch (e) {
+          console.error("Failed to parse fishing data", e);
+        }
+      } else {
+        setScore(0);
+        setCaughtCount(0);
+        setDiscoveredSpecies([]);
+      }
+      setActiveUser(currentUser.username);
+    } else {
+      setScore(0);
+      setCaughtCount(0);
+      setDiscoveredSpecies([]);
+      setActiveUser(null);
+    }
+  }, [currentUser]);
+
+  // Save user data
+  useEffect(() => {
+    if (currentUser && activeUser === currentUser.username) {
+      const dataToSave = {
+        score,
+        caughtCount,
+        discoveredSpecies,
+      };
+      localStorage.setItem(`fishing_data_${currentUser.username}`, JSON.stringify(dataToSave));
+    }
+  }, [score, caughtCount, discoveredSpecies, currentUser, activeUser]);
 
   const waterHeight = Math.max(260, Math.floor(canvasHeight * 0.45));
   const waterSurfaceY = canvasHeight - waterHeight + 10;
@@ -416,6 +698,7 @@ export const FishingGameSection: React.FC = () => {
       if (escapeTimeoutRef.current) clearTimeout(escapeTimeoutRef.current);
       playSound('tap');
       const randomFish = getRandomFish();
+      currentFishRef.current = randomFish;
       const weightVal = (Math.random() * (randomFish.maxWeight - randomFish.minWeight) + randomFish.minWeight).toFixed(2);
       const lengthVal = (parseFloat(weightVal) * 11 + Math.random() * 6 + 6).toFixed(1);
 
@@ -431,7 +714,8 @@ export const FishingGameSection: React.FC = () => {
       if (reelProgressRef.current >= 100) {
         reelProgressRef.current = 100;
         playSound('caught');
-        const basePts = fish?.points || 100;
+        const caughtFish = currentFishRef.current;
+        const basePts = caughtFish?.points || 100;
         const comboBonus = combo * 25;
         const perfectBonus = isPerfectCast ? 50 : 0;
         const totalPts = basePts + comboBonus + perfectBonus;
@@ -439,10 +723,10 @@ export const FishingGameSection: React.FC = () => {
         setScore(s => s + totalPts);
         setCaughtCount(c => c + 1);
         setCombo(c => c + 1);
-        if (fish) {
-          setDiscoveredSpecies(prev => prev.includes(fish.id) ? prev : [...prev, fish.id]);
+        if (caughtFish) {
+          setDiscoveredSpecies(prev => prev.includes(caughtFish.id) ? prev : [...prev, caughtFish.id]);
         }
-        triggerFloatingText(`+${totalPts} PTS!`, bobberPos.x, 320, '#34d399');
+        triggerFloatingText(`+${totalPts} PTS!`, bobberPos.x, bobberPos.y - 60, '#34d399');
         setGameState('caught');
       }
       setReelProgress(reelProgressRef.current);
@@ -653,6 +937,58 @@ export const FishingGameSection: React.FC = () => {
               </>
             )}
           </div>
+        </div>
+
+        {/* Meters */}
+        <div className="w-full flex justify-center pointer-events-none mt-2">
+          <AnimatePresence>
+            {gameState === 'preparing' && (
+              <motion.div
+                key="power-meter"
+                initial={{ y: -40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -40, opacity: 0 }}
+                className="bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none"
+              >
+                <div className="flex justify-between items-center mb-2 font-black text-xs text-slate-900">
+                  <span>POWER LEMPARAN</span>
+                  <span className="text-red-600 font-extrabold">{Math.round(power)}%</span>
+                </div>
+                <div className="w-full h-[26px] bg-slate-900 border-[3px] border-black p-1 relative overflow-hidden">
+                  {/* Perfect Cast Sweet Spot Marker (80% - 95%) */}
+                  <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-300/30 border-x border-yellow-400 z-10 flex items-center justify-center">
+                    <span className="text-[8px] font-black text-yellow-300 tracking-tighter">PERFECT</span>
+                  </div>
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-red-600"
+                    style={{ width: `${Math.max(0, Math.min(100, power))}%` }}
+                  />
+                </div>
+                <p className="text-[9px] font-bold text-slate-600 text-center mt-2">LEPAS LAYAR UNTUK MELEMPAR KAIL</p>
+              </motion.div>
+            )}
+
+            {gameState === 'reeling' && (
+              <motion.div
+                key="reeling-meter"
+                initial={{ y: -40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -40, opacity: 0 }}
+                className="bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none"
+              >
+                <div className="flex justify-between items-center mb-2 font-black text-xs text-blue-700 animate-pulse">
+                  <span>TARIK! TAP FAST!</span>
+                  <span>{Math.round(reelProgress)}%</span>
+                </div>
+                <div className="w-full h-[26px] bg-slate-900 border-[3px] border-black p-1 relative">
+                  <div
+                    className="h-full bg-blue-500"
+                    style={{ width: `${Math.max(0, Math.min(100, reelProgress))}%` }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -1046,94 +1382,19 @@ export const FishingGameSection: React.FC = () => {
         <AnimatePresence>
           {/* Fishing Journal Modal */}
           {isJournalOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-50 p-4 font-mono"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <div className="bg-[#5c3a21] border-[6px] border-black p-2 sm:p-4 w-full max-w-[650px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative h-[85vh] max-h-[600px] flex flex-col mt-4 rounded-sm">
-                {/* Book spine line */}
-                <div className="hidden sm:block absolute top-0 bottom-0 left-1/2 w-[6px] bg-black/40 z-0 -translate-x-1/2 shadow-inner" />
-                
-                {/* Close button */}
-                <button
-                  onClick={() => setIsJournalOpen(false)}
-                  className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-30 transition-transform active:scale-95"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Inner Pages */}
-                <div className="bg-[#fef3c7] border-[4px] border-black flex-1 overflow-hidden flex flex-col sm:flex-row relative z-10 shadow-inner">
-                  {/* Left Page: Stats */}
-                  <div className="flex-none h-[180px] sm:h-auto sm:flex-1 p-3 sm:p-5 flex flex-col border-b-[4px] sm:border-b-0 sm:border-r-[4px] border-black/20 bg-[#fef3c7]">
-                    <div className="flex items-center gap-2 text-slate-800 mb-4 sm:mb-6 border-b-[2px] border-black/20 pb-2 sm:pb-3">
-                      <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" /> 
-                      <h2 className="text-[14px] sm:text-[18px] font-black">MY JOURNAL</h2>
-                    </div>
-                    
-                    <div className="flex flex-row sm:flex-col gap-3 sm:gap-5 mb-2">
-                      <div className="flex-1 bg-sky-200 border-[3px] border-black p-2 sm:p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)] transform sm:-rotate-1">
-                        <div className="text-[8px] sm:text-[9px] font-bold text-slate-700 mb-1">TOTAL CATCHES</div>
-                        <div className="text-lg sm:text-xl font-black text-sky-900">{caughtCount}</div>
-                      </div>
-                      <div className="flex-1 bg-amber-300 border-[3px] border-black p-2 sm:p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)] transform sm:rotate-1">
-                        <div className="text-[8px] sm:text-[9px] font-bold text-slate-700 mb-1">LIFETIME SCORE</div>
-                        <div className="text-lg sm:text-xl font-black text-amber-900">{score}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-auto hidden sm:block">
-                      <div className="text-[10px] font-bold text-slate-400 text-center">PAGE 1</div>
-                    </div>
-                  </div>
-                  
-                  {/* Right Page: Species List */}
-                  <div className="flex-1 sm:flex-[1.4] p-3 sm:p-5 flex flex-col bg-[#fdf8e7] relative min-h-0">
-                    <div className="text-[9px] sm:text-[10px] font-bold mb-3 flex justify-between items-center text-slate-800 border-b-[2px] border-black/20 pb-2 shrink-0">
-                      <span>SPECIES DISCOVERED</span>
-                      <span className="bg-blue-600 text-white px-2 py-0.5 border-2 border-black drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">{discoveredSpecies.length} / {FISH_DATABASE.length}</span>
-                    </div>
-                    
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 min-h-0 pb-4">
-                      <div className="flex flex-col gap-2.5">
-                        {FISH_DATABASE.map(fish => {
-                          const isDiscovered = discoveredSpecies.includes(fish.id);
-                          return (
-                            <div key={fish.id} className={`border-[3px] border-black p-2 flex items-center gap-3 shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${isDiscovered ? 'bg-white' : 'bg-slate-300 opacity-60 grayscale'}`}>
-                              <div className="w-10 h-10 shrink-0 bg-sky-100 border-2 border-black flex items-center justify-center overflow-hidden">
-                                {isDiscovered ? (
-                                  <FishGraphic id={fish.id} size={30} />
-                                ) : (
-                                  <div className="text-slate-500 font-bold">?</div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-[9px] font-black truncate text-slate-900 mb-1">{isDiscovered ? fish.name : 'Unknown'}</div>
-                                <div className="text-[7px] font-bold px-1.5 py-0.5 inline-block border border-black text-slate-800" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
-                                  {isDiscovered ? fish.rarity : '???'}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    
-                    <div className="absolute bottom-2 inset-x-0 hidden sm:block">
-                      <div className="text-[10px] font-bold text-slate-400 text-center">PAGE 2</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            <FishingJournal
+              key="journal-modal"
+              score={score}
+              caughtCount={caughtCount}
+              discoveredSpecies={discoveredSpecies}
+              onClose={() => setIsJournalOpen(false)}
+            />
           )}
 
           {/* Start Screen Modal */}
           {gameState === 'idle' && !hasStarted && (
             <motion.div
+              key="start-screen"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1176,56 +1437,10 @@ export const FishingGameSection: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Power Meter Overlay */}
-          {gameState === 'preparing' && (
-            <motion.div
-              initial={{ y: -40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -40, opacity: 0 }}
-              className="absolute top-[110px] sm:top-[120px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-[250] pointer-events-none"
-            >
-              <div className="flex justify-between items-center mb-2 font-black text-xs text-slate-900">
-                <span>POWER LEMPARAN</span>
-                <span className="text-red-600 font-extrabold">{Math.round(power)}%</span>
-              </div>
-              <div className="w-full h-[26px] bg-slate-900 border-[3px] border-black p-1 relative overflow-hidden">
-                {/* Perfect Cast Sweet Spot Marker (80% - 95%) */}
-                <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-300/30 border-x border-yellow-400 z-10 flex items-center justify-center">
-                  <span className="text-[8px] font-black text-yellow-300 tracking-tighter">PERFECT</span>
-                </div>
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-red-600"
-                  style={{ width: `${Math.max(0, Math.min(100, power))}%` }}
-                />
-              </div>
-              <p className="text-[9px] font-bold text-slate-600 text-center mt-2">LEPAS LAYAR UNTUK MELEMPAR KAIL</p>
-            </motion.div>
-          )}
-
-          {/* Reeling Meter Overlay */}
-          {gameState === 'reeling' && (
-            <motion.div
-              initial={{ y: -40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -40, opacity: 0 }}
-              className="absolute top-[110px] sm:top-[120px] left-1/2 -translate-x-1/2 bg-amber-100 p-4 border-[4px] border-black w-[90%] max-w-[420px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] z-[250] pointer-events-none"
-            >
-              <div className="flex justify-between items-center mb-2 font-black text-xs text-blue-700 animate-pulse">
-                <span>TARIK! TAP FAST!</span>
-                <span>{Math.round(reelProgress)}%</span>
-              </div>
-              <div className="w-full h-[26px] bg-slate-900 border-[3px] border-black p-1 relative">
-                <div
-                  className="h-full bg-blue-500"
-                  style={{ width: `${Math.max(0, Math.min(100, reelProgress))}%` }}
-                />
-              </div>
-            </motion.div>
-          )}
-
           {/* Catch Result Modal */}
           {gameState === 'caught' && fish && fishStats && (
             <motion.div
+              key="catch-modal"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4"
@@ -1303,6 +1518,7 @@ export const FishingGameSection: React.FC = () => {
           {/* Escape Result Modal */}
           {gameState === 'escaped' && (
             <motion.div
+              key="escape-modal"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4"
