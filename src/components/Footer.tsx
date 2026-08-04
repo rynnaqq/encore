@@ -1,6 +1,13 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
+  const location = useLocation();
+
+  if (location.pathname === '/fishing') {
+    return null;
+  }
+
   return (
     <footer className="border-t py-8 transition-colors bg-[#F2F9FF] border-[#FFCCE1] text-slate-600">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-1 text-xs">

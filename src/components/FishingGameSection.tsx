@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fish, AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame } from 'lucide-react';
+import { Fish, AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FishGraphic } from './FishGraphic';
 
@@ -30,23 +30,54 @@ interface FishType {
 }
 
 const FISH_DATABASE: FishType[] = [
+  // Biasa
   { id: 'shoe', name: 'Sepatu Boots Tua', rarity: 'Biasa', color: '#a8a29e', secondaryColor: '#57534e', badgeBg: '#e7e5e4', difficulty: 0.35, minWeight: 0.3, maxWeight: 0.9, points: 25, description: 'Boot tua basah yang tersangkut di dasar sungai.' },
   { id: 'teri', name: 'Ikan Teri Neon', rarity: 'Biasa', color: '#38bdf8', secondaryColor: '#0284c7', badgeBg: '#e0f2fe', difficulty: 0.6, minWeight: 0.1, maxWeight: 0.4, points: 50, description: 'Ikan hias mungil berkilau biru neon saat terkena cahaya.' },
   { id: 'nila', name: 'Ikan Nila Emas', rarity: 'Biasa', color: '#facc15', secondaryColor: '#ca8a04', badgeBg: '#fef9c3', difficulty: 1.0, minWeight: 0.8, maxWeight: 2.8, points: 100, description: 'Sisiknya kuning berkilau seperti emas murni.' },
+  { id: 'mujair', name: 'Ikan Mujair Bintik', rarity: 'Biasa', color: '#64748b', secondaryColor: '#334155', badgeBg: '#f1f5f9', difficulty: 0.8, minWeight: 0.5, maxWeight: 1.5, points: 80, description: 'Ikan air tawar yang tangguh dan mudah berkembang biak.' },
+  { id: 'wader', name: 'Ikan Wader Pari', rarity: 'Biasa', color: '#cbd5e1', secondaryColor: '#94a3b8', badgeBg: '#f8fafc', difficulty: 0.5, minWeight: 0.05, maxWeight: 0.2, points: 40, description: 'Ikan kecil perak yang hidup bergerombol di perairan dangkal.' },
+  { id: 'sepat', name: 'Ikan Sepat Rawa', rarity: 'Biasa', color: '#9ca3af', secondaryColor: '#4b5563', badgeBg: '#f3f4f6', difficulty: 0.65, minWeight: 0.1, maxWeight: 0.3, points: 35, description: 'Suka bersembunyi di balik tanaman air.' },
+  { id: 'kepiting', name: 'Kepiting Kecil', rarity: 'Biasa', color: '#f87171', secondaryColor: '#b91c1c', badgeBg: '#fef2f2', difficulty: 0.9, minWeight: 0.2, maxWeight: 0.8, points: 60, description: 'Suka mencapit umpanmu dengan capitnya yang kecil.' },
+  { id: 'ranting', name: 'Ranting Pohon', rarity: 'Biasa', color: '#78350f', secondaryColor: '#451a03', badgeBg: '#fffbeb', difficulty: 0.2, minWeight: 0.5, maxWeight: 2.0, points: 10, description: 'Hanya sepotong kayu yang tersangkut.' },
+  { id: 'kaleng', name: 'Kaleng Bekas', rarity: 'Biasa', color: '#94a3b8', secondaryColor: '#475569', badgeBg: '#f8fafc', difficulty: 0.3, minWeight: 0.1, maxWeight: 0.5, points: 15, description: 'Sampah yang terbuang. Jagalah kebersihan lingkungan!' },
+  { id: 'betik', name: 'Ikan Betik', rarity: 'Biasa', color: '#65a30d', secondaryColor: '#3f6212', badgeBg: '#f7fee7', difficulty: 0.7, minWeight: 0.2, maxWeight: 0.6, points: 55, description: 'Ikan kuat yang bisa hidup di air keruh.' },
+  
+  // Langka
   { id: 'lele', name: 'Ikan Lele Raksasa', rarity: 'Langka', color: '#475569', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 1.6, minWeight: 3.5, maxWeight: 8.5, points: 250, description: 'Kumisnya panjang dan perlawanannya sangat sengit!' },
+  { id: 'gabus', name: 'Ikan Gabus Loreng', rarity: 'Langka', color: '#4d7c0f', secondaryColor: '#14532d', badgeBg: '#f0fdf4', difficulty: 1.8, minWeight: 2.0, maxWeight: 6.5, points: 300, description: 'Predator air tawar dengan gigi tajam dan corak loreng.' },
+  { id: 'gurame', name: 'Gurame Padang', rarity: 'Langka', color: '#fb923c', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.4, minWeight: 2.5, maxWeight: 5.0, points: 280, description: 'Pipih, lezat, dan memiliki warna cerah memikat.' },
+  { id: 'patin', name: 'Ikan Patin Sungai', rarity: 'Langka', color: '#cbd5e1', secondaryColor: '#64748b', badgeBg: '#f8fafc', difficulty: 1.5, minWeight: 2.0, maxWeight: 10.0, points: 260, description: 'Dagingnya tebal dan tarikannya cukup kuat.' },
+  { id: 'kura', name: 'Kura-kura Sungai', rarity: 'Langka', color: '#166534', secondaryColor: '#064e3b', badgeBg: '#f0fdf4', difficulty: 1.9, minWeight: 1.5, maxWeight: 4.0, points: 320, description: 'Tempurungnya keras, sangat berat saat ditarik.' },
+  { id: 'belut', name: 'Belut Listrik', rarity: 'Langka', color: '#eab308', secondaryColor: '#854d0e', badgeBg: '#fefce8', difficulty: 2.0, minWeight: 1.0, maxWeight: 3.5, points: 350, description: 'Hati-hati! Ikan ini bisa memberikan sengatan kecil.' },
+  { id: 'udang', name: 'Udang Galah Raksasa', rarity: 'Langka', color: '#f97316', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.7, minWeight: 0.5, maxWeight: 1.5, points: 290, description: 'Capitnya panjang berwarna biru, rasanya pasti lezat.' },
+  
+  // Sangat Langka
   { id: 'koi', name: 'Ikan Mas Koi Royal', rarity: 'Sangat Langka', color: '#f87171', secondaryColor: '#fef2f2', badgeBg: '#fee2e2', difficulty: 2.3, minWeight: 2.5, maxWeight: 6.0, points: 500, description: 'Simbol keberuntungan bertotol merah putih indah.' },
+  { id: 'arwana', name: 'Arwana Super Red', rarity: 'Sangat Langka', color: '#dc2626', secondaryColor: '#7f1d1d', badgeBg: '#fef2f2', difficulty: 2.6, minWeight: 1.5, maxWeight: 4.5, points: 650, description: 'Raja akuarium dengan sisik merah merona yang mahal harganya.' },
+  { id: 'belida', name: 'Ikan Belida Lopis', rarity: 'Sangat Langka', color: '#9ca3af', secondaryColor: '#374151', badgeBg: '#f3f4f6', difficulty: 2.4, minWeight: 3.0, maxWeight: 7.0, points: 600, description: 'Bentuknya unik seperti pisau, sangat langka di alam liar.' },
+  { id: 'pari', name: 'Pari Air Tawar', rarity: 'Sangat Langka', color: '#d6d3d1', secondaryColor: '#78716c', badgeBg: '#fafaf9', difficulty: 2.5, minWeight: 5.0, maxWeight: 15.0, points: 550, description: 'Bentuknya pipih melebar, sangat jarang terlihat.' },
+  { id: 'pesut', name: 'Pesut Mahakam', rarity: 'Sangat Langka', color: '#bfdbfe', secondaryColor: '#60a5fa', badgeBg: '#eff6ff', difficulty: 2.8, minWeight: 10.0, maxWeight: 30.0, points: 700, description: 'Mamalia air tawar yang cerdas dan bersahabat.' },
+  { id: 'piranha', name: 'Piranha Merah', rarity: 'Sangat Langka', color: '#ef4444', secondaryColor: '#991b1b', badgeBg: '#fef2f2', difficulty: 2.7, minWeight: 0.8, maxWeight: 2.5, points: 680, description: 'Ikan predator buas dengan gigi setajam silet.' },
+  
+  // Legendaris
   { id: 'megalodon', name: 'Hiu Megalodon Purba', rarity: 'Legendaris', color: '#38bdf8', secondaryColor: '#f1f5f9', badgeBg: '#bae6fd', difficulty: 3.2, minWeight: 20.0, maxWeight: 60.0, points: 1200, description: 'Predator samudra purba yang legendaris! Sangat langka.' },
+  { id: 'kraken', name: 'Bayi Kraken', rarity: 'Legendaris', color: '#a855f7', secondaryColor: '#581c87', badgeBg: '#faf5ff', difficulty: 3.5, minWeight: 15.0, maxWeight: 45.0, points: 1500, description: 'Makhluk mitologi berwujud gurita raksasa berukuran kecil.' },
+  { id: 'naga', name: 'Naga Air Zamrud', rarity: 'Legendaris', color: '#10b981', secondaryColor: '#047857', badgeBg: '#ecfdf5', difficulty: 3.8, minWeight: 25.0, maxWeight: 80.0, points: 2000, description: 'Naga gaib penunggu kedalaman, memancarkan aura magis hijau.' },
+  { id: 'leviathan', name: 'Leviathan Air Tawar', rarity: 'Legendaris', color: '#1e3a8a', secondaryColor: '#172554', badgeBg: '#eff6ff', difficulty: 3.9, minWeight: 50.0, maxWeight: 150.0, points: 2500, description: 'Raksasa mitologi yang menguasai perairan dalam.' },
+  { id: 'cumi', name: 'Cumi-cumi Raksasa', rarity: 'Legendaris', color: '#f43f5e', secondaryColor: '#9f1239', badgeBg: '#fff1f2', difficulty: 3.6, minWeight: 30.0, maxWeight: 70.0, points: 1800, description: 'Tentakelnya sangat kuat, bisa menyemburkan tinta hitam.' },
+  { id: 'hiuhantu', name: 'Hiu Hantu Tembus Pandang', rarity: 'Legendaris', color: '#f8fafc', secondaryColor: '#cbd5e1', badgeBg: '#f1f5f9', difficulty: 3.7, minWeight: 10.0, maxWeight: 25.0, points: 1900, description: 'Tubuhnya transparan, hanya terlihat matanya yang bersinar.' },
+  { id: 'duyung', name: 'Putri Duyung Emas', rarity: 'Legendaris', color: '#fcd34d', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 4.0, minWeight: 40.0, maxWeight: 65.0, points: 3000, description: 'Sosok mitos cantik yang membawa keberuntungan tiada tara.' }
 ];
 
 const getRandomFish = (): FishType => {
   const rand = Math.random();
-  if (rand < 0.48) {
+  if (rand < 0.58) {
     const biasa = FISH_DATABASE.filter(f => f.rarity === 'Biasa');
     return biasa[Math.floor(Math.random() * biasa.length)];
-  } else if (rand < 0.78) {
+  } else if (rand < 0.88) {
     const langka = FISH_DATABASE.filter(f => f.rarity === 'Langka');
     return langka[Math.floor(Math.random() * langka.length)];
-  } else if (rand < 0.93) {
+  } else if (rand < 0.98) {
     const sgtLangka = FISH_DATABASE.filter(f => f.rarity === 'Sangat Langka');
     return sgtLangka[Math.floor(Math.random() * sgtLangka.length)];
   } else {
@@ -65,7 +96,8 @@ export const FishingGameSection: React.FC = () => {
   const [bobberPos, setBobberPos] = useState({ x: 400, y: 380 });
   const [castProgress, setCastProgress] = useState(0);
   const [escapeReason, setEscapeReason] = useState<'early' | 'missed' | 'failed' | null>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState({ x: 1, y: 1 });
+  const [canvasHeight, setCanvasHeight] = useState(600);
   const [score, setScore] = useState(0);
   const [caughtCount, setCaughtCount] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -74,6 +106,56 @@ export const FishingGameSection: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [splashes, setSplashes] = useState<{ id: number; x: number; y: number }[]>([]);
   const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [discoveredSpecies, setDiscoveredSpecies] = useState<string[]>([]);
+  const [isJournalOpen, setIsJournalOpen] = useState(false);
+
+  const waterSurfaceY = canvasHeight - 220;
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const padding = isFullscreen ? 0 : 12;
+      const availableWidth = Math.max(280, window.innerWidth - padding);
+      const availableHeight = Math.max(200, window.innerHeight - padding);
+      const sw = availableWidth / 800;
+      const sh = availableHeight / 600;
+      const s = Math.min(sw, sh);
+      
+      setScale({ x: s, y: s });
+
+      if (sw < sh) {
+        setCanvasHeight(Math.max(600, availableHeight / sw));
+      } else {
+        setCanvasHeight(600);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isFullscreen]);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (containerRef.current) {
+          await containerRef.current.requestFullscreen();
+        }
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.warn('Fullscreen API failed', err);
+    }
+  };
 
   const triggerFloatingText = (text: string, x: number, y: number, color = '#facc15') => {
     const id = Date.now() + Math.random();
@@ -106,11 +188,12 @@ export const FishingGameSection: React.FC = () => {
         const tipRect = rodTipRef.current.getBoundingClientRect();
         const canvasRect = gameCanvasRef.current.getBoundingClientRect();
         if (canvasRect.width > 0) {
-          const currentScale = canvasRect.width / 800;
+          const scaleX = canvasRect.width / 800;
+          const scaleY = canvasRect.height / canvasHeight;
           const tipCenterX = (tipRect.left + tipRect.right) / 2;
           const tipCenterY = (tipRect.top + tipRect.bottom) / 2;
-          const x = (tipCenterX - canvasRect.left) / currentScale;
-          const y = (tipCenterY - canvasRect.top) / currentScale;
+          const x = (tipCenterX - canvasRect.left) / scaleX;
+          const y = (tipCenterY - canvasRect.top) / scaleY;
           setRodTipPos({ x, y });
         }
       }
@@ -121,7 +204,7 @@ export const FishingGameSection: React.FC = () => {
   }, []);
 
   // Audio synthesis for retro sound effects
-  const playSound = (type: 'cast' | 'splash' | 'bite' | 'tap' | 'caught' | 'escape') => {
+  const playSound = (type: 'cast' | 'splash' | 'bite' | 'tap' | 'caught' | 'escape' | 'reeling' | 'release') => {
     if (!soundEnabled) return;
     try {
       const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -181,26 +264,27 @@ export const FishingGameSection: React.FC = () => {
         gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
         osc.start(now);
         osc.stop(now + 0.3);
+      } else if (type === 'reeling') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.linearRampToValueAtTime(420, now + 0.05);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'release') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.4);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
       }
     } catch {
       // Audio fallback silent
     }
   };
-
-  // Screen scale calculator
-  useEffect(() => {
-    const handleResize = () => {
-      const padding = 12;
-      const availableWidth = Math.max(280, window.innerWidth - padding);
-      const availableHeight = Math.max(200, window.innerHeight - padding);
-      const sw = availableWidth / 800;
-      const sh = availableHeight / 600;
-      setScale(Math.min(sw, sh));
-    };
-    window.addEventListener('resize', handleResize);
-    handleResize();
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Cleanups
   useEffect(() => {
@@ -212,7 +296,7 @@ export const FishingGameSection: React.FC = () => {
   }, []);
 
   const triggerSplash = (x: number, y: number) => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setSplashes(s => [...s, { id, x, y }]);
     setTimeout(() => {
       setSplashes(s => s.filter(p => p.id !== id));
@@ -220,6 +304,7 @@ export const FishingGameSection: React.FC = () => {
   };
 
   const startPreparing = () => {
+    setHasStarted(true);
     setGameState('preparing');
     setPower(0);
     powerRef.current = 0;
@@ -270,16 +355,16 @@ export const FishingGameSection: React.FC = () => {
 
       const currentX = startX + (targetX - startX) * progress;
       const peakY = Math.min(startY - 80, 120);
-      const currentY = (1 - progress) * (1 - progress) * startY + 2 * (1 - progress) * progress * peakY + progress * progress * 380;
+      const currentY = (1 - progress) * (1 - progress) * startY + 2 * (1 - progress) * progress * peakY + progress * progress * waterSurfaceY;
 
       setBobberPos({ x: currentX, y: currentY });
 
       if (progress < 1) {
         reqRef.current = requestAnimationFrame(animateCast);
       } else {
-        setBobberPos({ x: targetX, y: 380 });
+        setBobberPos({ x: targetX, y: waterSurfaceY });
         playSound('splash');
-        triggerSplash(targetX, 380);
+        triggerSplash(targetX, waterSurfaceY);
 
         if (perfect) {
           triggerFloatingText('PERFECT CAST! ⭐', targetX, 340, '#facc15');
@@ -292,7 +377,7 @@ export const FishingGameSection: React.FC = () => {
           setGameState(prev => {
             if (prev === 'waiting') {
               playSound('bite');
-              triggerSplash(targetX, 380);
+              triggerSplash(targetX, waterSurfaceY);
 
               escapeTimeoutRef.current = setTimeout(() => {
                 setGameState(curr => {
@@ -339,7 +424,7 @@ export const FishingGameSection: React.FC = () => {
       reelProgressRef.current = 35;
       setReelProgress(35);
     } else if (gameState === 'reeling') {
-      playSound('tap');
+      playSound('reeling');
       triggerSplash(bobberPos.x, bobberPos.y);
       reelProgressRef.current += 15;
       if (reelProgressRef.current >= 100) {
@@ -353,6 +438,9 @@ export const FishingGameSection: React.FC = () => {
         setScore(s => s + totalPts);
         setCaughtCount(c => c + 1);
         setCombo(c => c + 1);
+        if (fish) {
+          setDiscoveredSpecies(prev => prev.includes(fish.id) ? prev : [...prev, fish.id]);
+        }
         triggerFloatingText(`+${totalPts} PTS!`, bobberPos.x, 320, '#34d399');
         setGameState('caught');
       }
@@ -360,7 +448,7 @@ export const FishingGameSection: React.FC = () => {
 
       const targetX = targetBobberXRef.current;
       const newBobberX = targetX - (reelProgressRef.current / 100) * (targetX - 250);
-      setBobberPos({ x: Math.max(250, newBobberX), y: 380 });
+      setBobberPos({ x: Math.max(250, newBobberX), y: waterSurfaceY });
     }
   };
 
@@ -386,7 +474,7 @@ export const FishingGameSection: React.FC = () => {
 
         const targetX = targetBobberXRef.current;
         const newBobberX = targetX - (reelProgressRef.current / 100) * (targetX - 250);
-        setBobberPos({ x: Math.max(250, newBobberX), y: 380 });
+        setBobberPos({ x: Math.max(250, newBobberX), y: waterSurfaceY });
       }, 40);
     }
     return () => {
@@ -406,7 +494,7 @@ export const FishingGameSection: React.FC = () => {
   return (
     <section
       id="fishing"
-      className="relative w-full h-[100dvh] z-[100] bg-slate-950 flex items-center justify-center select-none touch-none font-mono overflow-hidden"
+      className="relative w-full h-[100dvh] z-[100] bg-black flex items-center justify-center select-none touch-none font-mono overflow-hidden"
       style={{
         fontFamily: '"Press Start 2P", monospace',
         imageRendering: 'pixelated',
@@ -522,6 +610,22 @@ export const FishingGameSection: React.FC = () => {
           </div>
 
           <button
+            onClick={toggleFullscreen}
+            className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={() => setIsJournalOpen(true)}
+            className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+            title="Fishing Journal"
+          >
+            <BookOpen className="w-4 h-4 text-blue-700" />
+          </button>
+
+          <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className="bg-amber-100 text-slate-900 border-[4px] border-black p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
           >
@@ -550,8 +654,8 @@ export const FishingGameSection: React.FC = () => {
         ref={gameCanvasRef}
         style={{
           width: 800,
-          height: 600,
-          transform: `scale(${scale})`,
+          height: canvasHeight,
+          transform: `scale(${scale.x}, ${scale.y})`,
           transformOrigin: 'center',
         }}
         className="relative overflow-hidden shadow-[0_0_0_6px_#000,0_0_0_12px_#38bdf8] shrink-0 bg-sky-300"
@@ -567,7 +671,7 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#38bdf8]" />
               <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#7dd3fc]" />
               <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#bae6fd]" />
-              <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#e0f2fe]" />
+              <div className="absolute top-[285px] inset-x-0 bottom-[230px] bg-[#e0f2fe]" />
             </>
           )}
 
@@ -577,7 +681,7 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#7c2d12]" />
               <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#c2410c]" />
               <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#f97316]" />
-              <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#fdba74]" />
+              <div className="absolute top-[285px] inset-x-0 bottom-[230px] bg-[#fdba74]" />
             </>
           )}
 
@@ -587,7 +691,7 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute top-[65px] inset-x-0 h-[70px] bg-[#0f172a]" />
               <div className="absolute top-[135px] inset-x-0 h-[75px] bg-[#1e1b4b]" />
               <div className="absolute top-[210px] inset-x-0 h-[75px] bg-[#312e81]" />
-              <div className="absolute top-[285px] inset-x-0 h-[65px] bg-[#4338ca]" />
+              <div className="absolute top-[285px] inset-x-0 bottom-[230px] bg-[#4338ca]" />
 
               {/* Twinkling Stars */}
               <div className="absolute top-8 left-12 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
@@ -925,15 +1029,81 @@ export const FishingGameSection: React.FC = () => {
 
         {/* ================= INTERACTIVE OVERLAYS & MODALS ================= */}
         <AnimatePresence>
+          {/* Fishing Journal Modal */}
+          {isJournalOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-50 p-4 font-mono"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div className="bg-amber-100 border-[6px] border-black p-4 sm:p-6 w-full max-w-[500px] text-slate-900 shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative max-h-[550px] flex flex-col mt-4">
+                <button
+                  onClick={() => setIsJournalOpen(false)}
+                  className="absolute top-2 right-2 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] z-10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="bg-blue-600 text-white border-[4px] border-black py-2 px-4 -mt-8 sm:-mt-10 mx-auto inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-10 mb-4 shrink-0">
+                  <h2 className="text-[16px] sm:text-[18px] font-black text-yellow-300 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" /> FISHING JOURNAL
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4 shrink-0">
+                  <div className="bg-sky-200 border-[3px] border-black p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                    <div className="text-[9px] font-bold text-slate-700 mb-1">TOTAL CATCHES</div>
+                    <div className="text-xl font-black text-sky-900">{caughtCount}</div>
+                  </div>
+                  <div className="bg-amber-300 border-[3px] border-black p-3 text-center shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                    <div className="text-[9px] font-bold text-slate-700 mb-1">LIFETIME SCORE</div>
+                    <div className="text-xl font-black text-amber-900">{score}</div>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto bg-amber-50 border-[3px] border-black p-3 shadow-inner custom-scrollbar min-h-0">
+                  <div className="text-[10px] font-bold mb-3 flex justify-between items-center text-slate-800">
+                    <span>SPECIES DISCOVERED</span>
+                    <span className="bg-blue-600 text-white px-2 py-0.5 border-2 border-black">{discoveredSpecies.length} / {FISH_DATABASE.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {FISH_DATABASE.map(fish => {
+                      const isDiscovered = discoveredSpecies.includes(fish.id);
+                      return (
+                        <div key={fish.id} className={`border-[3px] border-black p-2 flex items-center gap-3 ${isDiscovered ? 'bg-white' : 'bg-slate-300 opacity-60 grayscale'}`}>
+                          <div className="w-10 h-10 shrink-0 bg-sky-100 border-2 border-black flex items-center justify-center overflow-hidden">
+                            {isDiscovered ? (
+                              <FishGraphic id={fish.id} size={30} />
+                            ) : (
+                              <div className="text-slate-500 font-bold">?</div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[9px] font-black truncate text-slate-900 mb-1">{isDiscovered ? fish.name : 'Unknown'}</div>
+                            <div className="text-[7px] font-bold px-1.5 py-0.5 inline-block border border-black text-slate-800" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
+                              {isDiscovered ? fish.rarity : '???'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Start Screen Modal */}
-          {gameState === 'idle' && (
+          {gameState === 'idle' && !hasStarted && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/75 z-40 p-4"
             >
-              <div className="bg-amber-100 border-[6px] border-black p-6 sm:p-8 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center max-w-[520px] w-full relative">
+              <div className="bg-amber-100 border-[6px] border-black p-6 sm:p-8 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center max-w-[520px] w-full relative mt-6">
                 <div className="bg-blue-600 text-white border-[4px] border-black py-2.5 px-6 -mt-10 mx-auto inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                   <h1 className="text-[18px] sm:text-[22px] font-black tracking-wider text-yellow-300 drop-shadow-[2px_2px_0_#000]">
                     PIXEL FISHING PRO
@@ -1025,13 +1195,13 @@ export const FishingGameSection: React.FC = () => {
               className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="bg-amber-100 border-[6px] border-black p-6 w-full max-w-[420px] text-slate-900 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center relative overflow-hidden">
+              <div className="bg-amber-100 border-[6px] border-black p-6 w-full max-w-[420px] text-slate-900 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center relative overflow-hidden flex flex-col max-h-[550px]">
                 {/* Rotating Rays */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center">
                   <div className="w-[600px] h-[600px] bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 animate-[rayRotate_12s_linear_infinite]" />
                 </div>
 
-                <div className="relative z-10">
+                <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-2">
                   <div className="bg-emerald-600 text-white border-[4px] border-black py-2 px-4 mb-4 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                     <h2 className="text-[18px] font-black text-yellow-300 flex items-center gap-2">
                       <Sparkles className="w-5 h-5" /> TERTANGKAP!
@@ -1068,15 +1238,27 @@ export const FishingGameSection: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setGameState('idle');
-                    }}
-                    className="w-full py-3.5 bg-amber-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-amber-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
-                  >
-                    LEMPAR KAIL LAGI
-                  </button>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setGameState('idle');
+                      }}
+                      className="flex-1 py-3.5 bg-amber-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-amber-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                    >
+                      SIMPAN
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playSound('release');
+                        setGameState('idle');
+                      }}
+                      className="flex-1 py-3.5 bg-sky-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-sky-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                    >
+                      LEPAS
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
