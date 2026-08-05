@@ -1,0 +1,24 @@
+--- src/components/ChessGameSection.tsx
++++ src/components/ChessGameSection.tsx
+@@ -815,18 +815,10 @@
+   // Undo Move
+   const undoMove = () => {
+     if (isThinking || gameResult) return;
+-
+-    if (gameMode === 'ai') {
+-      // Undo both AI move and Player move
+-      game.undo();
+-      game.undo();
+-    } else {
+-      game.undo();
+-    }
++    game.undo();
+     const newGame = new Chess(game.fen());
+     setGame(newGame);
+     setSelectedSquare(null);
+     setPossibleMoves([]);
+     setLastMove(null);
+-    setMoveHistory((prev) => (gameMode === 'ai' ? prev.slice(0, -2) : prev.slice(0, -1)));
++    setMoveHistory((prev) => prev.slice(0, -1));
+     setGameResult(null);
+   };

@@ -1,0 +1,68 @@
+--- src/components/ChessGameSection.tsx
++++ src/components/ChessGameSection.tsx
+@@ -1259,10 +1259,8 @@
+                       {isFlipped
+                         ? activeRoom.whitePlayer?.flag || '⚪'
+                         : activeRoom.blackPlayer?.flag || '⚫'}
+                     </span>
+-                  ) : gameMode === 'ai' ? (
+-                    playerColor === 'w' ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />
+                   ) : (
+                     <Users className="w-4 h-4" />
+                   )}
+                 </div>
+@@ -1272,11 +1270,6 @@
+                       {gameMode === 'online' && activeRoom
+                         ? isFlipped
+                           ? activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
+                           : activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
+-                        : gameMode === 'ai'
+-                        ? playerColor === 'w'
+-                          ? `Bot (${difficulty})`
+-                          : (currentUser ? currentUser.username : 'You')
+                         : isFlipped
+                         ? 'Player 1 (White)'
+                         : 'Player 2 (Black)'}
+@@ -1285,9 +1278,6 @@
+                       gameMode === 'online' && activeRoom
+                         ? isFlipped
+                           ? activeRoom.whitePlayer?.name
+                           : activeRoom.blackPlayer?.name
+-                        : gameMode === 'ai' && playerColor !== 'w'
+-                        ? currentUser?.username
+                         : null
+                     ) && <AdminBadge />}
+                     {game.turn() === (isFlipped ? 'w' : 'b') && !game.isGameOver() && (
+@@ -1362,10 +1352,8 @@
+                       {isFlipped
+                         ? activeRoom.blackPlayer?.flag || '⚫'
+                         : activeRoom.whitePlayer?.flag || '⚪'}
+                     </span>
+-                  ) : gameMode === 'ai' ? (
+-                    playerColor === 'w' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />
+                   ) : (
+                     <Users className="w-4 h-4" />
+                   )}
+                 </div>
+@@ -1375,11 +1363,6 @@
+                       {gameMode === 'online' && activeRoom
+                         ? isFlipped
+                           ? activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
+                           : activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
+-                        : gameMode === 'ai'
+-                        ? playerColor === 'w'
+-                          ? (currentUser ? currentUser.username : 'You')
+-                          : `Bot (${difficulty})`
+                         : isFlipped
+                         ? 'Player 2 (Black)'
+                         : 'Player 1 (White)'}
+@@ -1388,9 +1371,6 @@
+                       gameMode === 'online' && activeRoom
+                         ? isFlipped
+                           ? activeRoom.blackPlayer?.name
+                           : activeRoom.whitePlayer?.name
+-                        : gameMode === 'ai' && playerColor === 'w'
+-                        ? currentUser?.username
+                         : null
+                     ) && <AdminBadge />}
+                     {game.turn() === (isFlipped ? 'b' : 'w') && !game.isGameOver() && (

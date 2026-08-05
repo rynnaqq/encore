@@ -1,0 +1,75 @@
+--- src/components/ChessGameSection.tsx
++++ src/components/ChessGameSection.tsx
+@@ -1033,21 +1033,6 @@
+           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none snap-x">
+-            <button
+-              onClick={() => {
+-                setGameMode('ai');
+-                resetGame();
+-              }}
+-              className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+-                gameMode === 'ai'
+-                  ? 'bg-[#E195AB] text-white shadow-md'
+-                  : 'bg-[#FFF5D7] text-[#E195AB] hover:bg-[#FFCCE1]'
+-              }`}
+-            >
+-              <Bot className="w-4 h-4" />
+-              <span>VS Bot</span>
+-            </button>
+             <button
+               onClick={() => {
+                 setGameMode('pass');
+                 resetGame();
+@@ -1078,41 +1063,6 @@
+           </div>
+ 
+-          {/* Bot Level (If VS Bot) */}
+-          {gameMode === 'ai' && (
+-            <div className="flex items-center gap-1.5 bg-[#FFF5D7] p-1 rounded-xl border border-[#FFCCE1]">
+-              <span className="text-[11px] font-mono text-slate-500 font-bold px-1.5">Bot Level:</span>
+-              {(['easy', 'medium', 'hard'] as AIDifficulty[]).map((d) => (
+-                <button
+-                  key={d}
+-                  onClick={() => setDifficulty(d)}
+-                  className={`px-2 py-0.5 rounded-lg font-sans text-xs font-bold capitalize transition-all cursor-pointer ${
+-                    difficulty === d
+-                      ? 'bg-[#E195AB] text-white'
+-                      : 'text-[#E195AB] hover:bg-[#FFCCE1]'
+-                  }`}
+-                >
+-                  {d}
+-                </button>
+-              ))}
+-            </div>
+-          )}
+-
+-          {/* Side Selector (If VS Bot) */}
+-          {gameMode === 'ai' && (
+-            <div className="flex items-center gap-1.5">
+-              <span className="text-[11px] font-mono text-slate-500 font-bold">Play as:</span>
+-              <button
+-                onClick={() => {
+-                  setPlayerColor('w');
+-                  setIsFlipped(false);
+-                }}
+-                className={`w-6 h-6 rounded-md flex items-center justify-center cursor-pointer transition-all ${
+-                  playerColor === 'w' ? 'bg-zinc-800 text-white shadow-md' : 'bg-white text-zinc-400 border border-zinc-200 hover:bg-zinc-50'
+-                }`}
+-              >
+-                w
+-              </button>
+-              <button
+-                onClick={() => {
+-                  setPlayerColor('b');
+-                  setIsFlipped(true);
+-                }}
+-                className={`w-6 h-6 rounded-md flex items-center justify-center cursor-pointer transition-all ${
+-                  playerColor === 'b' ? 'bg-zinc-800 text-white shadow-md' : 'bg-white text-zinc-400 border border-zinc-200 hover:bg-zinc-50'
+-                }`}
+-              >
+-                b
+-              </button>
+-            </div>
+-          )}
+-
+           {/* Online Multiplayer Info */}

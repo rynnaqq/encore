@@ -5,7 +5,7 @@ import { Chess, Square } from 'chess.js';
 import { io, Socket } from 'socket.io-client';
 import {
   RotateCcw,
-  Bot,
+  
   User,
   Users,
   Zap,
@@ -39,8 +39,7 @@ import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
 
-type GameMode = 'ai' | 'pass' | 'online';
-type AIDifficulty = 'easy' | 'medium' | 'hard';
+type GameMode = 'pass' | 'online';
 type PlayerColor = 'w' | 'b';
 
 interface MoveHistoryItem {
@@ -124,11 +123,9 @@ export const ChessGameSection: React.FC = () => {
   const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<MoveHistoryItem[]>([]);
-  const [gameMode, setGameMode] = useState<GameMode>('ai');
-  const [difficulty, setDifficulty] = useState<AIDifficulty>('medium');
+  const [gameMode, setGameMode] = useState<GameMode>('pass');
   const [playerColor, setPlayerColor] = useState<PlayerColor>('w');
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
-  const [isThinking, setIsThinking] = useState<boolean>(false);
   const [hintSquare, setHintSquare] = useState<{ from: Square; to: Square } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [autoFlip, setAutoFlip] = useState<boolean>(true); // Auto-flip board in 2-Player Pass & Play mode
@@ -391,9 +388,7 @@ export const ChessGameSection: React.FC = () => {
 
   // Handle board orientation automatically when changing side
   useEffect(() => {
-    if (gameMode === 'ai') {
-      setIsFlipped(playerColor === 'b');
-    }
+    // Flipped state can be updated based on other modes here if needed
   }, [playerColor, gameMode]);
 
   // Socket lifecycle and event handlers for online multiplayer
@@ -583,134 +578,6 @@ export const ChessGameSection: React.FC = () => {
     return () => clearInterval(interval);
   }, [isTimerActive, game, timeControl, gameResult, playAudioEffect]);
 
-  // Evaluate position score for AI
-  const evaluateBoard = (currentBoard: ReturnType<Chess['board']>) => {
-    let totalEvaluation = 0;
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        const piece = currentBoard[r][c];
-        if (piece) {
-          const val = PIECE_VALUES[piece.type] || 0;
-          let tableVal = 0;
-          const row = piece.color === 'w' ? 7 - r : r;
-          const col = c;
-
-          if (piece.type === 'p') tableVal = PAWN_TABLE[row][col];
-          else if (piece.type === 'n') tableVal = KNIGHT_TABLE[row][col];
-          else if (piece.type === 'b') tableVal = BISHOP_TABLE[row][col];
-          else if (piece.type === 'r') tableVal = ROOK_TABLE[row][col];
-          else if (piece.type === 'q') tableVal = QUEEN_TABLE[row][col];
-
-          const score = val + tableVal;
-          totalEvaluation += piece.color === 'w' ? score : -score;
-        }
-      }
-    }
-    return totalEvaluation;
-  };
-
-  // Minimax evaluation for Hard AI
-  const minimax = (
-    chessGame: Chess,
-    depth: number,
-    alpha: number,
-    beta: number,
-    isMaximizing: boolean
-  ): number => {
-    if (depth === 0 || chessGame.isGameOver()) {
-      return evaluateBoard(chessGame.board());
-    }
-
-    const moves = chessGame.moves({ verbose: true });
-    if (isMaximizing) {
-      let maxEval = -Infinity;
-      for (const move of moves) {
-        chessGame.move(move);
-        const evalScore = minimax(chessGame, depth - 1, alpha, beta, false);
-        chessGame.undo();
-        maxEval = Math.max(maxEval, evalScore);
-        alpha = Math.max(alpha, evalScore);
-        if (beta <= alpha) break;
-      }
-      return maxEval;
-    } else {
-      let minEval = Infinity;
-      for (const move of moves) {
-        chessGame.move(move);
-        const evalScore = minimax(chessGame, depth - 1, alpha, beta, true);
-        chessGame.undo();
-        minEval = Math.min(minEval, evalScore);
-        beta = Math.min(beta, evalScore);
-        if (beta <= alpha) break;
-      }
-      return minEval;
-    }
-  };
-
-  // Get AI Move according to difficulty
-  const getAIMove = useCallback(() => {
-    const moves = game.moves({ verbose: true });
-    if (moves.length === 0) return null;
-
-    if (difficulty === 'easy') {
-      // Pick random move, but prefer capture 40% of the time
-      const captures = moves.filter((m) => m.captured);
-      if (captures.length > 0 && Math.random() < 0.4) {
-        return captures[Math.floor(Math.random() * captures.length)];
-      }
-      return moves[Math.floor(Math.random() * moves.length)];
-    }
-
-    if (difficulty === 'medium') {
-      // 1-ply evaluation lookahead
-      let bestMove = moves[0];
-      let bestScore = game.turn() === 'w' ? -Infinity : Infinity;
-
-      for (const move of moves) {
-        game.move(move);
-        const score = evaluateBoard(game.board());
-        game.undo();
-
-        if (game.turn() === 'w') {
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = move;
-          }
-        } else {
-          if (score < bestScore) {
-            bestScore = score;
-            bestMove = move;
-          }
-        }
-      }
-      return bestMove;
-    }
-
-    // Hard difficulty: Minimax with alpha-beta depth 2 or 3
-    let bestMove = moves[0];
-    const isMax = game.turn() === 'w';
-    let bestScore = isMax ? -Infinity : Infinity;
-
-    for (const move of moves) {
-      game.move(move);
-      const score = minimax(game, 2, -Infinity, Infinity, !isMax);
-      game.undo();
-
-      if (isMax) {
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = move;
-        }
-      } else {
-        if (score < bestScore) {
-          bestScore = score;
-          bestMove = move;
-        }
-      }
-    }
-
-    return bestMove;
-  }, [game, difficulty]);
 
   // Execute a move on the chess instance
   const makeMove = useCallback(
@@ -857,32 +724,9 @@ export const ChessGameSection: React.FC = () => {
     [game, isTimerActive, timeControl, playAudioEffect, gameMode, autoFlip, socket, activeRoom, yourSide]
   );
 
-  // Trigger AI Turn when turn matches AI
-  useEffect(() => {
-    if (
-      gameMode === 'ai' &&
-      !game.isGameOver() &&
-      !gameResult &&
-      game.turn() !== playerColor
-    ) {
-      setIsThinking(true);
-      const timer = setTimeout(() => {
-        const aiMove = getAIMove();
-        if (aiMove) {
-          makeMove(aiMove.from as Square, aiMove.to as Square, aiMove.promotion || 'q');
-        }
-        setIsThinking(false);
-      }, 120);
-      return () => clearTimeout(timer);
-    }
-  }, [game, gameMode, playerColor, gameResult, getAIMove, makeMove]);
-
   // Square Selection / Click handler
   const handleSquareClick = (square: Square) => {
-    if (game.isGameOver() || gameResult || isThinking) return;
-
-    // Is AI turn?
-    if (gameMode === 'ai' && game.turn() !== playerColor) return;
+    if (game.isGameOver() || gameResult ) return;
 
     // Is Online turn?
     if (gameMode === 'online') {
@@ -969,26 +813,20 @@ export const ChessGameSection: React.FC = () => {
 
   // Undo Move
   const undoMove = () => {
-    if (isThinking || gameResult) return;
-    if (gameMode === 'ai') {
-      // Undo both AI move and Player move
-      game.undo();
-      game.undo();
-    } else {
-      game.undo();
-    }
+    if (gameResult) return;
+    game.undo();
     const newGame = new Chess(game.fen());
     setGame(newGame);
     setSelectedSquare(null);
     setPossibleMoves([]);
     setLastMove(null);
-    setMoveHistory((prev) => (gameMode === 'ai' ? prev.slice(0, -2) : prev.slice(0, -1)));
+    setMoveHistory((prev) => prev.slice(0, -1));
     setGameResult(null);
   };
 
   // Hint Generator
   const showHint = () => {
-    if (isThinking || game.isGameOver()) return;
+    if (game.isGameOver()) return;
     const moves = game.moves({ verbose: true });
     if (moves.length === 0) return;
 
@@ -1193,20 +1031,6 @@ export const ChessGameSection: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                setGameMode('ai');
-                resetGame();
-              }}
-              className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                gameMode === 'ai'
-                  ? 'bg-[#E195AB] text-white shadow-md'
-                  : 'bg-[#FFF5D7] text-[#E195AB] hover:bg-[#FFCCE1]'
-              }`}
-            >
-              <Bot className="w-4 h-4" />
-              <span>VS Bot</span>
-            </button>
-            <button
-              onClick={() => {
                 setGameMode('pass');
                 resetGame();
               }}
@@ -1238,58 +1062,6 @@ export const ChessGameSection: React.FC = () => {
             </button>
           </div>
 
-          {/* Bot Level (If VS Bot) */}
-          {gameMode === 'ai' && (
-            <div className="flex items-center gap-1.5 bg-[#FFF5D7] p-1 rounded-xl border border-[#FFCCE1]">
-              <span className="text-[11px] font-mono text-slate-500 font-bold px-1.5">Bot Level:</span>
-              {(['easy', 'medium', 'hard'] as AIDifficulty[]).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDifficulty(d)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold capitalize transition-colors cursor-pointer ${
-                    difficulty === d
-                      ? 'bg-[#E195AB] text-white shadow-sm'
-                      : 'text-[#E195AB] hover:bg-[#FFCCE1]/50'
-                  }`}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Side Selector (If VS Bot) */}
-          {gameMode === 'ai' && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-mono text-slate-500 font-bold">Play as:</span>
-              <button
-                onClick={() => {
-                  setPlayerColor('w');
-                  resetGame();
-                }}
-                className={`px-2.5 py-1 rounded-lg border text-xs font-bold cursor-pointer ${
-                  playerColor === 'w'
-                    ? 'bg-white border-[#E195AB] text-slate-800 shadow-sm'
-                    : 'bg-[#FFF5D7] border-[#FFCCE1] text-slate-500'
-                }`}
-              >
-                ♔ White
-              </button>
-              <button
-                onClick={() => {
-                  setPlayerColor('b');
-                  resetGame();
-                }}
-                className={`px-2.5 py-1 rounded-lg border text-xs font-bold cursor-pointer ${
-                  playerColor === 'b'
-                    ? 'bg-slate-800 border-slate-800 text-white shadow-sm'
-                    : 'bg-[#FFF5D7] border-[#FFCCE1] text-slate-500'
-                }`}
-              >
-                ♚ Black
-              </button>
-            </div>
-          )}
 
           {/* Time Control Selector */}
           <div className="flex items-center gap-1.5 bg-[#FFF5D7] p-1 rounded-xl border border-[#FFCCE1]">
@@ -1444,9 +1216,7 @@ export const ChessGameSection: React.FC = () => {
                 ? yourSide === game.turn()
                   ? ' (Your Turn!)'
                   : ' (Opponent)'
-                : game.turn() === playerColor
-                ? ' (You)'
-                : ' (Bot)'}
+                : ''}
             </span>
           </div>
 
@@ -1455,14 +1225,10 @@ export const ChessGameSection: React.FC = () => {
               <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold">
                 Local Pass & Play
               </span>
-            ) : gameMode === 'online' ? (
+            ) : (
               <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold flex items-center gap-1">
                 <Globe className="w-3 h-3" />
                 Online Multiplayer
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold">
-                VS Bot ({difficulty})
               </span>
             )}
           </div>
@@ -1485,8 +1251,6 @@ export const ChessGameSection: React.FC = () => {
                         ? activeRoom.whitePlayer?.flag || '⚪'
                         : activeRoom.blackPlayer?.flag || '⚫'}
                     </span>
-                  ) : gameMode === 'ai' ? (
-                    playerColor === 'w' ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />
                   ) : (
                     <Users className="w-4 h-4" />
                   )}
@@ -1498,10 +1262,6 @@ export const ChessGameSection: React.FC = () => {
                         ? isFlipped
                           ? activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
                           : activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
-                        : gameMode === 'ai'
-                        ? playerColor === 'w'
-                          ? `Bot (${difficulty})`
-                          : (currentUser ? currentUser.username : 'You')
                         : isFlipped
                         ? 'Player 1 (White)'
                         : 'Player 2 (Black)'}
@@ -1511,8 +1271,6 @@ export const ChessGameSection: React.FC = () => {
                         ? isFlipped
                           ? activeRoom.whitePlayer?.name
                           : activeRoom.blackPlayer?.name
-                        : gameMode === 'ai' && playerColor !== 'w'
-                        ? currentUser?.username
                         : null
                     ) && <AdminBadge />}
                     {game.turn() === (isFlipped ? 'w' : 'b') && !game.isGameOver() && (
@@ -1557,25 +1315,6 @@ export const ChessGameSection: React.FC = () => {
                   Array.from({ length: 8 }).map((_, c) => renderSquare(r, c))
                 )}
               </div>
-
-              {/* Thinking Overlay */}
-              <AnimatePresence>
-                {isThinking && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px] flex items-center justify-center z-30"
-                  >
-                    <div className="px-5 py-2.5 rounded-2xl bg-white/90 border border-[#FFCCE1] shadow-2xl flex items-center gap-3">
-                      <div className="w-5 h-5 border-2 border-[#E195AB] border-t-transparent rounded-full animate-spin" />
-                      <span className="font-sans font-bold text-xs text-slate-800">
-                        Bot is thinking...
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
 
             {/* Bottom Player Card (White or You) */}
@@ -1588,8 +1327,6 @@ export const ChessGameSection: React.FC = () => {
                         ? activeRoom.blackPlayer?.flag || '⚫'
                         : activeRoom.whitePlayer?.flag || '⚪'}
                     </span>
-                  ) : gameMode === 'ai' ? (
-                    playerColor === 'w' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />
                   ) : (
                     <Users className="w-4 h-4" />
                   )}
@@ -1601,10 +1338,6 @@ export const ChessGameSection: React.FC = () => {
                         ? isFlipped
                           ? activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
                           : activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
-                        : gameMode === 'ai'
-                        ? playerColor === 'w'
-                          ? (currentUser ? currentUser.username : 'You')
-                          : `Bot (${difficulty})`
                         : isFlipped
                         ? 'Player 2 (Black)'
                         : 'Player 1 (White)'}
@@ -1614,8 +1347,6 @@ export const ChessGameSection: React.FC = () => {
                         ? isFlipped
                           ? activeRoom.blackPlayer?.name
                           : activeRoom.whitePlayer?.name
-                        : gameMode === 'ai' && playerColor === 'w'
-                        ? currentUser?.username
                         : null
                     ) && <AdminBadge />}
                     {game.turn() === (isFlipped ? 'b' : 'w') && !game.isGameOver() && (
@@ -1737,7 +1468,7 @@ export const ChessGameSection: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     onClick={undoMove}
-                    disabled={moveHistory.length === 0 || isThinking}
+                    disabled={moveHistory.length === 0 }
                     className="px-3 py-2 rounded-xl border border-[#FFCCE1] bg-[#FFF5D7] text-[#E195AB] text-xs font-bold hover:bg-[#FFCCE1] disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />

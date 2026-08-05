@@ -7,7 +7,6 @@ import { AboutSection } from './components/AboutSection';
 import { CommentSection } from './components/CommentSection';
 import { AboutModal } from './components/AboutModal';
 import { ChangelogModal } from './components/ChangelogModal';
-import { CalculatorSection } from './components/CalculatorSection';
 import { FishingGameSection } from './components/FishingGameSection';
 import { ChessGameSection } from './components/ChessGameSection';
 import { UnoGameSection } from './components/UnoGameSection';
@@ -118,21 +117,6 @@ function AnimatedRoutes({
               <HeroSection onOpenAboutModal={handleOpenAboutModal} />
               <AboutSection onOpenModal={handleOpenAboutModal} />
               <CommentSection />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/game"
-          element={
-            <motion.div
-              key="route-game"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <CalculatorSection />
             </motion.div>
           }
         />
