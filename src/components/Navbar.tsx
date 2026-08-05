@@ -121,18 +121,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => {
                       setIsProfileModalOpen(true);
                     }}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition-all ${
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition-all max-w-[100px] sm:max-w-[150px] ${
                       currentUser.role === 'admin'
                         ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200 cursor-pointer'
                         : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 cursor-pointer'
                     }`}
                   >
                     {currentUser.role === 'admin' ? (
-                      <Shield className="w-3.5 h-3.5 text-amber-600" />
+                      <Shield className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                     ) : (
-                      <UserIcon className="w-3.5 h-3.5 text-[#E195AB]" />
+                      <UserIcon className="w-3.5 h-3.5 text-[#E195AB] shrink-0" />
                     )}
-                    <span>{currentUser.username}</span>
+                    <span className="truncate">{currentUser.username}</span>
                   </button>
                   <button
                     onClick={logout}
