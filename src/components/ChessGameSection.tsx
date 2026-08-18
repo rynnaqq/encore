@@ -5,7 +5,6 @@ import { Chess, Square } from 'chess.js';
 import { io, Socket } from 'socket.io-client';
 import {
   RotateCcw,
-  
   User,
   Users,
   Zap,
@@ -994,10 +993,10 @@ export const ChessGameSection: React.FC = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFCCE1] text-[#E195AB] font-mono text-xs sm:text-sm font-bold tracking-wide mb-3 shadow-sm">
             <Crown className="w-4 h-4 text-[#E195AB]" />
-            <span>GRANDMASTER CHESS</span>
+            <span>CHESS</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
-            Play Chess <span className="text-[#E195AB]">Interactive</span>
+            Play <span className="text-[#E195AB]">Chess</span>
           </h1>
         </motion.div>
 
