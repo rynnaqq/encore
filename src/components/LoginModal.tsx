@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Lock, LogIn, UserPlus, Shield, X, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, LogIn, UserPlus, Shield, X, AlertCircle, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -17,139 +16,239 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const navigate = useNavigate();
+  const [isCapsLock, setIsCapsLock] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setIsCapsLock(e.getModifierState('CapsLock'));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setIsSubmitting(true);
 
-    if (isRegisterMode) {
-      const res = register(username, password);
-      if (res.success) {
-        setUsername('');
-        setPassword('');
-        if (onSuccess) onSuccess();
-        onClose();
+    setTimeout(() => {
+      if (isRegisterMode) {
+        const res = register(username, password);
+        if (res.success) {
+          setUsername('');
+          setPassword('');
+          if (onSuccess) onSuccess();
+          onClose();
+        } else {
+          setErrorMsg(res.message || 'Gagal mendaftar');
+        }
       } else {
-        setErrorMsg(res.message || 'Gagal mendaftar');
+        const res = login(username, password);
+        if (res.success) {
+          setUsername('');
+          setPassword('');
+          if (onSuccess) onSuccess();
+          onClose();
+        } else {
+          setErrorMsg(res.message || 'Gagal masuk');
+        }
       }
-    } else {
-      const res = login(username, password);
-      if (res.success) {
-        setUsername('');
-        setPassword('');
-        if (onSuccess) onSuccess();
-        onClose();
-      } else {
-        setErrorMsg(res.message || 'Gagal masuk');
-      }
-    }
+      setIsSubmitting(false);
+    }, 150);
   };
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        {/* Backdrop with Ambient Glow */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/70 backdrop-blur-md"
+          className="fixed inset-0 bg-slate-950/75 backdrop-blur-md cursor-pointer"
         />
 
+        {/* Modal Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.94, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-pink-100 dark:border-slate-800 max-w-md w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-8 z-10 my-auto"
+          exit={{ opacity: 0, scale: 0.94, y: 12 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border-2 border-[#FFCCE1] dark:border-slate-800 max-w-md w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-7 z-10 my-auto"
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
+            className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer z-20"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Header */}
-          <div className="text-center mb-6">
+          {/* Header & Avatar */}
+          <div className="text-center mb-5">
             {!currentUser && (
-              <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 border border-pink-200 text-[#E195AB] text-xs font-bold animate-pulse">
+              <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-950/50 border border-pink-200 dark:border-pink-900/60 text-[#E195AB] dark:text-[#FFCCE1] text-[11px] font-bold animate-pulse">
                 <Shield className="w-3.5 h-3.5" />
-                <span>Silakan Login / Daftar Terlebih Dahulu</span>
+                <span>Masuk untuk Akses Semua Game & Komentar</span>
               </div>
             )}
-            <div className="w-14 h-14 bg-gradient-to-tr from-[#E195AB] to-[#FFCCE1] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-pink-200 dark:shadow-none">
-              {isRegisterMode ? (
-                <UserPlus className="w-7 h-7 text-white" />
-              ) : (
-                <LogIn className="w-7 h-7 text-white" />
-              )}
+            
+            {/* Mascot Avatar with Rotating Aura */}
+            <div className="relative w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 rounded-2xl border-2 border-dashed border-[#E195AB]/60 dark:border-pink-500/40"
+              />
+              <motion.div
+                key={isRegisterMode ? 'reg-icon' : 'login-icon'}
+                initial={{ scale: 0.8, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 15 }}
+                className="relative z-10 w-13 h-13 bg-gradient-to-tr from-[#E195AB] via-[#FFCCE1] to-[#FFF5D7] dark:from-pink-600 dark:via-purple-600 dark:to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-200 dark:shadow-none"
+              >
+                {isRegisterMode ? (
+                  <UserPlus className="w-6 h-6 text-white drop-shadow" />
+                ) : (
+                  <LogIn className="w-6 h-6 text-white drop-shadow" />
+                )}
+              </motion.div>
             </div>
+
             <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100">
               {isRegisterMode ? 'Buat Akun Baru' : 'Masuk Ke Akun'}
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
               Format akun menggunakan <strong className="text-slate-700 dark:text-slate-300">Username & Password</strong> (Tanpa Email)
             </p>
           </div>
 
-          {errorMsg && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+          {/* Tab Pill Switcher */}
+          <div className="flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700/60 relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisterMode(false);
+                setErrorMsg('');
+              }}
+              className={`flex-1 py-2 rounded-xl font-black text-xs transition-all relative z-10 cursor-pointer flex items-center justify-center gap-1.5 ${
+                !isRegisterMode
+                  ? 'text-[#E195AB] dark:text-[#FFCCE1]'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              {!isRegisterMode && (
+                <motion.div
+                  layoutId="auth-tab-pill-modal"
+                  className="absolute inset-0 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200/60 dark:border-slate-700/60 -z-10"
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                />
+              )}
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Masuk</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisterMode(true);
+                setErrorMsg('');
+              }}
+              className={`flex-1 py-2 rounded-xl font-black text-xs transition-all relative z-10 cursor-pointer flex items-center justify-center gap-1.5 ${
+                isRegisterMode
+                  ? 'text-[#E195AB] dark:text-[#FFCCE1]'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              {isRegisterMode && (
+                <motion.div
+                  layoutId="auth-tab-pill-modal"
+                  className="absolute inset-0 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200/60 dark:border-slate-700/60 -z-10"
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                />
+              )}
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Daftar Akun</span>
+            </button>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Error Alert */}
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 p-3 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                Username
-              </label>
-              <div className="relative">
-                <User className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  Username
+                </label>
+                <span className="text-[10px] text-slate-400 font-medium">3-20 karakter</span>
+              </div>
+              <div className="relative group">
+                <User className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-[#E195AB] transition-colors" />
                 <input
                   type="text"
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Masukkan username"
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:bg-white dark:focus:bg-slate-900 focus:border-[#E195AB] focus:ring-4 focus:ring-pink-100 dark:focus:ring-pink-950/40 outline-none transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:bg-white dark:focus:bg-slate-900 focus:border-[#E195AB] focus:ring-4 focus:ring-pink-100 dark:focus:ring-pink-950/40 outline-none transition-all text-xs sm:text-sm shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  Password
+                </label>
+                {isCapsLock && (
+                  <span className="text-[10px] text-amber-500 font-bold animate-pulse">
+                    ⚠️ Caps Lock Aktif
+                  </span>
+                )}
+              </div>
+              <div className="relative group">
+                <Lock className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-[#E195AB] transition-colors" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
+                  onKeyDown={handleKeyDown}
+                  onKeyUp={handleKeyDown}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Masukkan password"
-                  className="w-full pl-11 pr-12 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:bg-white dark:focus:bg-slate-900 focus:border-[#E195AB] focus:ring-4 focus:ring-pink-100 dark:focus:ring-pink-950/40 outline-none transition-all text-sm"
+                  className="w-full pl-10 pr-11 py-2.5 sm:py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:bg-white dark:focus:bg-slate-900 focus:border-[#E195AB] focus:ring-4 focus:ring-pink-100 dark:focus:ring-pink-950/40 outline-none transition-all text-xs sm:text-sm shadow-inner"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg transition-colors cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#E195AB] to-[#d68097] hover:opacity-95 text-white font-black shadow-lg shadow-pink-200 dark:shadow-none transition-all flex items-center justify-center gap-2 text-sm mt-2 cursor-pointer"
+              disabled={isSubmitting || !username.trim() || !password.trim()}
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#E195AB] via-[#d68097] to-[#E195AB] hover:opacity-95 active:scale-98 disabled:opacity-50 text-white font-black shadow-lg shadow-pink-200 dark:shadow-none transition-all flex items-center justify-center gap-2 text-xs sm:text-sm mt-2 cursor-pointer"
             >
-              {isRegisterMode ? (
+              {isSubmitting ? (
+                <span className="animate-pulse">Memproses...</span>
+              ) : isRegisterMode ? (
                 <>
                   <UserPlus className="w-4 h-4" /> Daftar Sekarang
                 </>
@@ -161,22 +260,26 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             </button>
           </form>
 
-          {/* Mode Switcher */}
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsRegisterMode(!isRegisterMode);
-                setErrorMsg('');
-              }}
-              className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#E195AB] dark:hover:text-[#E195AB] transition-colors cursor-pointer"
-            >
-              {isRegisterMode ? (
-                <span>Sudah punya akun? <span className="text-[#E195AB] underline">Masuk di sini</span></span>
-              ) : (
-                <span>Belum punya akun? <span className="text-[#E195AB] underline">Daftar sekarang</span></span>
-              )}
-            </button>
+          {/* Benefits Preview */}
+          <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+            <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-1.5 flex items-center justify-center gap-1">
+              <Sparkles className="w-3 h-3 text-[#E195AB]" />
+              <span>Akses Penuh:</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-1">
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+                ♟️ Catur
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+                🎲 Ular Tangga
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+                🃏 UNO
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+                💬 Komentar
+              </span>
+            </div>
           </div>
         </motion.div>
       </div>

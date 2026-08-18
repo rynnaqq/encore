@@ -11,11 +11,12 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { FishingGameSection } from './components/FishingGameSection';
 import { ChessGameSection } from './components/ChessGameSection';
 import { UnoGameSection } from './components/UnoGameSection';
-import { AdminPage } from './components/AdminPage';
 import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
+import { AdminPage } from './components/AdminPage';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
+import { LoginPage } from './components/LoginPage';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -197,6 +198,36 @@ function AnimatedRoutes({
               className="gpu-smooth"
             >
               <AdminPage />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <motion.div
+              key="route-login"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <LoginPage />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <motion.div
+              key="route-register"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="gpu-smooth"
+            >
+              <LoginPage />
             </motion.div>
           }
         />
