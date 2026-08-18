@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Copy, Check, Users, ArrowRight, Sparkles, AlertCircle, User, Plus } from 'lucide-react';
+import { Copy, Check, Users, ArrowRight, Sparkles, AlertCircle, User, Plus, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
@@ -52,12 +52,37 @@ export const UnoGameSection: React.FC = () => {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const leaveTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
+  // 5-Minute Inactivity Lobby Timeout (300 seconds)
+  const [lobbyTimeLeft, setLobbyTimeLeft] = useState<number>(300);
+
   useEffect(() => {
     stateRef.current = gameState;
     if (gameState && typeof window !== 'undefined') {
       sessionStorage.setItem('uno_saved_state_' + gameState.roomId, JSON.stringify(gameState));
     }
   }, [gameState]);
+
+  // 5-Minute Inactivity Lobby Countdown Timer
+  useEffect(() => {
+    if (!gameState || gameState.status !== 'waiting') {
+      setLobbyTimeLeft(300);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLobbyTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleLeaveRoom();
+          setErrorMsg('Lobby ditutup otomatis karena tidak ada aktivitas selama 5 menit.');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [gameState?.status, !gameState]);
 
   // Interactive UNO Button State & Timers
   const unoTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -869,6 +894,11 @@ export const UnoGameSection: React.FC = () => {
                         {copiedRoomCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </div>
+                    {/* 5-minute Lobby Inactivity Countdown */}
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 dark:border-amber-400/20 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
+                      <Clock className="w-3 h-3" />
+                      <span>Batas waktu lobby: {Math.floor(lobbyTimeLeft / 60)}:{(lobbyTimeLeft % 60).toString().padStart(2, '0')}</span>
+                    </div>
                   </div>
 
                   <div className="text-left">
@@ -948,7 +978,7 @@ export const UnoGameSection: React.FC = () => {
                 isOpen={true}
                 winnerName={gameState.players.find(p => p.id === gameState.winnerId)?.name || 'Player'}
                 winnerColor="#E195AB"
-                subtitle="Telah berhasil menghabiskan seluruh kartu & menjadi Juara UNO!"
+                subtitle={gameState.players.length === 1 ? 'Lawan keluar dari permainan. Anda dinyatakan Menang!' : 'Telah berhasil menghabiskan seluruh kartu & menjadi Juara UNO!'}
                 gameTitle="UNO Multiplayer"
                 isHost={effectiveIsHost}
                 onPlayAgain={handleStartGame}

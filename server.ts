@@ -187,23 +187,38 @@ async function startServer() {
     });
   }, 1000);
 
-  // Periodic room garbage collection (every 2 minutes) to prevent memory leaks
+  // Periodic room garbage collection & 5-minute lobby suspension check (every 30s)
   setInterval(() => {
     const now = Date.now();
-    const MAX_INACTIVE_MS = 30 * 60 * 1000; // 30 minutes
+    const MAX_LOBBY_INACTIVE_MS = 5 * 60 * 1000; // 5 minutes
+    const MAX_GAME_INACTIVE_MS = 30 * 60 * 1000; // 30 minutes
+
+    let roomsChanged = false;
     for (const [roomId, room] of rooms.entries()) {
       const isAbandoned = !room.whitePlayer && !room.blackPlayer && (!room.spectators || room.spectators.length === 0);
-      const isExpired = now - room.createdAt > MAX_INACTIVE_MS;
-      if (isAbandoned || (room.isGameOver && isExpired)) {
+      const isLobbyExpired = !room.isStarted && (now - room.createdAt > MAX_LOBBY_INACTIVE_MS);
+      const isGameExpired = now - room.createdAt > MAX_GAME_INACTIVE_MS;
+
+      if (isLobbyExpired && !isAbandoned) {
+        io.to(roomId).emit('error_message', 'Lobby ditutup karena tidak ada aktivitas selama 5 menit.');
         rooms.delete(roomId);
+        roomsChanged = true;
+      } else if (isAbandoned || (room.isGameOver && isGameExpired)) {
+        rooms.delete(roomId);
+        roomsChanged = true;
       }
     }
+
     for (const [roomId, snlRoom] of snlRooms.entries()) {
       if (!snlRoom.players || snlRoom.players.length === 0) {
         snlRooms.delete(roomId);
       }
     }
-  }, 120 * 1000);
+
+    if (roomsChanged) {
+      io.emit('lobby_room_updated');
+    }
+  }, 30 * 1000);
 
   // Socket.IO event handlers
   io.on('connection', (socket: Socket) => {

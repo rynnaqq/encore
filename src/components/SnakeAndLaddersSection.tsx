@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Dices, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight, Sparkles } from 'lucide-react';
+import { Dices, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight, Sparkles, Clock } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -79,6 +79,9 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const [isRolling, setIsRolling] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
   
+  // 5-Minute Inactivity Lobby Timeout (300 seconds)
+  const [lobbyTimeLeft, setLobbyTimeLeft] = useState<number>(300);
+
   // References to handle host logic
   const roomRef = useRef<SNLRoomState | null>(null);
   const leaveTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -90,6 +93,28 @@ export const SnakeAndLaddersSection: React.FC = () => {
       sessionStorage.setItem('snl_saved_state_' + room.roomId, JSON.stringify(room));
     }
   }, [room]);
+
+  // 5-Minute Inactivity Lobby Countdown Timer
+  useEffect(() => {
+    if (!room || room.isStarted) {
+      setLobbyTimeLeft(300);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLobbyTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleLeaveRoom();
+          setErrorMsg('Lobby ditutup otomatis karena tidak ada aktivitas selama 5 menit.');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [room?.isStarted, !room]);
 
   // Sync room state when we are host
   const broadcastState = (stateToBroadcast: SNLRoomState) => {
@@ -388,8 +413,11 @@ export const SnakeAndLaddersSection: React.FC = () => {
     }
 
     let winnerId = currentRoom.winnerId;
+    let winLog = `${leaver.name} keluar dari room.`;
+
     if (currentRoom.isStarted && remainingPlayers.length === 1 && !winnerId) {
       winnerId = remainingPlayers[0].id;
+      winLog = `🏆 ${leaver.name} keluar dari permainan! ${remainingPlayers[0].name} dinyatakan menang!`;
     }
 
     let newHostId = currentRoom.hostId;
@@ -403,7 +431,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
       players: remainingPlayers,
       currentPlayerIndex: newTurnIndex,
       winnerId,
-      logs: [...currentRoom.logs, `${leaver.name} left the room.`]
+      logs: [...currentRoom.logs, winLog]
     };
 
     setRoom(updatedRoom);
@@ -426,9 +454,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
       if (room) sessionStorage.removeItem('snl_saved_state_' + room.roomId);
     }
     if (channel) {
-      if (!isHost) {
-        channel.send({ type: 'broadcast', event: 'leave_request', payload: { id: myId } });
-      }
+      channel.send({ type: 'broadcast', event: 'leave_request', payload: { id: myId } });
       getSupabaseClient()?.removeChannel(channel);
       setChannel(null);
     }
@@ -702,6 +728,11 @@ export const SnakeAndLaddersSection: React.FC = () => {
                 {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
+            {/* 5-minute Lobby Inactivity Countdown */}
+            <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 dark:border-amber-400/20 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
+              <Clock className="w-3 h-3" />
+              <span>Batas tunggu lobby: {Math.floor(lobbyTimeLeft / 60)}:{(lobbyTimeLeft % 60).toString().padStart(2, '0')}</span>
+            </div>
           </div>
 
           <div className="text-left">
@@ -931,7 +962,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
           isOpen={!!winner}
           winnerName={winner?.name || ''}
           winnerColor={winner?.color || '#E195AB'}
-          subtitle={room && room.players.length === 1 ? 'Menang karena semua pemain lain keluar ruangan!' : 'Berhasil melewati tangga dan mencapai petak 100!'}
+          subtitle={room && room.players.length === 1 ? 'Lawan keluar dari permainan. Anda memenangkan pertandingan!' : 'Berhasil melewati tangga dan mencapai petak 100!'}
           gameTitle="Ular Tangga Multiplayer"
           isHost={isHost}
           onPlayAgain={handleResetGame}

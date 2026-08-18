@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Hash, Trophy, Copy, Check, User, Activity, RefreshCw, AlertCircle, Database, Cloud } from 'lucide-react';
+import { Users, Plus, Hash, Trophy, Copy, Check, User, Activity, RefreshCw, AlertCircle, Database, Cloud, Clock } from 'lucide-react';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { subscribeToGlobalLobby } from "../lib/supabaseChess";
@@ -108,6 +108,30 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
   const [newRoomName, setNewRoomName] = useState('');
   const [timeControl, setTimeControl] = useState(10);
   const [isPublic, setIsPublic] = useState(true);
+
+  // 5-Minute Inactivity Lobby Timeout (300 seconds)
+  const [lobbyTimeLeft, setLobbyTimeLeft] = useState<number>(300);
+
+  useEffect(() => {
+    if (!activeRoom || activeRoom.isStarted) {
+      setLobbyTimeLeft(300);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLobbyTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          onLeaveRoom();
+          alert('Lobby ditutup otomatis karena tidak ada aktivitas selama 5 menit.');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeRoom?.isStarted, !activeRoom, onLeaveRoom]);
 
   const supabaseCreds = getSupabaseCredentials();
 
@@ -292,12 +316,20 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
               </div>
             </div>
             
-            <div className="mt-6 flex items-center justify-between border-t border-[#FFCCE1] dark:border-slate-800/50 pt-4">
-              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Activity className="w-4 h-4 text-[#E195AB]" />
-                {activeRoom.isStarted ? 'Pertandingan Berlangsung' : 'Menunggu Lawan...'}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#FFCCE1] dark:border-slate-800/50 pt-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-[#E195AB]" />
+                  {activeRoom.isStarted ? 'Pertandingan Berlangsung' : 'Menunggu Lawan...'}
+                </div>
+                {!activeRoom.isStarted && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 dark:border-amber-400/20 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
+                    <Clock className="w-3 h-3" />
+                    <span>Batas tunggu: {Math.floor(lobbyTimeLeft / 60)}:{(lobbyTimeLeft % 60).toString().padStart(2, '0')}</span>
+                  </div>
+                )}
               </div>
-              <button onClick={onLeaveRoom} className="px-5 py-2.5 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold text-xs rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/80 hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer">
+              <button onClick={onLeaveRoom} className="w-full sm:w-auto px-5 py-2.5 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold text-xs rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/80 hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer">
                 Batalkan
               </button>
             </div>
