@@ -329,62 +329,61 @@ export const OnlineMultiplayerLobby: React.FC<OnlineMultiplayerLobbyProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white/90 dark:bg-slate-900/90 p-4 sm:p-5 rounded-3xl border border-[#FFCCE1] dark:border-slate-800">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2"><Plus className="w-4 h-4 text-[#E195AB]" /> Create Room</h3>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2"><Plus className="w-4 h-4 text-[#E195AB]" /> Buat Room Baru</h3>
             <form onSubmit={handleCreateRoom} className="space-y-3">
-              <input type="text" placeholder="Room Name" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl text-xs" />
+              <input type="text" placeholder="Nama Room (opsional)" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl text-xs outline-none focus:border-[#E195AB]" />
               <div className="flex gap-2">
-                <select value={timeControl} onChange={e => setTimeControl(Number(e.target.value))} className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs w-1/2">
-                  <option value={3}>3 min</option>
-                  <option value={5}>5 min</option>
-                  <option value={10}>10 min</option>
-                  <option value={30}>30 min</option>
+                <select value={timeControl} onChange={e => setTimeControl(Number(e.target.value))} className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs w-1/2 outline-none">
+                  <option value={3}>3 Menit</option>
+                  <option value={5}>5 Menit</option>
+                  <option value={10}>10 Menit</option>
+                  <option value={30}>30 Menit</option>
                 </select>
-                <select value={isPublic ? 'public' : 'private'} onChange={e => setIsPublic(e.target.value === 'public')} className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs w-1/2">
-                  <option value="public">Public</option>
-                  <option value="private">Private</option>
+                <select value={isPublic ? 'public' : 'private'} onChange={e => setIsPublic(e.target.value === 'public')} className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs w-1/2 outline-none">
+                  <option value="public">Publik</option>
+                  <option value="private">Privat</option>
                 </select>
               </div>
-              <button type="submit" className="w-full py-2 bg-[#E195AB] text-white font-bold text-xs rounded-xl hover:bg-[#d88299] cursor-pointer">Create Room</button>
+              <button type="submit" className="w-full py-2.5 bg-[#E195AB] text-white font-bold text-xs rounded-xl hover:bg-[#d88299] transition-colors cursor-pointer shadow-sm">Buat Room</button>
             </form>
 
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-6 mb-4 flex items-center gap-2"><Hash className="w-4 h-4 text-[#E195AB]" /> Join by Code</h3>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-6 mb-4 flex items-center gap-2"><Hash className="w-4 h-4 text-[#E195AB]" /> Masuk dengan Kode</h3>
             <form onSubmit={handleJoin} className="flex gap-2">
-              <input type="text" placeholder="Room Code" value={joinCode} onChange={e => setJoinCode(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl text-xs uppercase" />
-              <button type="submit" className="px-4 bg-slate-800 dark:bg-slate-700 text-white font-bold text-xs rounded-xl hover:bg-slate-700 dark:hover:bg-slate-600 cursor-pointer">Join</button>
+              <input type="text" placeholder="Kode Room" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} maxLength={6} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl text-xs uppercase font-mono font-bold outline-none focus:border-[#E195AB]" />
+              <button type="submit" className="px-5 bg-slate-800 dark:bg-slate-700 text-white font-bold text-xs rounded-xl hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors cursor-pointer shadow-sm">Masuk</button>
             </form>
           </div>
 
           <div className="bg-white/90 dark:bg-slate-900/90 p-4 sm:p-5 rounded-3xl border border-[#FFCCE1] dark:border-slate-800">
              <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#E195AB]" /> Public Rooms
-                  <span className="text-xs font-mono bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/50 dark:border-slate-700 px-2 py-1 rounded-full">{roomsList.length} Active</span>
+                  <Activity className="w-4 h-4 text-[#E195AB]" /> Room Publik
+                  <span className="text-xs font-mono bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/50 dark:border-slate-700 px-2 py-0.5 rounded-full">{roomsList.length} Aktif</span>
                 </h3>
                 <button
                   type="button"
                   onClick={() => {
-                    // Trigger manual refresh
                     const event = new CustomEvent('manual_refresh_rooms');
                     window.dispatchEvent(event);
                   }}
                   className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-400 cursor-pointer"
-                  title="Refresh Rooms"
+                  title="Segarkan Room"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
              </div>
              <div className="space-y-2 h-64 overflow-y-auto pr-1">
                 {roomsList.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400 text-xs font-medium">No public rooms available</div>
+                  <div className="text-center py-8 text-slate-400 text-xs font-medium">Belum ada room publik yang aktif</div>
                 ) : (
                   roomsList.filter(r => r.isPublic !== false).map(r => (
                     <div key={r.roomId} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm hover:border-[#FFCCE1] dark:hover:border-slate-600 transition-all">
                       <div>
-                        <div className="font-bold text-xs text-slate-800 dark:text-slate-100">{r.roomName || 'Unnamed Room'}</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">{r.timeControl} min • {r.playersCount}/2 Players</div>
+                        <div className="font-bold text-xs text-slate-800 dark:text-slate-100">{r.roomName || 'Room Match'}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">{r.timeControl} mnt • {r.playersCount}/2 Pemain</div>
                       </div>
                       <button onClick={() => onJoinRoom(r.roomId)} className="px-3 py-1.5 bg-[#FFF5D7] dark:bg-slate-700 text-[#d88299] dark:text-[#FFCCE1] font-bold text-[10px] rounded-lg hover:bg-[#ffe3ea] dark:hover:bg-slate-600 transition-colors cursor-pointer">
-                        {r.playersCount >= 2 ? 'Spectate' : 'Join'}
+                        {r.playersCount >= 2 ? 'Tonton' : 'Masuk'}
                       </button>
                     </div>
                   ))

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Dices, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight } from 'lucide-react';
+import { Dices, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight, Sparkles } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -78,6 +78,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isHost, setIsHost] = useState(false);
+  const effectiveIsHost = room ? room.hostId === myId : isHost;
   
   // Game state
   const [diceValue, setDiceValue] = useState<number | null>(null);
@@ -493,44 +494,43 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl relative"
+      className="max-w-md mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl relative text-center"
     >
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-[#FFF5D7] dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-[#FFCCE1] dark:border-slate-700">
-          <UsersRound className="w-8 h-8 text-[#E195AB] dark:text-[#FFCCE1]" />
-        </div>
-        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Multiplayer Setup</h3>
-        <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Play online with friends!</p>
+      {/* Game Badge */}
+      <div className="w-20 h-20 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-5 transform -rotate-6 border-4 border-[#FFF5D7] dark:border-slate-800 shadow-lg">
+        <Dices className="w-10 h-10 text-[#FFF5D7]" />
       </div>
+      <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">Snakes & Ladders Multiplayer</h2>
+      <p className="text-slate-600 dark:text-slate-400 text-xs mb-6">Bermain ular tangga bersama teman secara real-time</p>
       
       {errorMsg && (
-        <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-sm font-semibold text-center">
+        <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold text-center">
           {errorMsg}
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 text-left">
         <div>
-          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Your Name (Terkunci)</label>
+          <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Nama Pemain</label>
           <input
             type="text"
             value={playerName}
             disabled
             readOnly
-            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none"
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-400 cursor-not-allowed outline-none text-sm"
           />
-          <p className="text-xs text-slate-400 mt-1">Username disamakan dengan akun login Anda.</p>
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Your Color</label>
-          <div className="flex gap-2">
+          <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">Pilihan Warna Bidak</label>
+          <div className="flex gap-2 justify-center py-1">
             {availableColors.map(c => (
               <button
                 key={c}
+                type="button"
                 onClick={() => setPlayerColor(c)}
-                className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center cursor-pointer ${playerColor === c ? 'scale-110 shadow-md ring-2 ring-offset-2 dark:ring-offset-slate-900' : 'hover:scale-105'}`}
-                style={{ backgroundColor: c, ringColor: c }}
+                className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center cursor-pointer ${playerColor === c ? 'scale-110 shadow-md ring-2 ring-offset-2 ring-[#E195AB] dark:ring-offset-slate-900' : 'hover:scale-105 opacity-80 hover:opacity-100'}`}
+                style={{ backgroundColor: c }}
               >
                 {playerColor === c && <Check className="w-5 h-5 text-white" />}
               </button>
@@ -538,18 +538,35 @@ export const SnakeAndLaddersSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-4 grid grid-cols-2 gap-4">
+        <button
+          onClick={handleCreateRoom}
+          className="w-full bg-[#E195AB] hover:bg-[#d88299] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md text-sm mt-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Buat Room Baru</span>
+        </button>
+
+        <div className="relative flex items-center py-1">
+          <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+          <span className="flex-shrink-0 mx-4 text-slate-400 font-bold text-xs uppercase tracking-wider">atau</span>
+          <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Kode Room"
+            value={joinRoomId}
+            onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100 uppercase outline-none focus:border-[#E195AB] text-sm"
+            maxLength={6}
+          />
           <button
-            onClick={handleCreateRoom}
-            className="px-4 py-3 rounded-xl bg-[#E195AB] text-white font-bold hover:bg-[#d88299] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            onClick={handleJoinRoom}
+            disabled={joinRoomId.length < 4}
+            className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm whitespace-nowrap"
           >
-            <Plus className="w-5 h-5" /> Create Room
-          </button>
-          <button
-            onClick={() => setSetupMode('join')}
-            className="px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-700 text-white font-bold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-          >
-            <Send className="w-5 h-5" /> Join Room
+            Masuk
           </button>
         </div>
       </div>
@@ -560,127 +577,105 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl"
+      className="max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-2xl text-center"
     >
-      <div className="flex items-center gap-4 mb-8">
-        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Room Lobby</h3>
+      <div className="w-16 h-16 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-3 transform -rotate-3 border-2 border-white shadow-sm">
+        <Dices className="w-8 h-8 text-[#FFF5D7]" />
       </div>
+      <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">Lobby Ular Tangga</h3>
+      <p className="text-slate-600 dark:text-slate-400 text-xs mb-5 font-medium">Menunggu pemain lain untuk bergabung</p>
 
       {!room ? (
         <div className="text-center py-8 space-y-4">
           <div className="w-10 h-10 border-4 border-slate-200 dark:border-slate-700 border-t-[#E195AB] rounded-full animate-spin mx-auto" />
-          <p className="text-slate-500 font-bold">Connecting to server...</p>
+          <p className="text-slate-500 font-bold text-xs">Menghubungkan ke room...</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-sm font-bold text-slate-500 mb-1">Room Code</p>
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl font-black tracking-wider text-slate-800 dark:text-slate-100">{room.roomId}</span>
+        <div className="space-y-5">
+          <div className="bg-[#FFF5D7] dark:bg-slate-800 p-4 rounded-2xl border border-[#FFCCE1] dark:border-slate-700 text-center shadow-sm">
+            <p className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Kode Room</p>
+            <div className="flex items-center justify-center gap-2.5">
+              <span className="text-3xl font-mono font-black tracking-wider text-[#E195AB] dark:text-[#FFCCE1] select-all">{room.roomId}</span>
               <button
                 onClick={copyRoomId}
-                className="p-2 rounded-lg hover:bg-slate-200 text-slate-600 dark:text-slate-400 transition-colors"
-                title="Copy Room Code"
+                className="p-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+                title="Salin Kode Room"
               >
-                {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">Players ({room.players.length}/4)</h4>
+          <div className="text-left">
+            <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 mb-2.5 uppercase tracking-wider">
+              Daftar Pemain ({room.players.length}/4)
+            </h4>
             <div className="space-y-2">
-              {room.players.map((p, idx) => (
-                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: p.color }}>
-                    <User className="w-5 h-5" />
+              {room.players.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-[#FFCCE1]/60 dark:border-slate-800 shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 shadow-xs" style={{ backgroundColor: p.color }}>
+                    <User className="w-4 h-4" />
                   </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                      <span>{p.name} {p.id === myId && '(You)'}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                      <span className="truncate">{p.name} {p.id === myId && '(Anda)'}</span>
                       {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
                     </div>
-                    {p.id === room.hostId && <div className="text-xs font-bold text-[#E195AB] dark:text-[#FFCCE1]">Host</div>}
                   </div>
+                  {p.id === room.hostId && (
+                    <span className="text-[10px] font-mono font-bold text-[#E195AB] dark:text-[#FFCCE1] bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded-md shrink-0">
+                      Host
+                    </span>
+                  )}
                 </div>
               ))}
               {room.players.length < 4 && (
                 <div className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400">
-                  <div className="w-10 h-10 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                    <Plus className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                    <Plus className="w-4 h-4" />
                   </div>
-                  <div className="font-medium">Waiting for players...</div>
+                  <div className="font-medium text-xs">Menunggu pemain lain...</div>
                 </div>
               )}
             </div>
           </div>
 
-          {isHost ? (
-            <div className="pt-4 space-y-3">
-              <button
-                onClick={handleStartGame}
-                disabled={room.players.length < 2}
-                className="w-full py-4 rounded-xl bg-[#E195AB] text-white font-black text-lg hover:bg-[#d88299] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
-              >
-                {room.players.length < 2 ? 'Need more players' : 'Start Game'}
-              </button>
+          {effectiveIsHost ? (
+            <div className="pt-2 space-y-2.5">
+              {room.players.length >= 2 ? (
+                <button
+                  onClick={handleStartGame}
+                  className="w-full py-3.5 rounded-xl bg-[#E195AB] text-white font-black text-base hover:bg-[#d88299] transition-all cursor-pointer shadow-lg"
+                >
+                  MULAI PERMAINAN
+                </button>
+              ) : (
+                <p className="text-amber-700 dark:text-amber-300 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs">
+                  Minimal 2 pemain untuk memulai permainan.
+                </p>
+              )}
               <button
                 onClick={handleLeaveRoom}
-                className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-transparent dark:border-slate-700"
+                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
               >
-                Leave Room
+                Keluar dari Room
               </button>
             </div>
           ) : (
-            <div className="pt-4 text-center">
-              <p className="text-slate-500 dark:text-slate-400 font-medium mb-4 animate-pulse">Waiting for host to start...</p>
+            <div className="pt-2 space-y-3 text-center">
+              <p className="text-slate-600 dark:text-slate-400 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs animate-pulse">
+                Menunggu host memulai permainan...
+              </p>
               <button
                 onClick={handleLeaveRoom}
-                className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-transparent dark:border-slate-700"
+                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
               >
-                Leave Room
+                Keluar dari Room
               </button>
             </div>
           )}
         </div>
       )}
-    </motion.div>
-  );
-
-  const renderJoinRoom = () => (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl"
-    >
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setSetupMode('menu')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Join Room</h3>
-      </div>
-
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Room Code</label>
-          <input
-            type="text"
-            value={joinRoomId}
-            onChange={e => setJoinRoomId(e.target.value.toUpperCase())}
-            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 outline-none transition-all font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest text-center text-xl bg-white dark:bg-slate-800"
-            placeholder="XXXXXX"
-            maxLength={6}
-          />
-        </div>
-
-        <button
-          onClick={handleJoinRoom}
-          disabled={joinRoomId.length < 4}
-          className="w-full py-4 rounded-xl bg-slate-800 dark:bg-slate-700 text-white font-bold text-lg hover:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-        >
-          Join Game <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
     </motion.div>
   );
 
@@ -707,7 +702,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
         </motion.div>
         
         {!room?.isStarted ? (
-          setupMode === 'menu' ? renderLobbyMenu() : setupMode === 'create' ? renderCreateRoom() : renderJoinRoom()
+          !room ? renderLobbyMenu() : renderCreateRoom()
         ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8 items-start max-w-6xl mx-auto">
           {/* Game Board */}

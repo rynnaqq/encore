@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { Copy, Users, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { Copy, Check, Users, ArrowRight, Sparkles, AlertCircle, User, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
@@ -39,12 +39,23 @@ export const UnoGameSection: React.FC = () => {
   
   const [isHost, setIsHost] = useState(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const effectiveIsHost = gameState ? gameState.hostId === localPlayerId : isHost;
   
   const [colorPickerVisible, setColorPickerVisible] = useState<{cardId: string} | null>(null);
+  const [copiedRoomCode, setCopiedRoomCode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const handleCopyRoomCode = () => {
+    if (gameState?.roomId) {
+      navigator.clipboard.writeText(gameState.roomId);
+      setCopiedRoomCode(true);
+      setTimeout(() => setCopiedRoomCode(false), 2000);
+    }
+  };
 
   // Host Only Ref to always have latest state in callbacks
   const stateRef = useRef<GameState | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const leaveTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
@@ -73,12 +84,13 @@ export const UnoGameSection: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (channel) supabase?.removeChannel(channel);
+      if (channelRef.current) supabase?.removeChannel(channelRef.current);
+      else if (channel) supabase?.removeChannel(channel);
     };
   }, [channel, supabase]);
 
   const broadcastState = (state: GameState, ch?: RealtimeChannel) => {
-    const c = ch || channel;
+    const c = ch || channelRef.current || channel;
     if (c) {
       c.send({
         type: 'broadcast',
@@ -89,7 +101,7 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const handlePlayerLeave = (leavingPlayerId: string, activeChannel?: RealtimeChannel | null) => {
-    const currentState = stateRef.current;
+    const currentState = stateRef.current || gameState;
     if (!currentState) return;
 
     const leavingIndex = currentState.players.findIndex(p => p.id === leavingPlayerId);
@@ -210,21 +222,28 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const joinChannel = (roomId: string, initialHostState?: GameState) => {
-    if (channel) supabase?.removeChannel(channel);
+    if (channelRef.current) supabase?.removeChannel(channelRef.current);
+    else if (channel) supabase?.removeChannel(channel);
+
     const newChannel = supabase!.channel(`uno-${roomId}`, {
       config: { 
         broadcast: { self: true },
         presence: { key: localPlayerId }
       }
     });
+    channelRef.current = newChannel;
 
     newChannel.on('broadcast', { event: 'SYNC_STATE' }, ({ payload }) => {
-      setGameState(payload.state);
+      if (payload?.state) {
+        setGameState(payload.state);
+        stateRef.current = payload.state;
+      }
     });
 
     newChannel.on('broadcast', { event: 'JOIN_REQUEST' }, ({ payload }) => {
-      if (stateRef.current && stateRef.current.hostId === localPlayerId) {
-        const state = JSON.parse(JSON.stringify(stateRef.current));
+      const currentState = stateRef.current || gameState;
+      if (currentState && (currentState.hostId === localPlayerId || isHost)) {
+        const state = JSON.parse(JSON.stringify(currentState));
         const existingPlayer = state.players.find((p: Player) => p.id === payload.id);
         if (existingPlayer) {
           // Reconnecting player!
@@ -245,7 +264,8 @@ export const UnoGameSection: React.FC = () => {
     });
 
     newChannel.on('broadcast', { event: 'PLAYER_ACTION' }, ({ payload }) => {
-      if (stateRef.current && stateRef.current.hostId === localPlayerId) {
+      const currentState = stateRef.current || gameState;
+      if (currentState && (currentState.hostId === localPlayerId || isHost)) {
         processAction(payload, newChannel);
       }
     });
@@ -273,6 +293,32 @@ export const UnoGameSection: React.FC = () => {
       });
     });
 
+    const handlePresenceSync = () => {
+      const currentState = stateRef.current || gameState;
+      if (currentState && (currentState.hostId === localPlayerId || isHost) && currentState.status === 'waiting') {
+        const pState = newChannel.presenceState();
+        let stateChanged = false;
+        const state = JSON.parse(JSON.stringify(currentState));
+        Object.values(pState).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            const pId = p.id || p.key;
+            const pName = p.name || 'Pemain';
+            if (pId && !state.players.some((pl: Player) => pl.id === pId) && state.players.length < 4) {
+              state.players.push({ id: pId, name: pName, hand: [], isHost: false });
+              stateChanged = true;
+            }
+          });
+        });
+        if (stateChanged) {
+          setGameState(state);
+          stateRef.current = state;
+          broadcastState(state, newChannel);
+        }
+      }
+    };
+
+    newChannel.on('presence', { event: 'sync' }, handlePresenceSync);
+
     newChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
       newPresences.forEach((presence: any) => {
         const id = presence.id || presence.key;
@@ -281,6 +327,7 @@ export const UnoGameSection: React.FC = () => {
           delete leaveTimersRef.current[id];
         }
       });
+      handlePresenceSync();
     });
 
     newChannel.subscribe(async (status) => {
@@ -293,6 +340,25 @@ export const UnoGameSection: React.FC = () => {
             event: 'JOIN_REQUEST',
             payload: { id: localPlayerId, name: playerName }
           });
+          // Retry JOIN_REQUEST if state not received yet
+          let retries = 0;
+          const retryInterval = setInterval(() => {
+            retries++;
+            if (stateRef.current && stateRef.current.players.some(p => p.id === localPlayerId)) {
+              clearInterval(retryInterval);
+            } else if (retries >= 4) {
+              clearInterval(retryInterval);
+              if (!stateRef.current) {
+                setErrorMsg('Room tidak ditemukan atau Host sedang offline.');
+              }
+            } else {
+              newChannel.send({
+                type: 'broadcast',
+                event: 'JOIN_REQUEST',
+                payload: { id: localPlayerId, name: playerName }
+              });
+            }
+          }, 800);
         } else {
           // I am host restoring or creating room, broadcast state
           broadcastState(initialHostState, newChannel);
@@ -333,18 +399,20 @@ export const UnoGameSection: React.FC = () => {
     }
   }, [supabase]);
 
-  const processAction = (payload: any, activeChannel = channel) => {
-    let state = JSON.parse(JSON.stringify(stateRef.current!));
+  const processAction = (payload: any, activeChannel?: RealtimeChannel | null) => {
+    const currentState = stateRef.current || gameState;
+    if (!currentState) return;
+    let state = JSON.parse(JSON.stringify(currentState));
     if (state.status !== 'playing' || state.winnerId) return;
 
-    const playerIndex = state.players.findIndex(p => p.id === payload.playerId);
+    const playerIndex = state.players.findIndex((p: Player) => p.id === payload.playerId);
     if (playerIndex === -1) return;
     if (payload.action !== 'UNO_PENALTY' && playerIndex !== state.currentTurn) return; // Not their turn
     
     const player = state.players[playerIndex];
 
     if (payload.action === 'PLAY_CARD') {
-      const cardIndex = player.hand.findIndex(c => c.id === payload.cardId);
+      const cardIndex = player.hand.findIndex((c: Card) => c.id === payload.cardId);
       if (cardIndex === -1) return;
       const card = player.hand[cardIndex];
 
@@ -355,32 +423,26 @@ export const UnoGameSection: React.FC = () => {
       state.topCard = card;
       state.currentColor = card.color !== 'Wild' ? card.color : payload.chosenColor;
       
-
       // Win check
       if (player.hand.length === 0) {
         state.status = 'finished';
         state.winnerId = player.id;
-        
       } else {
         // Apply effects
         let skipNext = false;
         if (card.value === 'Skip') {
           skipNext = true;
-          
         } else if (card.value === 'Reverse') {
           state.direction *= -1;
-          
           if (state.players.length === 2) skipNext = true; // In 2-player, reverse acts as skip
         } else if (card.value === 'DrawTwo') {
           const nextIndex = (state.currentTurn + state.direction + state.players.length) % state.players.length;
           drawCards(state, nextIndex, 2);
           skipNext = true;
-          
         } else if (card.value === 'WildDrawFour') {
           const nextIndex = (state.currentTurn + state.direction + state.players.length) % state.players.length;
           drawCards(state, nextIndex, 4);
           skipNext = true;
-          
         }
 
         // Advance turn
@@ -389,7 +451,6 @@ export const UnoGameSection: React.FC = () => {
       }
     } else if (payload.action === 'DRAW_CARD') {
       drawCards(state, state.currentTurn, 1);
-      
       state.currentTurn = (state.currentTurn + state.direction + state.players.length) % state.players.length;
     } else if (payload.action === 'UNO_PENALTY') {
       drawCards(state, playerIndex, 1);
@@ -399,16 +460,18 @@ export const UnoGameSection: React.FC = () => {
 
     setGameState(state);
     stateRef.current = state;
-    broadcastState(state, activeChannel);
+    broadcastState(state, activeChannel || channelRef.current || channel || undefined);
   };
 
   const drawCards = (state: GameState, pIndex: number, count: number) => {
     for (let i = 0; i < count; i++) {
       if (state.deck.length === 0) {
         state.deck = generateDeck(); // Reshuffle
-        
       }
-      state.players[pIndex].hand.push(state.deck.pop()!);
+      const card = state.deck.pop();
+      if (card) {
+        state.players[pIndex].hand.push(card);
+      }
     }
   };
 
@@ -463,10 +526,11 @@ export const UnoGameSection: React.FC = () => {
     }, 4000);
 
     const payload = { playerId: localPlayerId, action: 'UNO_PENALTY' };
-    if (isHost) {
-      processAction(payload);
-    } else if (channel) {
-      channel.send({
+    const activeCh = channelRef.current || channel;
+    if (effectiveIsHost) {
+      processAction(payload, activeCh);
+    } else if (activeCh) {
+      activeCh.send({
         type: 'broadcast',
         event: 'PLAYER_ACTION',
         payload
@@ -475,41 +539,51 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const handleStartGame = () => {
-    if (!isHost || !stateRef.current) return;
-    const state = JSON.parse(JSON.stringify(stateRef.current));
+    const currentState = stateRef.current || gameState;
+    if (!currentState) return;
+    if (!effectiveIsHost && currentState.hostId !== localPlayerId) return;
+    if (currentState.players.length < 2) {
+      setErrorMsg('Minimal 2 pemain untuk memulai permainan.');
+      return;
+    }
+    const state = JSON.parse(JSON.stringify(currentState));
     state.deck = generateDeck();
     
     // Deal 7 cards to each
-    state.players.forEach(p => {
+    state.players.forEach((p: Player) => {
       p.hand = [];
       for (let i = 0; i < 7; i++) {
-        p.hand.push(state.deck.pop()!);
+        const card = state.deck.pop();
+        if (card) p.hand.push(card);
       }
     });
 
-    // Flip top card
-    let initialTop = state.deck.pop()!;
-    while (initialTop.color === 'Wild' || initialTop.value === 'Skip' || initialTop.value === 'Reverse' || initialTop.value === 'DrawTwo') {
+    // Flip top card (avoid special cards on initial start)
+    let initialTop = state.deck.pop();
+    while (initialTop && (initialTop.color === 'Wild' || initialTop.value === 'Skip' || initialTop.value === 'Reverse' || initialTop.value === 'DrawTwo')) {
       state.deck.unshift(initialTop);
-      initialTop = state.deck.pop()!;
+      initialTop = state.deck.pop();
     }
+    if (!initialTop) initialTop = { id: 'c-init', color: 'Red', value: '7' };
     
     state.topCard = initialTop;
     state.currentColor = initialTop.color;
     state.status = 'playing';
     state.currentTurn = 0;
     state.direction = 1;
-    
     state.winnerId = null;
 
     setGameState(state);
     stateRef.current = state;
-    broadcastState(state);
+    broadcastState(state, channelRef.current || channel || undefined);
   };
 
   const handlePlayCard = (card: Card, chosenColor?: Color) => {
-    if (!channel || !gameState) return;
-    if (gameState.currentTurn !== gameState.players.findIndex(p => p.id === localPlayerId)) return;
+    const activeCh = channelRef.current || channel;
+    const currentState = stateRef.current || gameState;
+    if (!activeCh || !currentState) return;
+    const myIndex = currentState.players.findIndex((p: Player) => p.id === localPlayerId);
+    if (currentState.currentTurn !== myIndex) return;
 
     if (card.color === 'Wild' && !chosenColor) {
       setColorPickerVisible({ cardId: card.id });
@@ -519,17 +593,17 @@ export const UnoGameSection: React.FC = () => {
     setColorPickerVisible(null);
 
     // If player currently has 2 cards, playing this card reduces count to 1 -> Trigger shrinking UNO button!
-    const myPlayer = gameState.players.find(p => p.id === localPlayerId);
+    const myPlayer = currentState.players.find((p: Player) => p.id === localPlayerId);
     if (myPlayer && myPlayer.hand.length === 2) {
       triggerUnoButton();
     }
 
     const payload = { playerId: localPlayerId, action: 'PLAY_CARD', cardId: card.id, chosenColor };
     
-    if (isHost) {
-      processAction(payload);
+    if (effectiveIsHost) {
+      processAction(payload, activeCh);
     } else {
-      channel.send({
+      activeCh.send({
         type: 'broadcast',
         event: 'PLAYER_ACTION',
         payload
@@ -538,14 +612,17 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const handleDrawCard = () => {
-    if (!channel || !gameState) return;
-    if (gameState.currentTurn !== gameState.players.findIndex(p => p.id === localPlayerId)) return;
+    const activeCh = channelRef.current || channel;
+    const currentState = stateRef.current || gameState;
+    if (!activeCh || !currentState) return;
+    const myIndex = currentState.players.findIndex((p: Player) => p.id === localPlayerId);
+    if (currentState.currentTurn !== myIndex) return;
     
     const payload = { playerId: localPlayerId, action: 'DRAW_CARD' };
-    if (isHost) {
-      processAction(payload);
+    if (effectiveIsHost) {
+      processAction(payload, activeCh);
     } else {
-      channel.send({
+      activeCh.send({
         type: 'broadcast',
         event: 'PLAYER_ACTION',
         payload
@@ -720,6 +797,13 @@ export const UnoGameSection: React.FC = () => {
               <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-xs font-medium">
                 <span>Kode Room:</span>
                 <span className="bg-white dark:bg-slate-900 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded font-mono text-[#E195AB] dark:text-[#FFCCE1] font-bold select-all shadow-2xs">{gameState.roomId}</span>
+                <button
+                  onClick={handleCopyRoomCode}
+                  className="p-1 hover:text-[#E195AB] transition-colors cursor-pointer"
+                  title="Salin Kode Room"
+                >
+                  {copiedRoomCode ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-slate-400 hover:text-[#E195AB]" />}
+                </button>
               </div>
             </div>
           </div>
@@ -737,34 +821,97 @@ export const UnoGameSection: React.FC = () => {
           <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-[#FFF5D7]/30 dark:bg-slate-950/50 border-b lg:border-b-0 border-[#FFCCE1] dark:border-slate-800 overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
             {/* Status Overlay */}
             {gameState.status === 'waiting' && (
-              <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center">
-                <Users className="w-12 h-12 text-[#E195AB] dark:text-[#FFCCE1] mb-3" />
-                <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">Menunggu Pemain Lain</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 font-medium">{gameState.players.length} / 4 Pemain Terhubung</p>
-                
-                <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-md">
-                  {gameState.players.map((p, i) => (
-                    <div key={i} className="bg-white dark:bg-slate-900 border-2 border-[#FFCCE1] dark:border-slate-800 px-4 py-2.5 rounded-xl flex items-center gap-2.5 shadow-sm">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-slate-800 dark:text-slate-100 font-bold text-sm flex items-center gap-1.5">
-                        <span>{p.name} {p.id === localPlayerId ? '(Anda)' : ''}</span>
-                        {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
-                      </span>
-                    </div>
-                  ))}
+              <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4 sm:p-6 text-center overflow-y-auto">
+                <div className="w-16 h-16 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-3 transform -rotate-3 border-2 border-white shadow-sm shrink-0">
+                  <span className="text-[#FFF5D7] font-black text-xl">UNO</span>
                 </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">Lobby UNO Multiplayer</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mb-4 font-medium">Menunggu pemain lain untuk bergabung</p>
+                
+                <div className="w-full max-w-md space-y-4">
+                  <div className="bg-[#FFF5D7] dark:bg-slate-800 p-3.5 rounded-2xl border border-[#FFCCE1] dark:border-slate-700 text-center shadow-sm">
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Kode Room</p>
+                    <div className="flex items-center justify-center gap-2.5">
+                      <span className="text-2xl sm:text-3xl font-mono font-black tracking-wider text-[#E195AB] dark:text-[#FFCCE1] select-all">{gameState.roomId}</span>
+                      <button
+                        onClick={handleCopyRoomCode}
+                        className="p-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+                        title="Salin Kode Room"
+                      >
+                        {copiedRoomCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-                {isHost && gameState.players.length >= 2 && (
-                  <button onClick={handleStartGame} className="bg-[#E195AB] hover:bg-[#d88299] text-white px-8 py-3.5 rounded-xl font-black text-base transition-all shadow-lg cursor-pointer">
-                    MULAI PERMAINAN
-                  </button>
-                )}
-                {isHost && gameState.players.length < 2 && (
-                  <p className="text-amber-700 dark:text-amber-300 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2 rounded-xl text-xs">Minimal 2 pemain untuk memulai permainan.</p>
-                )}
-                {!isHost && (
-                  <p className="text-slate-600 dark:text-slate-400 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2 rounded-xl text-xs">Menunggu host memulai permainan...</p>
-                )}
+                  <div className="text-left">
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                      Daftar Pemain ({gameState.players.length}/4)
+                    </h4>
+                    <div className="space-y-2">
+                      {gameState.players.map((p) => (
+                        <div key={p.id} className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-[#FFCCE1]/60 dark:border-slate-800 shadow-2xs">
+                          <div className="w-8 h-8 rounded-lg bg-[#E195AB] flex items-center justify-center text-white shrink-0 shadow-xs">
+                            <User className="w-4 h-4 text-[#FFF5D7]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                              <span className="truncate">{p.name} {p.id === localPlayerId && '(Anda)'}</span>
+                              {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
+                            </div>
+                          </div>
+                          {p.id === gameState.hostId && (
+                            <span className="text-[10px] font-mono font-bold text-[#E195AB] dark:text-[#FFCCE1] bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded-md shrink-0">
+                              Host
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      {gameState.players.length < 4 && (
+                        <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400">
+                          <div className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                            <Plus className="w-4 h-4" />
+                          </div>
+                          <div className="font-medium text-xs">Menunggu pemain lain...</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {effectiveIsHost ? (
+                    <div className="pt-1 space-y-2">
+                      {gameState.players.length >= 2 ? (
+                        <button
+                          onClick={handleStartGame}
+                          className="w-full py-3.5 rounded-xl bg-[#E195AB] text-white font-black text-base hover:bg-[#d88299] transition-all cursor-pointer shadow-lg"
+                        >
+                          MULAI PERMAINAN
+                        </button>
+                      ) : (
+                        <p className="text-amber-700 dark:text-amber-300 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs">
+                          Minimal 2 pemain untuk memulai permainan.
+                        </p>
+                      )}
+                      <button
+                        onClick={handleLeaveRoom}
+                        className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                      >
+                        Keluar dari Room
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pt-1 space-y-2 text-center">
+                      <p className="text-slate-600 dark:text-slate-400 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs animate-pulse">
+                        Menunggu host memulai permainan...
+                      </p>
+                      <button
+                        onClick={handleLeaveRoom}
+                        className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                      >
+                        Keluar dari Room
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -775,7 +922,7 @@ export const UnoGameSection: React.FC = () => {
                 winnerColor="#E195AB"
                 subtitle="Telah berhasil menghabiskan seluruh kartu & menjadi Juara UNO!"
                 gameTitle="UNO Multiplayer"
-                isHost={isHost}
+                isHost={effectiveIsHost}
                 onPlayAgain={handleStartGame}
                 onLeave={handleLeaveRoom}
                 playAgainText="Main Lagi"
