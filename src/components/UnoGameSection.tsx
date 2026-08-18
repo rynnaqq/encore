@@ -27,17 +27,11 @@ export const UnoGameSection: React.FC = () => {
   }, [currentUser]);
   const [joinRoomId, setJoinRoomId] = useState('');
   const [localPlayerId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('uno_player_id');
-      if (saved) return saved;
-      const newId = `p-${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('uno_player_id', newId);
-      return newId;
-    }
-    return `p-${Math.random().toString(36).substr(2, 9)}`;
+    return `p-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
   });
   
   const [isHost, setIsHost] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const effectiveIsHost = gameState ? gameState.hostId === localPlayerId : isHost;
   
@@ -162,7 +156,14 @@ export const UnoGameSection: React.FC = () => {
       sessionStorage.removeItem('uno_active_session');
       if (gameState) sessionStorage.removeItem('uno_saved_state_' + gameState.roomId);
     }
-    if (channel && gameState) {
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'LEAVE_REQUEST',
+        payload: { playerId: localPlayerId }
+      });
+      supabase?.removeChannel(channelRef.current);
+    } else if (channel) {
       channel.send({
         type: 'broadcast',
         event: 'LEAVE_REQUEST',
@@ -172,6 +173,7 @@ export const UnoGameSection: React.FC = () => {
     }
     setChannel(null);
     setGameState(null);
+    setIsConnecting(false);
     setIsHost(false);
   };
 
@@ -185,6 +187,7 @@ export const UnoGameSection: React.FC = () => {
     
     const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     setIsHost(true);
+    setIsConnecting(false);
     
     const initialState: GameState = {
       roomId: newRoomId,
@@ -214,6 +217,8 @@ export const UnoGameSection: React.FC = () => {
     if (!supabase) return setErrorMsg('Supabase not configured');
     if (!playerName.trim() || !joinRoomId.trim()) return setErrorMsg('Name and Room ID required');
     setIsHost(false);
+    setIsConnecting(true);
+    setErrorMsg('');
     const targetRoomId = joinRoomId.toUpperCase();
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('uno_active_session', JSON.stringify({ roomId: targetRoomId, isHost: false }));
@@ -235,6 +240,7 @@ export const UnoGameSection: React.FC = () => {
 
     newChannel.on('broadcast', { event: 'SYNC_STATE' }, ({ payload }) => {
       if (payload?.state) {
+        setIsConnecting(false);
         setGameState(payload.state);
         stateRef.current = payload.state;
       }
@@ -631,6 +637,28 @@ export const UnoGameSection: React.FC = () => {
   };
 
   if (!gameState) {
+    if (isConnecting) {
+      return (
+        <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 border-t-[#E195AB] rounded-full animate-spin mx-auto" />
+            <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">Menghubungkan ke Room...</h3>
+            <p className="text-slate-500 text-xs font-mono font-bold">Kode: <span className="text-[#E195AB]">{joinRoomId.toUpperCase()}</span></p>
+            <button
+              onClick={() => {
+                setIsConnecting(false);
+                if (channelRef.current) supabase?.removeChannel(channelRef.current);
+                setChannel(null);
+              }}
+              className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
         <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
@@ -683,7 +711,7 @@ export const UnoGameSection: React.FC = () => {
             />
             <button
               onClick={handleJoinRoom}
-              className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm"
+              className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm whitespace-nowrap"
             >
               Masuk
             </button>

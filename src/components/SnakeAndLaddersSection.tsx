@@ -56,14 +56,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   // Setup state
   const availableColors = ['#E195AB', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
   const [myId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('snl_player_id');
-      if (saved) return saved;
-      const newId = `snl_p_${Math.random().toString(36).substring(2, 10)}`;
-      sessionStorage.setItem('snl_player_id', newId);
-      return newId;
-    }
-    return `snl_p_${Math.random().toString(36).substring(2, 10)}`;
+    return `snl_p_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
   });
   const [playerName, setPlayerName] = useState(() => currentUser ? currentUser.username : 'Player ' + Math.floor(Math.random() * 100));
 
@@ -78,6 +71,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isHost, setIsHost] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const effectiveIsHost = room ? room.hostId === myId : isHost;
   
   // Game state
@@ -111,24 +105,26 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const initChannel = (roomId: string, hosting: boolean, initialHostState?: SNLRoomState) => {
     if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
        setErrorMsg('Multiplayer credentials not configured in Settings.');
+       setIsConnecting(false);
        return null;
     }
 
     const newChannel = supabase.channel(`room:${roomId}`, {
       config: {
-        broadcast: { ack: false },
+        broadcast: { ack: false, self: true },
         presence: { key: myId }
       }
     });
 
     newChannel
       .on('broadcast', { event: 'sync_state' }, ({ payload }) => {
+        setIsConnecting(false);
         setRoom(payload);
         if (payload.winnerId) setIsRolling(false);
         if (payload.hostId === myId) setIsHost(true);
       })
       .on('broadcast', { event: 'join_request' }, ({ payload }) => {
-        if (roomRef.current && roomRef.current.hostId === myId) {
+        if (roomRef.current && (roomRef.current.hostId === myId || isHost)) {
           const currentRoom = { ...roomRef.current };
           const existingPlayer = currentRoom.players.find(p => p.id === payload.id);
           if (existingPlayer) {
@@ -176,16 +172,48 @@ export const SnakeAndLaddersSection: React.FC = () => {
             }, 10000);
           }
         });
-      })
-      .on('presence', { event: 'join' }, ({ newPresences }) => {
-        newPresences.forEach((p: any) => {
-          const joinerKey = p.key || p.id;
-          if (joinerKey && leaveTimersRef.current[joinerKey]) {
-            clearTimeout(leaveTimersRef.current[joinerKey]);
-            delete leaveTimersRef.current[joinerKey];
-          }
-        });
       });
+
+    const handlePresenceSync = () => {
+      const currentRoom = roomRef.current;
+      if (currentRoom && (currentRoom.hostId === myId || isHost) && !currentRoom.isStarted) {
+        const pState = newChannel.presenceState();
+        let stateChanged = false;
+        const updatedRoom = { ...currentRoom, players: [...currentRoom.players] };
+        Object.values(pState).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            const pId = p.id || p.key;
+            const pName = p.name || 'Pemain';
+            const pColor = p.color || availableColors[updatedRoom.players.length % availableColors.length];
+            if (pId && !updatedRoom.players.some(pl => pl.id === pId) && updatedRoom.players.length < 4) {
+              updatedRoom.players.push({
+                id: pId,
+                name: pName,
+                color: pColor,
+                position: 1
+              });
+              stateChanged = true;
+            }
+          });
+        });
+        if (stateChanged) {
+          setRoom(updatedRoom);
+          newChannel.send({ type: 'broadcast', event: 'sync_state', payload: updatedRoom });
+        }
+      }
+    };
+
+    newChannel.on('presence', { event: 'sync' }, handlePresenceSync);
+    newChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
+      newPresences.forEach((p: any) => {
+        const joinerKey = p.key || p.id;
+        if (joinerKey && leaveTimersRef.current[joinerKey]) {
+          clearTimeout(leaveTimersRef.current[joinerKey]);
+          delete leaveTimersRef.current[joinerKey];
+        }
+      });
+      handlePresenceSync();
+    });
 
     newChannel.subscribe((status, err) => {
       if (status === 'SUBSCRIBED') {
@@ -212,20 +240,34 @@ export const SnakeAndLaddersSection: React.FC = () => {
             payload: { id: myId, name: playerName, color: playerColor, position: 1 }
           });
           
-          setTimeout(() => {
-            if (!roomRef.current) {
-              supabase.removeChannel(newChannel);
-              setChannel(null);
-              setSetupMode('menu');
-              setErrorMsg('Room not found or invalid code.');
+          let retries = 0;
+          const retryInterval = setInterval(() => {
+            retries++;
+            if (roomRef.current && roomRef.current.players.some(p => p.id === myId)) {
+              clearInterval(retryInterval);
+              setIsConnecting(false);
+            } else if (retries >= 5) {
+              clearInterval(retryInterval);
+              if (!roomRef.current) {
+                setIsConnecting(false);
+                supabase.removeChannel(newChannel);
+                setChannel(null);
+                setErrorMsg('Room tidak ditemukan atau Host sedang offline.');
+              }
+            } else {
+              newChannel.send({
+                type: 'broadcast',
+                event: 'join_request',
+                payload: { id: myId, name: playerName, color: playerColor, position: 1 }
+              });
             }
-          }, 3000);
+          }, 800);
         }
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+        setIsConnecting(false);
         supabase.removeChannel(newChannel);
         setChannel(null);
-        setSetupMode('menu');
-        setErrorMsg('Failed to connect to room.');
+        setErrorMsg('Gagal terhubung ke room.');
       }
     });
 
@@ -244,6 +286,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
     }
     const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     setIsHost(true);
+    setIsConnecting(false);
     setSetupMode('create');
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('snl_active_session', JSON.stringify({ roomId: newRoomId, isHost: true }));
@@ -256,9 +299,11 @@ export const SnakeAndLaddersSection: React.FC = () => {
       openLoginModal();
       return;
     }
-    if (!joinRoomId) return;
+    if (!joinRoomId.trim()) return;
     setIsHost(false);
-    const targetRoomId = joinRoomId.toUpperCase();
+    setIsConnecting(true);
+    setErrorMsg('');
+    const targetRoomId = joinRoomId.trim().toUpperCase();
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('snl_active_session', JSON.stringify({ roomId: targetRoomId, isHost: false }));
     }
@@ -388,6 +433,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
     }
     setRoom(null);
     setSetupMode('menu');
+    setIsConnecting(false);
     setIsHost(false);
     setErrorMsg('');
   };
@@ -589,6 +635,12 @@ export const SnakeAndLaddersSection: React.FC = () => {
         <div className="text-center py-8 space-y-4">
           <div className="w-10 h-10 border-4 border-slate-200 dark:border-slate-700 border-t-[#E195AB] rounded-full animate-spin mx-auto" />
           <p className="text-slate-500 font-bold text-xs">Menghubungkan ke room...</p>
+          <button
+            onClick={handleLeaveRoom}
+            className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+          >
+            Batal
+          </button>
         </div>
       ) : (
         <div className="space-y-5">
@@ -702,7 +754,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
         </motion.div>
         
         {!room?.isStarted ? (
-          !room ? renderLobbyMenu() : renderCreateRoom()
+          !room && !isConnecting ? renderLobbyMenu() : renderCreateRoom()
         ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8 items-start max-w-6xl mx-auto">
           {/* Game Board */}
