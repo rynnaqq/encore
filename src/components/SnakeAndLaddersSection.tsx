@@ -442,7 +442,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const handleRoll = () => {
     if (isRolling || !room || room.winnerId || !channel) return;
     const currentPlayer = room.players[room.currentPlayerIndex];
-    if (currentPlayer.id !== myId) return; // Not my turn
+    if (currentPlayer?.id !== myId) return; // Not my turn
     
     setIsRolling(true);
     const roll = Math.floor(Math.random() * 6) + 1;
@@ -451,7 +451,6 @@ export const SnakeAndLaddersSection: React.FC = () => {
       event: 'action_roll',
       payload: { roll, playerId: myId }
     });
-    handleRemoteRoll(roll, myId, channel, isHost); // Apply locally as well
   };
 
   const handleRemoteRoll = (roll: number, rollingPlayerId: string, currentChannel: RealtimeChannel, hosting: boolean) => {
@@ -462,62 +461,108 @@ export const SnakeAndLaddersSection: React.FC = () => {
     const rollInterval = setInterval(() => {
       setDiceValue(Math.floor(Math.random() * 6) + 1);
       rolls++;
-      if (rolls >= 10) {
+      if (rolls >= 8) {
         clearInterval(rollInterval);
         setDiceValue(roll);
         setTimeout(() => {
           if (hosting) {
-            processTurnHost(roll, currentChannel); 
+            processTurnHost(roll, rollingPlayerId, currentChannel); 
           }
           setIsRolling(false);
-        }, 500);
+        }, 400);
       }
-    }, 100);
+    }, 80);
   };
 
-  const processTurnHost = (roll: number, currentChannel: RealtimeChannel) => {
-    if (!roomRef.current) return;
-    const currentRoom = { ...roomRef.current };
-    const currentPlayer = currentRoom.players[currentRoom.currentPlayerIndex];
+  const processTurnHost = (roll: number, rollingPlayerId: string, currentChannel: RealtimeChannel) => {
+    const currentRoom = roomRef.current;
+    if (!currentRoom || !currentRoom.isStarted || currentRoom.winnerId) return;
+
+    // Validate that the rolling player is indeed the active player for this turn
+    const activePlayerIndex = currentRoom.currentPlayerIndex;
+    const currentPlayer = currentRoom.players[activePlayerIndex];
+    if (!currentPlayer || currentPlayer.id !== rollingPlayerId) return;
+
     let newPos = currentPlayer.position + roll;
+    let logMsg = '';
     
     if (newPos > TOTAL_CELLS) {
       newPos = TOTAL_CELLS - (newPos - TOTAL_CELLS);
-      currentRoom.logs.push(`${currentPlayer.name} rolled ${roll} but bounced back to ${newPos}`);
+      logMsg = `${currentPlayer.name} rolled ${roll} but bounced back to ${newPos}`;
     } else {
-      currentRoom.logs.push(`${currentPlayer.name} rolled ${roll} and moved to ${newPos}`);
+      logMsg = `${currentPlayer.name} rolled ${roll} and moved to ${newPos}`;
     }
 
+    // Step 1: Move player to the initial rolled cell
+    const steppedPlayers = currentRoom.players.map((p, idx) =>
+      idx === activePlayerIndex ? { ...p, position: newPos } : p
+    );
+
+    const stepRoom: SNLRoomState = {
+      ...currentRoom,
+      players: steppedPlayers,
+      logs: [...currentRoom.logs, logMsg]
+    };
+
+    // Check if player landed on a Snake or Ladder
     if (SNAKES_AND_LADDERS[newPos]) {
       const dest = SNAKES_AND_LADDERS[newPos];
       const isLadder = dest > newPos;
+      const snakeLadderMsg = `${currentPlayer.name} hit a ${isLadder ? 'ladder 🪜' : 'snake 🐍'}! Moved to ${dest}`;
+
+      // Update room state for the intermediate landing
+      setRoom(stepRoom);
+      currentChannel.send({ type: 'broadcast', event: 'sync_state', payload: stepRoom });
+
+      // After pawn lands on ladder/snake, slide to destination and switch turn
       setTimeout(() => {
-        if (!roomRef.current) return;
-        const delayedRoom = { ...roomRef.current };
-        delayedRoom.players[delayedRoom.currentPlayerIndex].position = dest;
-        delayedRoom.logs.push(`${currentPlayer.name} hit a ${isLadder ? 'ladder' : 'snake'}! Moved to ${dest}`);
-        
-        if (dest === TOTAL_CELLS) {
-          delayedRoom.winnerId = currentPlayer.id;
-          delayedRoom.logs.push(`${currentPlayer.name} wins!`);
-        } else {
-          delayedRoom.currentPlayerIndex = (delayedRoom.currentPlayerIndex + 1) % delayedRoom.players.length;
+        const latestRoom = roomRef.current || stepRoom;
+        const finalPlayers = latestRoom.players.map((p, idx) =>
+          idx === activePlayerIndex ? { ...p, position: dest } : p
+        );
+
+        const isWinner = dest === TOTAL_CELLS;
+        const winnerId = isWinner ? currentPlayer.id : null;
+        const nextTurnIndex = isWinner ? activePlayerIndex : (activePlayerIndex + 1) % finalPlayers.length;
+
+        const finalLogs = [...latestRoom.logs, snakeLadderMsg];
+        if (isWinner) {
+          finalLogs.push(`🏆 ${currentPlayer.name} wins!`);
         }
-        setRoom(delayedRoom);
-        currentChannel.send({ type: 'broadcast', event: 'sync_state', payload: delayedRoom });
-      }, 800);
+
+        const finalRoom: SNLRoomState = {
+          ...latestRoom,
+          players: finalPlayers,
+          currentPlayerIndex: nextTurnIndex,
+          winnerId,
+          logs: finalLogs
+        };
+
+        setRoom(finalRoom);
+        currentChannel.send({ type: 'broadcast', event: 'sync_state', payload: finalRoom });
+      }, 700);
     } else {
-      currentRoom.players[currentRoom.currentPlayerIndex].position = newPos;
-      if (newPos === TOTAL_CELLS) {
-        currentRoom.winnerId = currentPlayer.id;
-        currentRoom.logs.push(`${currentPlayer.name} wins!`);
-      } else {
-        currentRoom.currentPlayerIndex = (currentRoom.currentPlayerIndex + 1) % currentRoom.players.length;
+      // Normal move without snake or ladder
+      const isWinner = newPos === TOTAL_CELLS;
+      const winnerId = isWinner ? currentPlayer.id : null;
+      const nextTurnIndex = isWinner ? activePlayerIndex : (activePlayerIndex + 1) % steppedPlayers.length;
+
+      const finalLogs = [...currentRoom.logs, logMsg];
+      if (isWinner) {
+        finalLogs.push(`🏆 ${currentPlayer.name} wins!`);
       }
+
+      const finalRoom: SNLRoomState = {
+        ...currentRoom,
+        players: steppedPlayers,
+        currentPlayerIndex: nextTurnIndex,
+        winnerId,
+        logs: finalLogs
+      };
+
+      setRoom(finalRoom);
+      currentChannel.send({ type: 'broadcast', event: 'sync_state', payload: finalRoom });
     }
-    
-    setRoom(currentRoom);
-    currentChannel.send({ type: 'broadcast', event: 'sync_state', payload: currentRoom });
   };
 
   const copyRoomId = () => {
