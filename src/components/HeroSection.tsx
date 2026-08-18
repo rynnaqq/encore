@@ -101,7 +101,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
           style={{ y: yPhone, opacity: opacityPhone }}
           className="w-full flex justify-center mb-8 sm:mb-12 relative gpu-smooth"
         >
-          <div className="relative w-full max-w-[560px] sm:max-w-[620px] aspect-[16/9]">
+          <div className="relative w-full max-w-[min(100%,560px)] sm:max-w-[620px] aspect-[16/9]">
             
             {/* Top Left Animated Smiley */}
             <motion.div
@@ -115,10 +115,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
                 ease: "easeInOut",
               }}
               whileHover={{ scale: 1.15, rotate: 0 }}
-              className="absolute -top-4 -left-4 sm:-top-6 sm:-left-6 z-30 cursor-pointer"
+              className="absolute -top-2.5 -left-1 sm:-top-6 sm:-left-6 z-30 cursor-pointer"
             >
-              <div className="bg-[#FFDD00] text-black w-10 h-10 sm:w-12 sm:h-12 rounded-[1rem] flex items-center justify-center border-[2.5px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-6 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6">
+              <div className="bg-[#FFDD00] text-black w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-[1rem] flex items-center justify-center border-[2px] sm:border-[2.5px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-6 transition-transform">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 sm:w-6 sm:h-6">
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
                   <line x1="9" y1="9" x2="9.01" y2="9"></line>
@@ -140,10 +140,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
                 delay: 1,
               }}
               whileHover={{ scale: 1.1, rotate: 0 }}
-              className="absolute -bottom-3 right-2 sm:-bottom-4 sm:right-4 z-30 cursor-pointer"
+              className="absolute -bottom-2 right-1 sm:-bottom-4 sm:right-4 z-30 cursor-pointer"
             >
-              <div className="bg-[#FF00E5] text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full border-[2.5px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3 flex items-center justify-center">
-                <span className="font-sans font-black text-[10px] sm:text-xs uppercase tracking-widest italic leading-none mt-0.5">Woah!</span>
+              <div className="bg-[#FF00E5] text-white px-3 py-1 sm:px-5 sm:py-2 rounded-full border-[2px] sm:border-[2.5px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3 flex items-center justify-center">
+                <span className="font-sans font-black text-[9px] sm:text-xs uppercase tracking-widest italic leading-none mt-0.5">Woah!</span>
               </div>
             </motion.div>
             
@@ -151,11 +151,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
             <motion.div
               whileHover={{ scale: 1.015, y: -4 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="relative w-full h-full rounded-2xl border shadow-2xl overflow-hidden flex items-center justify-center transition-shadow border-[#FFCCE1] shadow-pink-200/50 hover:shadow-pink-300/80"
+              className="relative w-full h-full rounded-2xl border shadow-2xl overflow-hidden flex items-center justify-center transition-shadow border-[#FFCCE1] dark:border-slate-800 shadow-pink-200/50 dark:shadow-none hover:shadow-pink-300/80 dark:hover:shadow-none bg-white dark:bg-slate-900"
             >
               
               {/* Speaker / Notch Accent */}
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFCCE1] rounded-full z-30 hidden sm:block" />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFCCE1] dark:bg-slate-700 rounded-full z-30 hidden sm:block" />
 
               {/* Inner Screen Display */}
               <div className="relative w-full h-full overflow-hidden group">
@@ -172,13 +172,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           style={{ y: yText, opacity: opacityText }}
-          className="w-full flex flex-col items-start space-y-5 max-w-2xl gpu-smooth"
+          className="w-full flex flex-col items-start space-y-4 sm:space-y-5 max-w-2xl gpu-smooth"
         >
           
           {/* Main Heading */}
           <div className="space-y-2">
-            <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight flex flex-col items-start gap-1">
-              <span className="text-slate-800">
+            <h1 className="font-sans text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight flex flex-col items-start gap-1">
+              <span className="text-slate-800 dark:text-slate-100">
                 Hello Everyone
               </span>
               <CyberDecoderText
@@ -186,7 +186,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
                 highlightText="Encore"
                 speed={35}
                 repeatInterval={10000}
-                className="text-slate-800"
+                className="text-slate-800 dark:text-slate-100"
               />
             </h1>
           </div>
@@ -196,7 +196,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
             text="I craft modern, delightful web experiences. As a frontend developer, I transform ideas into beautifully responsive and efficient interfaces that users love to engage with."
             speed={35}
             pauseDuration={4500}
-            className="font-sans text-base sm:text-lg max-w-xl text-left leading-relaxed text-slate-600"
+            className="font-sans text-sm sm:text-base lg:text-lg max-w-xl text-left leading-relaxed text-slate-600 dark:text-slate-300"
           />
 
           {/* View Profile Action Button */}
@@ -204,7 +204,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="pt-5 sm:pt-6 flex items-center gap-3 flex-wrap"
+            className="pt-4 sm:pt-6 flex items-center gap-3 w-full xs:w-auto"
           >
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -217,7 +217,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
                 }
               }}
               id="hero-view-profile-btn"
-              className="py-2.5 px-6 rounded-xl bg-[#E195AB] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all cursor-pointer shadow-md group/btn"
+              className="py-2.5 px-5 sm:px-6 w-full xs:w-auto rounded-xl bg-[#E195AB] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#d68097] dark:hover:bg-[#E195AB]/90 transition-all cursor-pointer shadow-md dark:shadow-none group/btn"
             >
               <User className="w-4 h-4 text-white" />
               <span>View Profile </span>

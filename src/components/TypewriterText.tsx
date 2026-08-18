@@ -65,7 +65,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
 
     return parts.map((part, i) =>
       part.isHighlight ? (
-        <span key={i} className="text-slate-800 font-semibold">
+        <span key={i} className="text-slate-900 dark:text-slate-100 font-bold">
           {part.text}
         </span>
       ) : (
@@ -75,7 +75,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
   };
 
   return (
-    <div className={`relative leading-relaxed text-slate-600 ${className}`}>
+    <div className={`relative leading-relaxed text-slate-600 dark:text-slate-300 ${className}`}>
       <p className="invisible select-none opacity-0 pointer-events-none" aria-hidden="true">
         {text}
         <span className="inline-block w-[2.5px] h-[1.2em] ml-1" />
@@ -83,7 +83,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
 
       <p className="absolute inset-0 top-0 left-0">
         {renderFormattedText(displayedText)}
-        <span className="inline-block w-[2.5px] h-[1.2em] ml-1 bg-[#E195AB] align-middle animate-cursor-blink" />
+        <span className="inline-block w-[2.5px] h-[1.2em] ml-1 bg-[#E195AB] dark:bg-[#FFCCE1] align-middle animate-cursor-blink" />
       </p>
     </div>
   );

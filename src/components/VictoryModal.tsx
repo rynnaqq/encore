@@ -72,14 +72,14 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="relative max-w-sm w-full bg-white border-2 border-[#FFCCE1] p-6 sm:p-8 rounded-[2rem] shadow-xl text-center overflow-hidden flex flex-col items-center z-10"
+          className="relative max-w-sm w-full bg-white dark:bg-slate-900 border-2 border-[#FFCCE1] dark:border-slate-800 p-6 sm:p-8 rounded-[2rem] shadow-xl text-center overflow-hidden flex flex-col items-center z-10"
         >
           {/* Trophy Visual Badge */}
           <div className="relative mb-5">
             <motion.div
               animate={{ y: [-2, 2, -2] }}
               transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-              className="w-20 h-20 sm:w-24 sm:h-24 bg-[#FFF5D7] rounded-2xl flex items-center justify-center shadow-sm border border-[#FFCCE1]"
+              className="w-20 h-20 sm:w-24 sm:h-24 bg-[#FFF5D7] dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm border border-[#FFCCE1] dark:border-slate-700"
             >
               <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-[#E195AB]" />
             </motion.div>
@@ -88,26 +88,26 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               initial={{ scale: 0, y: 8 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ delay: 0.15, type: 'spring' }}
-              className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 bg-white p-1 rounded-full shadow-sm border border-[#FFCCE1] text-[#E195AB]"
+              className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 bg-white dark:bg-slate-900 p-1 rounded-full shadow-sm border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB]"
             >
               <Crown className="w-4 h-4" />
             </motion.div>
           </div>
 
           {/* Game Tag */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF5D7] text-[#E195AB] font-bold text-xs uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-xs uppercase tracking-wider mb-2">
             <Medal className="w-3.5 h-3.5" />
             <span>{gameTitle}</span>
           </div>
 
           {/* Main Victory Title */}
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100 mb-2">
             KEMENANGAN!
           </h2>
 
           {/* Winner Name Box */}
-          <div className="w-full bg-[#F2F9FF] border border-blue-100 rounded-2xl p-4 my-2 flex flex-col items-center">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Pemenang Juara</span>
+          <div className="w-full bg-[#F2F9FF] dark:bg-slate-800/80 border border-blue-100 dark:border-slate-700 rounded-2xl p-4 my-2 flex flex-col items-center">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Pemenang Juara</span>
             <div 
               className="text-xl sm:text-2xl font-black tracking-wide flex items-center justify-center gap-2"
               style={{ color: winnerColor === '#f59e0b' ? '#E195AB' : winnerColor }}
@@ -118,13 +118,13 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
           {/* Subtitle / Details */}
           {subtitle && (
-            <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1 mb-5 max-w-xs leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1 mb-5 max-w-xs leading-relaxed">
               {subtitle}
             </p>
           )}
 
           {/* Action Buttons */}
-          <div className="w-full flex flex-col gap-2 mt-2 pt-4 border-t border-slate-100">
+          <div className="w-full flex flex-col gap-2 mt-2 pt-4 border-t border-slate-100 dark:border-slate-800">
             {isHost && onPlayAgain && (
               <button
                 onClick={onPlayAgain}
@@ -137,7 +137,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             {onLeave && (
               <button
                 onClick={onLeave}
-                className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-transparent dark:border-slate-700"
               >
                 <LogOut className="w-4 h-4" />
                 <span>{leaveText}</span>

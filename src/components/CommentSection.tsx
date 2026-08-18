@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { AdminBadge, isAdminName } from './AdminBadge';
+import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 
 interface Comment {
   id: string;
@@ -337,7 +337,7 @@ export const CommentSection: React.FC = () => {
     }, {} as Record<string, typeof commentsWithMeta>);
 
   return (
-    <section id="comments" className="py-20 relative bg-white border-t-2 border-slate-100">
+    <section id="comments" className="py-20 relative bg-white dark:bg-slate-900 border-t-2 border-slate-100 dark:border-slate-800">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -345,14 +345,14 @@ export const CommentSection: React.FC = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 font-bold text-sm mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/60 text-indigo-600 dark:text-indigo-400 font-bold text-sm mb-4">
             <Send className="w-4 h-4" />
             <span>Community</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tight mb-4">
             Leave a Comment
           </h2>
-          <p className="text-slate-500 font-medium max-w-2xl mx-auto">
+          <p className="text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto">
             Share your thoughts, suggestions, or just say hello!
           </p>
         </motion.div>
@@ -362,51 +362,51 @@ export const CommentSection: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100 mb-12 shadow-sm"
+          className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border-2 border-slate-100 dark:border-slate-800 mb-12 shadow-sm"
         >
           
           {!loggedInUser ? (
             
-            <form onSubmit={handleAuth} className="space-y-4 max-w-md mx-auto bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm">
+            <form onSubmit={handleAuth} className="space-y-4 max-w-md mx-auto bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">{isLoginMode ? 'Welcome Back' : 'Create Account'}</h3>
-                <p className="text-slate-500 text-sm">{isLoginMode ? 'Log in to continue commenting' : 'Sign up to start commenting'}</p>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">{isLoginMode ? 'Welcome Back' : 'Create Account'}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">{isLoginMode ? 'Log in to continue commenting' : 'Sign up to start commenting'}</p>
               </div>
 
               {authError && (
-                <div className="p-3 rounded-xl bg-rose-50 text-rose-600 text-sm font-bold text-center border border-rose-100">
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 text-sm font-bold text-center border border-rose-100 dark:border-rose-900/60">
                   {authError}
                 </div>
               )}
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">Username</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Username</label>
                   <input
                     type="text"
                     placeholder="Your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none transition-colors"
                     maxLength={30}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">Password</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Password</label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 pr-12 py-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors"
+                      className="w-full px-4 pr-12 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none transition-colors"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -438,7 +438,7 @@ export const CommentSection: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" id="comment-form-section">
               {replyingToId && (
-                <div className="flex items-center justify-between bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium border border-indigo-100">
+                <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 px-4 py-2 rounded-xl text-sm font-medium border border-indigo-100 dark:border-indigo-900/60">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
                     <span>Replying to {replyingToUser ? <span className="font-bold">@{replyingToUser}</span> : 'comment'}</span>
@@ -446,7 +446,7 @@ export const CommentSection: React.FC = () => {
                   <button 
                     type="button" 
                     onClick={() => { setReplyingToId(null); setReplyingToUser(null); }}
-                    className="p-1 hover:bg-indigo-100 rounded-full transition-colors"
+                    className="p-1 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-full transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -454,8 +454,8 @@ export const CommentSection: React.FC = () => {
               )}
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 font-medium">Commenting as:</span>
-                  <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Commenting as:</span>
+                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 rounded-full border border-transparent dark:border-indigo-900/50">
                     {loggedInUser}
                   </span>
                 </div>
@@ -474,7 +474,7 @@ export const CommentSection: React.FC = () => {
                   placeholder="Write your comment..."
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-2 border-slate-200 focus:border-indigo-500 outline-none transition-colors resize-y min-h-[120px]"
+                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none transition-colors resize-y min-h-[120px]"
                   maxLength={500}
                 />
                 <div className="text-right mt-1">
@@ -495,21 +495,21 @@ export const CommentSection: React.FC = () => {
                   />
                   <label
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer text-sm"
                   >
                     <Upload className="w-4 h-4" />
                     <span>Attach Photo</span>
                   </label>
                   {photoBase64 && (
                     <div className="mt-3 relative inline-block">
-                      <img src={photoBase64} alt="Preview" className="h-16 rounded-lg border border-slate-200 object-cover shadow-sm" />
+                      <img src={photoBase64} alt="Preview" className="h-16 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm" />
                       <button
                         type="button"
                         onClick={() => {
                           setPhotoBase64(null);
                           if (fileInputRef.current) fileInputRef.current.value = '';
                         }}
-                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-slate-200 text-rose-500 flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-rose-500 flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -562,32 +562,34 @@ export const CommentSection: React.FC = () => {
                   transition={{ delay: index * 0.05 }}
                   className="flex flex-col gap-3"
                 >
-                  <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex gap-4 group">
+                  <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex gap-3 sm:gap-4 group">
                     {isAdminName(comment.username) ? (
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 overflow-hidden border-2 border-indigo-200">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-950/70 flex items-center justify-center shrink-0 overflow-hidden border-2 border-indigo-200 dark:border-indigo-800/60">
                         <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 font-black flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-black text-sm sm:text-base flex items-center justify-center shrink-0 border border-transparent dark:border-indigo-800/40">
                         {comment.username.charAt(0).toUpperCase()}
                       </div>
                     )}
                     
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className={isAdminName(comment.username) ? "font-bold text-red-600" : "font-bold text-slate-800"}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <h4 className={`text-xs sm:text-sm ${isDeveloperName(comment.username) ? "font-bold text-emerald-600" : isAdminName(comment.username) ? "font-bold text-red-600" : "font-bold text-slate-800 dark:text-slate-100"}`}>
                             {comment.username}
                           </h4>
-                          <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${
-                            isAdminName(comment.username) 
-                              ? "bg-red-100 text-red-600" 
-                              : "bg-slate-100 text-slate-500"
-                          }`}>
-                            {isAdminName(comment.username) ? 'Admin' : 'Guest'}
-                          </span>
+                          {isDeveloperName(comment.username) ? (
+                            <DeveloperBadge />
+                          ) : isAdminName(comment.username) ? (
+                            <AdminBadge />
+                          ) : (
+                            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                              Guest
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs text-slate-400 font-medium">
+                        <span className="text-[10px] sm:text-xs text-slate-400 font-medium shrink-0">
                           {new Date(comment.timestamp).toLocaleDateString()}
                         </span>
                       </div>
@@ -597,7 +599,7 @@ export const CommentSection: React.FC = () => {
                           <textarea
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-400 outline-none text-sm text-slate-700"
+                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-indigo-400 outline-none text-sm text-slate-700 dark:text-slate-300"
                             rows={2}
                           />
                           <div className="flex gap-2">
@@ -609,7 +611,7 @@ export const CommentSection: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors"
+                              className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                             >
                               Cancel
                             </button>
@@ -622,7 +624,7 @@ export const CommentSection: React.FC = () => {
                             <Pin className="w-3 h-3" /> Pinned by Admin
                           </div>
                         )}
-                        <p className="text-slate-600 text-sm whitespace-pre-wrap">
+                        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm whitespace-pre-wrap break-words">
                           {comment.parsedText}
                         </p>
                         </>
@@ -633,12 +635,12 @@ export const CommentSection: React.FC = () => {
                           <img 
                              src={comment.photoBase64} 
                              alt="Attached" 
-                             className="max-h-48 rounded-xl border border-slate-200 object-cover shadow-sm"
+                             className="max-h-40 sm:max-h-48 max-w-full rounded-xl border border-slate-200 dark:border-slate-700 object-cover shadow-sm"
                           />
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-4 mt-4 transition-opacity">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-3 sm:mt-4 transition-opacity">
                         {loggedInUser && (
                           <button 
                             onClick={() => {
@@ -647,7 +649,7 @@ export const CommentSection: React.FC = () => {
                               document.getElementById('comment-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                               setText('');
                             }}
-                            className="text-xs font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                            className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Reply className="w-3 h-3" /> Reply
                           </button>
@@ -657,20 +659,20 @@ export const CommentSection: React.FC = () => {
                             {isAdmin && (
                               <button 
                                 onClick={() => handlePin(comment.id)}
-                                className="text-xs font-bold text-slate-400 hover:text-amber-500 flex items-center gap-1 transition-colors"
+                                className="text-xs font-bold text-slate-400 hover:text-amber-500 flex items-center gap-1 transition-colors cursor-pointer"
                               >
                                 {comment.isPinned ? <><PinOff className="w-3 h-3" /> Unpin</> : <><Pin className="w-3 h-3" /> Pin</>}
                               </button>
                             )}
                             <button 
                               onClick={() => startEditing(comment)}
-                              className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors"
+                              className="text-xs font-bold text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition-colors cursor-pointer"
                             >
                               <Edit2 className="w-3 h-3" /> Edit
                             </button>
                             <button 
                               onClick={() => handleDelete(comment.id)}
-                              className="text-xs font-bold text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors"
+                              className="text-xs font-bold text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-3 h-3" /> Delete
                             </button>
@@ -682,10 +684,10 @@ export const CommentSection: React.FC = () => {
 
                   {/* View Replies Toggle */}
                   {threadReplies.length > 0 && (
-                    <div className="ml-8 pl-4 mt-1">
+                    <div className="ml-4 sm:ml-8 pl-3 sm:pl-4 mt-1">
                       <button 
                         onClick={() => toggleReplies(comment.id)}
-                        className="text-indigo-600 font-bold text-xs flex items-center gap-1 hover:text-indigo-700 transition-colors"
+                        className="text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center gap-1 hover:text-indigo-700 transition-colors cursor-pointer"
                       >
                         {expandedReplies[comment.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         {expandedReplies[comment.id] ? 'Hide Replies' : `View ${threadReplies.length} ${threadReplies.length === 1 ? 'Reply' : 'Replies'}`}
@@ -695,34 +697,36 @@ export const CommentSection: React.FC = () => {
 
                   {/* Replies List */}
                   {threadReplies.length > 0 && expandedReplies[comment.id] && (
-                    <div className="ml-8 pl-4 border-l-2 border-slate-100 space-y-3 mt-3">
+                    <div className="ml-3 sm:ml-8 pl-2.5 sm:pl-4 border-l-2 border-slate-200 dark:border-slate-800 space-y-3 mt-2 sm:mt-3">
                       {threadReplies.map(reply => (
-                        <div key={reply.id} className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex gap-3">
+                        <div key={reply.id} className="bg-slate-50 dark:bg-slate-800/50 p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex gap-2.5 sm:gap-3">
                           {isAdminName(reply.username) ? (
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 overflow-hidden border border-indigo-200">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/70 flex items-center justify-center shrink-0 overflow-hidden border border-indigo-200 dark:border-indigo-800/60">
                               <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
                             </div>
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-black text-sm flex items-center justify-center shrink-0">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-black text-xs sm:text-sm flex items-center justify-center shrink-0 border border-transparent dark:border-indigo-800/40">
                               {reply.username.charAt(0).toUpperCase()}
                             </div>
                           )}
                           
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className={isAdminName(reply.username) ? "font-bold text-sm text-red-600" : "font-bold text-sm text-slate-800"}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                <h4 className={`text-xs sm:text-sm ${isDeveloperName(reply.username) ? "font-bold text-emerald-600" : isAdminName(reply.username) ? "font-bold text-red-600" : "font-bold text-slate-800 dark:text-slate-100"}`}>
                                   {reply.username}
                                 </h4>
-                                <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full ${
-                                  isAdminName(reply.username) 
-                                    ? "bg-red-100 text-red-600" 
-                                    : "bg-slate-200 text-slate-500"
-                                }`}>
-                                  {isAdminName(reply.username) ? 'Admin' : 'Guest'}
-                                </span>
+                                {isDeveloperName(reply.username) ? (
+                                  <DeveloperBadge />
+                                ) : isAdminName(reply.username) ? (
+                                  <AdminBadge />
+                                ) : (
+                                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                                    Guest
+                                  </span>
+                                )}
                               </div>
-                              <span className="text-[10px] text-slate-400 font-medium">
+                              <span className="text-[10px] text-slate-400 font-medium shrink-0">
                                 {new Date(reply.timestamp).toLocaleDateString()}
                               </span>
                             </div>
@@ -732,7 +736,7 @@ export const CommentSection: React.FC = () => {
                                 <textarea
                                   value={editText}
                                   onChange={(e) => setEditText(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 focus:border-indigo-400 outline-none text-sm text-slate-700"
+                                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-indigo-400 outline-none text-sm text-slate-700 dark:text-slate-300"
                                   rows={2}
                                 />
                                 <div className="flex gap-2">
@@ -744,14 +748,14 @@ export const CommentSection: React.FC = () => {
                                   </button>
                                   <button
                                     onClick={() => setEditingId(null)}
-                                    className="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-300 transition-colors"
+                                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                                   >
                                     Cancel
                                   </button>
                                 </div>
                               </div>
                             ) : (
-                              <p className="text-slate-600 text-sm whitespace-pre-wrap">
+                              <p className="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-wrap">
                                 {reply.replyToUsername && <span className="text-indigo-600 font-bold mr-1">@{reply.replyToUsername}</span>}
                                 {reply.parsedText}
                               </p>
@@ -762,7 +766,7 @@ export const CommentSection: React.FC = () => {
                                 <img 
                                    src={reply.photoBase64} 
                                    alt="Attached" 
-                                   className="max-h-32 rounded-lg border border-slate-200 object-cover shadow-sm"
+                                   className="max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm"
                                 />
                               </div>
                             )}
@@ -776,7 +780,7 @@ export const CommentSection: React.FC = () => {
                                     document.getElementById('comment-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                     setText('');
                                   }}
-                                  className="text-xs font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                                  className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
                                 >
                                   <Reply className="w-3 h-3" /> Reply
                                 </button>

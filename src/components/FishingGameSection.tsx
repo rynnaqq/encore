@@ -4,6 +4,7 @@ import { Fish, AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FishGraphic } from './FishGraphic';
+import { playFishingSound, unlockAudio, FishingSoundType } from '../lib/fishingAudio';
 
 type GameState = 'idle' | 'preparing' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'caught' | 'escaped';
 type TimeOfDay = 'pagi' | 'senja' | 'malam';
@@ -91,8 +92,9 @@ const FishingJournal: React.FC<{
   score: number;
   caughtCount: number;
   discoveredSpecies: string[];
+  soundEnabled?: boolean;
   onClose: () => void;
-}> = ({ score, caughtCount, discoveredSpecies, onClose }) => {
+}> = ({ score, caughtCount, discoveredSpecies, soundEnabled = true, onClose }) => {
   const [spread, setSpread] = useState(0);
   const [flippingState, setFlippingState] = useState<{isFlipping: boolean, dir: number, prevSpread: number, nextSpread: number} | null>(null);
 
@@ -195,11 +197,13 @@ const FishingJournal: React.FC<{
 
   const handleNext = () => {
     if (flippingState || spread >= totalSpreads - 1) return;
+    playFishingSound('page', soundEnabled);
     setFlippingState({ isFlipping: true, dir: 1, prevSpread: spread, nextSpread: spread + 1 });
   };
 
   const handlePrev = () => {
     if (flippingState || spread <= 0) return;
+    playFishingSound('page', soundEnabled);
     setFlippingState({ isFlipping: true, dir: -1, prevSpread: spread, nextSpread: spread - 1 });
   };
 
@@ -248,7 +252,10 @@ const FishingJournal: React.FC<{
         <div className="absolute -top-1 right-[20%] w-6 sm:w-8 h-24 sm:h-32 bg-red-700 border-x-2 border-b-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] z-10 origin-top" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
 
         <button
-          onClick={onClose}
+          onClick={() => {
+            playFishingSound('click', soundEnabled);
+            onClose();
+          }}
           className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-[350] transition-transform active:scale-95"
         >
           <X className="w-5 h-5" />
@@ -487,86 +494,8 @@ export const FishingGameSection: React.FC = () => {
   }, [canvasHeight]);
 
   // Audio synthesis for retro sound effects
-  const playSound = (type: 'cast' | 'splash' | 'bite' | 'tap' | 'caught' | 'escape' | 'reeling' | 'release') => {
-    if (!soundEnabled) return;
-    try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      const now = ctx.currentTime;
-      if (type === 'cast') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(200, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now);
-        osc.stop(now + 0.15);
-      } else if (type === 'splash') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now);
-        osc.stop(now + 0.2);
-      } else if (type === 'bite') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.setValueAtTime(1200, now + 0.08);
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-        osc.start(now);
-        osc.stop(now + 0.25);
-      } else if (type === 'tap') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(500, now + 0.05);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
-      } else if (type === 'caught') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.setValueAtTime(450, now + 0.1);
-        osc.frequency.setValueAtTime(600, now + 0.2);
-        osc.frequency.setValueAtTime(800, now + 0.3);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.45);
-        osc.start(now);
-        osc.stop(now + 0.45);
-      } else if (type === 'escape') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(350, now);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.3);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-        osc.start(now);
-        osc.stop(now + 0.3);
-      } else if (type === 'reeling') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.linearRampToValueAtTime(420, now + 0.05);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
-      } else if (type === 'release') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(200, now + 0.4);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
-      }
-    } catch {
-      // Audio fallback silent
-    }
+  const playSound = (type: FishingSoundType) => {
+    playFishingSound(type, soundEnabled);
   };
 
   // Cleanups
@@ -650,6 +579,7 @@ export const FishingGameSection: React.FC = () => {
         triggerSplash(targetX, waterSurfaceY);
 
         if (perfect) {
+          playSound('perfect');
           triggerFloatingText('PERFECT CAST! ⭐', targetX, waterSurfaceY - 40, '#facc15');
         }
 
@@ -685,6 +615,7 @@ export const FishingGameSection: React.FC = () => {
   };
 
   const handlePointerDown = () => {
+    unlockAudio();
     if (gameState === 'idle') {
       startPreparing();
     } else if (gameState === 'waiting') {
@@ -862,7 +793,10 @@ export const FishingGameSection: React.FC = () => {
         {/* Top Row: Back Button & Controls */}
         <div className="flex justify-between items-start gap-2">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              playSound('click');
+              navigate('/');
+            }}
             className="pointer-events-auto bg-amber-100 text-slate-900 border-[4px] border-black px-3 py-1.5 sm:px-4 sm:py-2 hover:bg-amber-200 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -874,21 +808,30 @@ export const FishingGameSection: React.FC = () => {
             {/* Time Selector */}
             <div className="bg-amber-100 border-[4px] border-black p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
               <button
-                onClick={() => setTimeOfDay('pagi')}
+                onClick={() => {
+                  playSound('click');
+                  setTimeOfDay('pagi');
+                }}
                 className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
                 title="Pagi (Day)"
               >
                 <Sun className="w-3.5 h-3.5 text-amber-700" />
               </button>
               <button
-                onClick={() => setTimeOfDay('senja')}
+                onClick={() => {
+                  playSound('click');
+                  setTimeOfDay('senja');
+                }}
                 className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
                 title="Senja (Sunset)"
               >
                 <Flame className="w-3.5 h-3.5 text-orange-800" />
               </button>
               <button
-                onClick={() => setTimeOfDay('malam')}
+                onClick={() => {
+                  playSound('click');
+                  setTimeOfDay('malam');
+                }}
                 className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
                 title="Malam (Night)"
               >
@@ -897,7 +840,10 @@ export const FishingGameSection: React.FC = () => {
             </div>
 
             <button
-              onClick={toggleFullscreen}
+              onClick={() => {
+                playSound('click');
+                toggleFullscreen();
+              }}
               className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
               title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             >
@@ -905,7 +851,10 @@ export const FishingGameSection: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setIsJournalOpen(true)}
+              onClick={() => {
+                playSound('page');
+                setIsJournalOpen(true);
+              }}
               className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
               title="Fishing Journal"
             >
@@ -913,7 +862,12 @@ export const FishingGameSection: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => {
+                if (!soundEnabled) {
+                  playFishingSound('click', true);
+                }
+                setSoundEnabled(!soundEnabled);
+              }}
               className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
             >
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />}
@@ -1387,6 +1341,7 @@ export const FishingGameSection: React.FC = () => {
               score={score}
               caughtCount={caughtCount}
               discoveredSpecies={discoveredSpecies}
+              soundEnabled={soundEnabled}
               onClose={() => setIsJournalOpen(false)}
             />
           )}
@@ -1399,6 +1354,11 @@ export const FishingGameSection: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/75 z-40 p-4"
+              onClick={() => {
+                unlockAudio();
+                playSound('click');
+                startPreparing();
+              }}
             >
               <div className="bg-amber-100 border-[6px] border-black p-6 sm:p-8 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center max-w-[520px] w-full relative mt-6">
                 <div className="bg-blue-600 text-white border-[4px] border-black py-2.5 px-6 -mt-10 mx-auto inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
@@ -1493,6 +1453,7 @@ export const FishingGameSection: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        playSound('click');
                         setGameState('idle');
                       }}
                       className="flex-1 py-3.5 bg-amber-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-amber-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
@@ -1544,6 +1505,7 @@ export const FishingGameSection: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    playSound('click');
                     setGameState('idle');
                   }}
                   className="w-full py-3.5 bg-white text-slate-900 border-[4px] border-black font-black text-xs hover:bg-slate-200 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"

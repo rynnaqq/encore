@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '../context/AuthContext';
-import { AdminBadge, isAdminName } from './AdminBadge';
+import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
 
 const BOARD_SIZE = 10;
@@ -493,43 +493,43 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl relative"
+      className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl relative"
     >
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-[#FFF5D7] rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-[#FFCCE1]">
-          <UsersRound className="w-8 h-8 text-[#E195AB]" />
+        <div className="w-16 h-16 bg-[#FFF5D7] dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-[#FFCCE1] dark:border-slate-700">
+          <UsersRound className="w-8 h-8 text-[#E195AB] dark:text-[#FFCCE1]" />
         </div>
-        <h3 className="text-2xl font-black text-slate-800">Multiplayer Setup</h3>
-        <p className="text-slate-500 font-medium mt-2">Play online with friends!</p>
+        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Multiplayer Setup</h3>
+        <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Play online with friends!</p>
       </div>
       
       {errorMsg && (
-        <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-sm font-semibold text-center">
+        <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-sm font-semibold text-center">
           {errorMsg}
         </div>
       )}
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">Your Name (Terkunci)</label>
+          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Your Name (Terkunci)</label>
           <input
             type="text"
             value={playerName}
             disabled
             readOnly
-            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 font-bold text-slate-500 cursor-not-allowed outline-none"
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none"
           />
           <p className="text-xs text-slate-400 mt-1">Username disamakan dengan akun login Anda.</p>
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">Your Color</label>
+          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Your Color</label>
           <div className="flex gap-2">
             {availableColors.map(c => (
               <button
                 key={c}
                 onClick={() => setPlayerColor(c)}
-                className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center ${playerColor === c ? 'scale-110 shadow-md ring-2 ring-offset-2' : 'hover:scale-105'}`}
+                className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center cursor-pointer ${playerColor === c ? 'scale-110 shadow-md ring-2 ring-offset-2 dark:ring-offset-slate-900' : 'hover:scale-105'}`}
                 style={{ backgroundColor: c, ringColor: c }}
               >
                 {playerColor === c && <Check className="w-5 h-5 text-white" />}
@@ -541,13 +541,13 @@ export const SnakeAndLaddersSection: React.FC = () => {
         <div className="pt-4 grid grid-cols-2 gap-4">
           <button
             onClick={handleCreateRoom}
-            className="px-4 py-3 rounded-xl bg-[#E195AB] text-white font-bold hover:bg-[#d88299] transition-colors flex items-center justify-center gap-2"
+            className="px-4 py-3 rounded-xl bg-[#E195AB] text-white font-bold hover:bg-[#d88299] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
           >
             <Plus className="w-5 h-5" /> Create Room
           </button>
           <button
             onClick={() => setSetupMode('join')}
-            className="px-4 py-3 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+            className="px-4 py-3 rounded-xl bg-slate-800 dark:bg-slate-700 text-white font-bold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
           >
             <Send className="w-5 h-5" /> Join Room
           </button>
@@ -560,26 +560,26 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl"
+      className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl"
     >
       <div className="flex items-center gap-4 mb-8">
-        <h3 className="text-2xl font-black text-slate-800">Room Lobby</h3>
+        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Room Lobby</h3>
       </div>
 
       {!room ? (
         <div className="text-center py-8 space-y-4">
-          <div className="w-10 h-10 border-4 border-slate-200 border-t-[#E195AB] rounded-full animate-spin mx-auto" />
+          <div className="w-10 h-10 border-4 border-slate-200 dark:border-slate-700 border-t-[#E195AB] rounded-full animate-spin mx-auto" />
           <p className="text-slate-500 font-bold">Connecting to server...</p>
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 text-center">
+          <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 text-center">
             <p className="text-sm font-bold text-slate-500 mb-1">Room Code</p>
             <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl font-black tracking-wider text-slate-800">{room.roomId}</span>
+              <span className="text-3xl font-black tracking-wider text-slate-800 dark:text-slate-100">{room.roomId}</span>
               <button
                 onClick={copyRoomId}
-                className="p-2 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors"
+                className="p-2 rounded-lg hover:bg-slate-200 text-slate-600 dark:text-slate-400 transition-colors"
                 title="Copy Room Code"
               >
                 {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
@@ -591,22 +591,22 @@ export const SnakeAndLaddersSection: React.FC = () => {
             <h4 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">Players ({room.players.length}/4)</h4>
             <div className="space-y-2">
               {room.players.map((p, idx) => (
-                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-white border-2 border-slate-100">
+                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: p.color }}>
                     <User className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                       <span>{p.name} {p.id === myId && '(You)'}</span>
-                      {isAdminName(p.name) && <AdminBadge />}
+                      {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
                     </div>
-                    {p.id === room.hostId && <div className="text-xs font-bold text-[#E195AB]">Host</div>}
+                    {p.id === room.hostId && <div className="text-xs font-bold text-[#E195AB] dark:text-[#FFCCE1]">Host</div>}
                   </div>
                 </div>
               ))}
               {room.players.length < 4 && (
-                <div className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-400">
-                  <div className="w-10 h-10 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center">
+                <div className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400">
+                  <div className="w-10 h-10 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center">
                     <Plus className="w-5 h-5" />
                   </div>
                   <div className="font-medium">Waiting for players...</div>
@@ -620,23 +620,23 @@ export const SnakeAndLaddersSection: React.FC = () => {
               <button
                 onClick={handleStartGame}
                 disabled={room.players.length < 2}
-                className="w-full py-4 rounded-xl bg-[#E195AB] text-white font-black text-lg hover:bg-[#d88299] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-4 rounded-xl bg-[#E195AB] text-white font-black text-lg hover:bg-[#d88299] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
               >
                 {room.players.length < 2 ? 'Need more players' : 'Start Game'}
               </button>
               <button
                 onClick={handleLeaveRoom}
-                className="w-full py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all"
+                className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-transparent dark:border-slate-700"
               >
                 Leave Room
               </button>
             </div>
           ) : (
             <div className="pt-4 text-center">
-              <p className="text-slate-500 font-medium mb-4 animate-pulse">Waiting for host to start...</p>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mb-4 animate-pulse">Waiting for host to start...</p>
               <button
                 onClick={handleLeaveRoom}
-                className="w-full py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all"
+                className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-transparent dark:border-slate-700"
               >
                 Leave Room
               </button>
@@ -651,23 +651,23 @@ export const SnakeAndLaddersSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-md mx-auto bg-white rounded-3xl p-8 border-2 border-[#FFCCE1] shadow-xl"
+      className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl"
     >
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setSetupMode('menu')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+        <button onClick={() => setSetupMode('menu')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h3 className="text-2xl font-black text-slate-800">Join Room</h3>
+        <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Join Room</h3>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">Room Code</label>
+          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Room Code</label>
           <input
             type="text"
             value={joinRoomId}
             onChange={e => setJoinRoomId(e.target.value.toUpperCase())}
-            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 outline-none transition-all font-bold text-slate-800 uppercase tracking-widest text-center text-xl"
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 outline-none transition-all font-bold text-slate-800 dark:text-slate-100 uppercase tracking-widest text-center text-xl bg-white dark:bg-slate-800"
             placeholder="XXXXXX"
             maxLength={6}
           />
@@ -676,7 +676,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
         <button
           onClick={handleJoinRoom}
           disabled={joinRoomId.length < 4}
-          className="w-full py-4 rounded-xl bg-slate-800 text-white font-bold text-lg hover:bg-slate-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-xl bg-slate-800 dark:bg-slate-700 text-white font-bold text-lg hover:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
         >
           Join Game <ArrowRight className="w-5 h-5" />
         </button>
@@ -694,17 +694,17 @@ export const SnakeAndLaddersSection: React.FC = () => {
   const isMyTurn = currentPlayer?.id === myId;
 
   return (
-    <section className="pt-28 sm:pt-32 pb-12 sm:pb-16 min-h-screen flex flex-col justify-center relative overflow-hidden bg-slate-50">
+    <section className="pt-28 sm:pt-32 pb-12 sm:pb-16 min-h-screen flex flex-col justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF5D7] border border-[#FFCCE1] text-[#E195AB] font-bold text-sm mb-4">
+          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-sm mb-4 shadow-sm">
             <Trophy className="w-4 h-4" /> Online Multiplayer
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Snakes & <span className="text-[#E195AB]">Ladders</span>
           </h2>
         </motion.div>
@@ -712,12 +712,12 @@ export const SnakeAndLaddersSection: React.FC = () => {
         {!room?.isStarted ? (
           setupMode === 'menu' ? renderLobbyMenu() : setupMode === 'create' ? renderCreateRoom() : renderJoinRoom()
         ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8 items-start max-w-6xl mx-auto">
           {/* Game Board */}
-          <div className="xl:col-span-2 bg-white p-4 sm:p-8 rounded-[2.5rem] shadow-2xl border-4 border-[#FFCCE1] relative">
+          <div className="xl:col-span-2 bg-white dark:bg-slate-900 p-2.5 sm:p-6 lg:p-8 rounded-3xl sm:rounded-[2.5rem] shadow-2xl border-2 sm:border-4 border-[#FFCCE1] dark:border-slate-800 relative">
             <div 
               ref={boardRef}
-              className="aspect-square relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-[#FFF5D7] bg-[length:100%_100%] bg-no-repeat"
+              className="aspect-square relative rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-4 border-slate-800 bg-[#FFF5D7] bg-[length:100%_100%] bg-no-repeat"
               style={{ backgroundImage: "url('/board.jpg')" }}
             >
               <div className="absolute inset-0 grid grid-cols-10 grid-rows-10">
@@ -735,17 +735,15 @@ export const SnakeAndLaddersSection: React.FC = () => {
                 })}
               </div>
 
-              
-
               {/* Render Players */}
               {room.players.map((p, idx) => {
                 const pos = getCellPercent(p.position);
-                const offset = (idx * 4) - ((room.players.length * 4) / 2);
+                const offset = (idx * 3) - ((room.players.length * 3) / 2);
                 
                 return (
                   <motion.div
                     key={p.id}
-                    className="absolute w-8 h-8 sm:w-10 sm:h-10 -ml-4 -mt-4 sm:-ml-5 sm:-mt-5 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white z-20"
+                    className="absolute w-6 h-6 sm:w-8 md:w-10 sm:h-8 md:h-10 -ml-3 -mt-3 sm:-ml-4 sm:-mt-4 md:-ml-5 md:-mt-5 rounded-full flex items-center justify-center text-white shadow-lg border-1.5 sm:border-2 border-white z-20"
                     style={{ backgroundColor: p.color }}
                     animate={{ 
                       left: `${pos.x}%`, 
@@ -759,7 +757,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
                       type: "spring"
                     }}
                   >
-                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <User className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                   </motion.div>
                 );
               })}
@@ -767,28 +765,28 @@ export const SnakeAndLaddersSection: React.FC = () => {
           </div>
 
           {/* Controls & Log */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#FFCCE1] shadow-xl relative overflow-hidden">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 mx-auto rounded-3xl bg-[#FFF5D7] flex items-center justify-center mb-6 shadow-inner border-2 border-[#FFCCE1] relative">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 lg:p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl relative overflow-hidden">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl sm:rounded-3xl bg-[#FFF5D7] dark:bg-slate-800 flex items-center justify-center mb-4 sm:mb-6 shadow-inner border-2 border-[#FFCCE1] dark:border-slate-700 relative">
                   {diceValue ? (
                     <motion.div
                       key={diceValue}
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
-                      className="text-4xl font-black text-[#E195AB]"
+                      className="text-3xl sm:text-4xl font-black text-[#E195AB] dark:text-[#FFCCE1]"
                     >
                       {diceValue}
                     </motion.div>
                   ) : (
-                    <Dices className={`w-10 h-10 text-[#E195AB] ${isRolling ? 'animate-spin' : ''}`} />
+                    <Dices className={`w-8 h-8 sm:w-10 sm:h-10 text-[#E195AB] dark:text-[#FFCCE1] ${isRolling ? 'animate-spin' : ''}`} />
                   )}
                 </div>
                 
                 <button
                   onClick={handleRoll}
                   disabled={isRolling || winner !== null || !isMyTurn}
-                  className="w-full py-4 rounded-xl bg-[#E195AB] text-white font-extrabold text-lg hover:bg-[#d88299] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 transition-all shadow-md relative overflow-hidden group"
+                  className="w-full py-3.5 sm:py-4 rounded-xl bg-[#E195AB] text-white font-extrabold text-base sm:text-lg hover:bg-[#d88299] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 transition-all shadow-md relative overflow-hidden group cursor-pointer"
                 >
                   <span className="relative z-10">
                     {isRolling ? 'Rolling...' : isMyTurn ? 'Roll Dice!' : `Waiting for ${currentPlayer?.name}...`}
@@ -796,30 +794,30 @@ export const SnakeAndLaddersSection: React.FC = () => {
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Players ({room.players.length})</h4>
-                  <div className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Room: {room.roomId}</div>
+                  <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Players ({room.players.length})</h4>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-transparent dark:border-slate-700">Room: {room.roomId}</div>
                 </div>
                 {room.players.map((p, idx) => (
                   <div 
                     key={p.id}
-                    className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                    className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border-2 transition-all ${
                       idx === room.currentPlayerIndex 
-                        ? 'border-[#E195AB] bg-[#FFF5D7]' 
-                        : 'border-slate-100 bg-white'
+                        ? 'border-[#E195AB] bg-[#FFF5D7] dark:bg-slate-800' 
+                        : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: p.color }}>
-                        <User className="w-4 h-4" />
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-white shrink-0" style={{ backgroundColor: p.color }}>
+                        <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </div>
-                      <div className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
-                        <span>{p.name} {p.id === myId && '(You)'}</span>
-                        {isAdminName(p.name) && <AdminBadge />}
+                      <div className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                        <span className="truncate">{p.name} {p.id === myId && '(You)'}</span>
+                        {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
                       </div>
                     </div>
-                    <div className="text-xs font-mono font-bold text-slate-500">
+                    <div className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 shrink-0 ml-2">
                       Cell {p.position}
                     </div>
                   </div>
@@ -829,7 +827,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
             
             <button
                 onClick={handleLeaveRoom}
-                className="w-full py-3 rounded-xl bg-white text-slate-600 font-bold hover:bg-slate-50 border-2 border-slate-200 transition-all shadow-sm flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 Leave Game
             </button>

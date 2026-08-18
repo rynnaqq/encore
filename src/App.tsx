@@ -1,3 +1,4 @@
+import { ThemeProvider } from "./context/ThemeContext";
 import { FloatingBackground } from './components/FloatingBackground';
 import React, { useState, useEffect, useCallback } from 'react';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -72,22 +73,22 @@ function ProtectedAdminRoute({ children, targetPath }: { children: React.ReactNo
 }
 
 const pageVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.99 },
+  initial: { opacity: 0, x: -20, filter: 'blur(8px)' },
   animate: {
     opacity: 1,
-    y: 0,
-    scale: 1,
+    x: 0,
+    filter: 'blur(0px)',
     transition: {
-      duration: 0.45,
+      duration: 0.6,
       ease: [0.22, 1, 0.36, 1],
     },
   },
   exit: {
     opacity: 0,
-    y: -16,
-    scale: 0.99,
+    x: 20,
+    filter: 'blur(8px)',
     transition: {
-      duration: 0.3,
+      duration: 0.4,
       ease: [0.22, 1, 0.36, 1],
     },
   },
@@ -204,16 +205,17 @@ function AnimatedRoutes({
   );
 }
 
-function MainLayout() {
+function MainLayout({ isLoading }: { isLoading: boolean }) {
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
   
   useEffect(() => {
-    // Open changelog every time the website is loaded
+    if (isLoading) return;
+    // Open changelog 1.5s after the website finishes loading
     const t = setTimeout(() => setIsChangelogModalOpen(true), 1500);
     return () => clearTimeout(t);
-  }, []);
+  }, [isLoading]);
 
   const handleCloseChangelog = () => {
     setIsChangelogModalOpen(false);
@@ -263,7 +265,12 @@ function MainLayout() {
   const isFullscreenGame = location.pathname === '/fishing';
 
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isLoading ? 0.01 : 1 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className={`min-h-screen ${isLoading ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''}`}
+    >
       <ScrollToTop />
       {!isFullscreenGame && (
         <Navbar
@@ -287,9 +294,10 @@ function MainLayout() {
         onClose={handleCloseChangelog}
       />
       {!isFullscreenGame && <Footer />}
-    </>
+    </motion.div>
   );
 }
+
 
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -300,18 +308,23 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] text-zinc-800`}>
-          <FloatingBackground />
-          
-          {/* Fullscreen Cybernetic Loading Screen */}
-          {isLoading && (
-            <LoadingScreen onFinishLoading={handleFinishLoading} />
-          )}
-          
-          {!isLoading && <MainLayout />}
-        </div>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <div className={`min-h-screen relative font-sans transition-colors duration-300 selection:bg-[#FFCCE1] selection:text-zinc-800 bg-[#F2F9FF] dark:bg-slate-950 text-zinc-800 dark:text-slate-100`}>
+            <FloatingBackground />
+            
+            {/* Pre-rendered Main Layout in Background */}
+            <MainLayout isLoading={isLoading} />
+
+            {/* Fullscreen Cybernetic Loading Screen Preloader Overlay */}
+            <AnimatePresence>
+              {isLoading && (
+                <LoadingScreen onFinishLoading={handleFinishLoading} />
+              )}
+            </AnimatePresence>
+          </div>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

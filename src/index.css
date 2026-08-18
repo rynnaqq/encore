@@ -2,6 +2,8 @@
 
 html {
   scroll-behavior: smooth;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 @layer utilities {
@@ -11,6 +13,19 @@ html {
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
+}
+
+/* Safe area inset helpers for modern mobile notches and home indicators */
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Touch manipulation optimization */
+button, a, input, select, textarea {
+  touch-action: manipulation;
 }
 
 /* Hardware accelerated transform utility */
@@ -45,3 +60,43 @@ html, body, * {
   animation: cursorBlink 0.8s step-end infinite;
 }
 
+/* Smooth View Transition Cross-Fade Animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 450ms;
+  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+
+@keyframes theme-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Smooth global color and background transitions */
+body {
+  transition: background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));

@@ -5,7 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { GameState, Card, Player, Color, generateDeck, isValidPlay } from '../lib/unoLogic';
 import { Copy, Play, UserPlus, Users, ArrowRight, MessageSquare, ShieldAlert, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { AdminBadge, isAdminName } from './AdminBadge';
+import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
 
 export const UnoGameSection: React.FC = () => {
@@ -579,17 +579,17 @@ export const UnoGameSection: React.FC = () => {
   if (!isUnlocked) {
     return (
       <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
-        <div className="bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
           <ShieldAlert className="w-14 h-14 text-[#E195AB] mx-auto mb-4" />
-          <h2 className="text-2xl font-black text-slate-800 mb-2">Akses Pengembang Required</h2>
-          <p className="text-slate-600 text-sm mb-6">Game ini masih dalam akses terbatas. Masukkan PIN pengembang untuk melanjutkan.</p>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">Akses Pengembang Required</h2>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">Game ini masih dalam akses terbatas. Masukkan PIN pengembang untuk melanjutkan.</p>
           <form onSubmit={handleUnlock}>
             <input
               type="password"
               placeholder="Masukkan PIN Pengembang"
               value={pin}
               onChange={(e) => { setPin(e.target.value); setPinError(''); }}
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 bg-slate-50 font-bold text-slate-800 mb-4 outline-none text-center"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 bg-slate-50 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-100 mb-4 outline-none text-center"
             />
             {pinError && <p className="text-rose-500 text-xs font-bold mb-4">{pinError}</p>}
             <button
@@ -607,28 +607,28 @@ export const UnoGameSection: React.FC = () => {
   if (!gameState) {
     return (
       <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
-        <div className="bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
           {/* Authentic UNO Badge */}
-          <div className="w-20 h-20 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-5 transform -rotate-6 border-4 border-[#FFF5D7] shadow-lg">
+          <div className="w-20 h-20 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-5 transform -rotate-6 border-4 border-[#FFF5D7] dark:border-slate-800 shadow-lg">
             <span className="text-[#FFF5D7] font-black text-3xl tracking-tighter drop-shadow">UNO</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-1">UNO Multiplayer</h2>
-          <p className="text-slate-600 text-xs mb-6">Bermain kartu UNO bersama teman secara real-time</p>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">UNO Multiplayer</h2>
+          <p className="text-slate-600 dark:text-slate-400 text-xs mb-6">Bermain kartu UNO bersama teman secara real-time</p>
           
           {errorMsg && (
-             <div className="bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-xl text-xs font-bold mb-4">
+             <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold mb-4">
                {errorMsg}
              </div>
           )}
           
           <div className="mb-4 text-left">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">Nama Pemain</label>
+            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Nama Pemain</label>
             <input
               type="text"
               value={playerName}
               disabled
               readOnly
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 font-bold text-slate-600 cursor-not-allowed outline-none text-sm"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-400 cursor-not-allowed outline-none text-sm"
             />
           </div>
 
@@ -641,9 +641,9 @@ export const UnoGameSection: React.FC = () => {
           </button>
           
           <div className="relative flex items-center py-2 mb-4">
-            <div className="flex-grow border-t border-slate-200"></div>
+            <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
             <span className="flex-shrink-0 mx-4 text-slate-400 font-bold text-xs uppercase tracking-wider">atau</span>
-            <div className="flex-grow border-t border-slate-200"></div>
+            <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
           </div>
 
           <div className="flex gap-2">
@@ -652,12 +652,12 @@ export const UnoGameSection: React.FC = () => {
               placeholder="Kode Room"
               value={joinRoomId}
               onChange={(e) => setJoinRoomId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white font-mono font-bold text-slate-800 uppercase outline-none focus:border-[#E195AB] text-sm"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100 uppercase outline-none focus:border-[#E195AB] text-sm"
               maxLength={6}
             />
             <button
               onClick={handleJoinRoom}
-              className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm"
+              className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm"
             >
               Masuk
             </button>
@@ -670,7 +670,7 @@ export const UnoGameSection: React.FC = () => {
   const renderCard = (card: Card, isPlayable = false, onClick?: () => void, isMyTurn = false) => {
     let cardBg = 'bg-slate-900 border-slate-700';
     let textColor = 'text-white';
-    let ovalBg = 'bg-white';
+    let ovalBg = 'bg-white dark:bg-slate-900';
     let centerTextColor = 'text-slate-900';
 
     if (card.color === 'Red') {
@@ -729,7 +729,7 @@ export const UnoGameSection: React.FC = () => {
         </div>
 
         {/* Center Oval Emblem */}
-        <div className="self-center w-10 h-14 md:w-14 md:h-20 bg-white rounded-[50%] flex items-center justify-center transform -rotate-[24deg] shadow-md border border-black/10">
+        <div className="self-center w-10 h-14 md:w-14 md:h-20 bg-white dark:bg-slate-900 rounded-[50%] flex items-center justify-center transform -rotate-[24deg] shadow-md border border-black/10">
           {card.color === 'Wild' ? (
             <div className="grid grid-cols-2 gap-0.5 w-6 h-6 md:w-9 md:h-9 rotate-[24deg]">
               <div className="bg-rose-500 rounded-tl" />
@@ -758,25 +758,25 @@ export const UnoGameSection: React.FC = () => {
 
   return (
     <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-24 sm:pt-28 md:pt-32 pb-4 md:pb-8 flex flex-col min-h-screen">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border-2 border-[#FFCCE1] flex flex-col flex-1">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border-2 border-[#FFCCE1] dark:border-slate-800 flex flex-col flex-1">
         
         {/* Header */}
-        <div className="bg-[#FFF5D7] p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-[#FFCCE1] shrink-0">
+        <div className="bg-[#FFF5D7] dark:bg-slate-800 p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-[#FFCCE1] dark:border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-[#E195AB] rounded-xl flex items-center justify-center transform -rotate-3 border-2 border-white shadow-sm">
               <span className="text-[#FFF5D7] font-black text-xs">UNO</span>
             </div>
             <div>
-              <h2 className="text-slate-800 font-extrabold text-base md:text-lg leading-tight">UNO Multiplayer</h2>
-              <div className="flex items-center gap-1.5 text-slate-600 text-xs font-medium">
+              <h2 className="text-slate-800 dark:text-slate-100 font-extrabold text-base md:text-lg leading-tight">UNO Multiplayer</h2>
+              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-xs font-medium">
                 <span>Kode Room:</span>
-                <span className="bg-white border border-[#FFCCE1] px-2 py-0.5 rounded font-mono text-[#E195AB] font-bold select-all shadow-2xs">{gameState.roomId}</span>
+                <span className="bg-white dark:bg-slate-900 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded font-mono text-[#E195AB] dark:text-[#FFCCE1] font-bold select-all shadow-2xs">{gameState.roomId}</span>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-             <button onClick={handleLeaveRoom} className="px-3.5 py-1.5 bg-[#E195AB]/10 hover:bg-[#E195AB]/20 text-[#E195AB] rounded-lg font-bold text-xs border border-[#FFCCE1] transition-colors cursor-pointer">
+             <button onClick={handleLeaveRoom} className="px-3.5 py-1.5 bg-[#E195AB]/10 hover:bg-[#E195AB]/20 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#E195AB] dark:text-[#FFCCE1] rounded-lg font-bold text-xs border border-[#FFCCE1] dark:border-slate-700 transition-colors cursor-pointer">
                Keluar
              </button>
           </div>
@@ -785,21 +785,21 @@ export const UnoGameSection: React.FC = () => {
         {/* Game Area */}
         <div className="flex flex-col lg:flex-row flex-1 min-h-0">
           {/* Main Felt Board */}
-          <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-[#FFF5D7]/30 border-b lg:border-b-0 border-[#FFCCE1] overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
+          <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-[#FFF5D7]/30 dark:bg-slate-950/50 border-b lg:border-b-0 border-[#FFCCE1] dark:border-slate-800 overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
             {/* Status Overlay */}
             {gameState.status === 'waiting' && (
-              <div className="absolute inset-0 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center">
-                <Users className="w-12 h-12 text-[#E195AB] mb-3" />
-                <h3 className="text-2xl font-black text-slate-800 mb-1">Menunggu Pemain Lain</h3>
-                <p className="text-slate-600 text-sm mb-6 font-medium">{gameState.players.length} / 4 Pemain Terhubung</p>
+              <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-50 p-6 text-center">
+                <Users className="w-12 h-12 text-[#E195AB] dark:text-[#FFCCE1] mb-3" />
+                <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">Menunggu Pemain Lain</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 font-medium">{gameState.players.length} / 4 Pemain Terhubung</p>
                 
                 <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-md">
                   {gameState.players.map((p, i) => (
-                    <div key={i} className="bg-white border-2 border-[#FFCCE1] px-4 py-2.5 rounded-xl flex items-center gap-2.5 shadow-sm">
+                    <div key={i} className="bg-white dark:bg-slate-900 border-2 border-[#FFCCE1] dark:border-slate-800 px-4 py-2.5 rounded-xl flex items-center gap-2.5 shadow-sm">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-slate-800 font-bold text-sm flex items-center gap-1.5">
+                      <span className="text-slate-800 dark:text-slate-100 font-bold text-sm flex items-center gap-1.5">
                         <span>{p.name} {p.id === localPlayerId ? '(Anda)' : ''}</span>
-                        {isAdminName(p.name) && <AdminBadge />}
+                        {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
                       </span>
                     </div>
                   ))}
@@ -811,10 +811,10 @@ export const UnoGameSection: React.FC = () => {
                   </button>
                 )}
                 {isHost && gameState.players.length < 2 && (
-                  <p className="text-amber-700 font-bold bg-[#FFF5D7] border border-[#FFCCE1] px-4 py-2 rounded-xl text-xs">Minimal 2 pemain untuk memulai permainan.</p>
+                  <p className="text-amber-700 dark:text-amber-300 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2 rounded-xl text-xs">Minimal 2 pemain untuk memulai permainan.</p>
                 )}
                 {!isHost && (
-                  <p className="text-slate-600 font-bold bg-[#FFF5D7] border border-[#FFCCE1] px-4 py-2 rounded-xl text-xs">Menunggu host memulai permainan...</p>
+                  <p className="text-slate-600 dark:text-slate-400 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2 rounded-xl text-xs">Menunggu host memulai permainan...</p>
                 )}
               </div>
             )}
@@ -838,28 +838,28 @@ export const UnoGameSection: React.FC = () => {
             {gameState.status === 'playing' && (
               <>
                 {/* Opponents Hands (Top) */}
-                <div className="flex justify-center gap-4 md:gap-8 shrink-0 py-1">
+                <div className="flex flex-wrap justify-center gap-2.5 sm:gap-4 md:gap-8 shrink-0 py-1">
                   {gameState.players.map((p, i) => {
                     if (p.id === localPlayerId) return null;
                     const isTurn = gameState.currentTurn === i;
                     return (
                       <div key={p.id} className={`flex flex-col items-center transition-all ${isTurn ? 'scale-105 opacity-100' : 'scale-90 opacity-75'}`}>
-                        <div className={`font-bold mb-1.5 px-3 py-0.5 rounded-full text-xs flex items-center gap-1.5 border ${
+                        <div className={`font-bold mb-1 px-2.5 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5 border ${
                           isTurn 
                             ? 'bg-[#E195AB] text-white border-[#E195AB] font-black shadow-md' 
-                            : 'bg-white border-[#FFCCE1] text-slate-700'
+                            : 'bg-white dark:bg-slate-900 border-[#FFCCE1] dark:border-slate-800 text-slate-700 dark:text-slate-300'
                         }`}>
-                          <span>{p.name}</span>
-                          {isAdminName(p.name) && <AdminBadge />}
+                          <span className="truncate max-w-[80px] sm:max-w-[120px]">{p.name}</span>
+                          {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
                         </div>
-                        <div className="flex -space-x-5 md:-space-x-7">
+                        <div className="flex -space-x-4 xs:-space-x-5 md:-space-x-7">
                           {p.hand.map((_, idx) => (
-                            <div key={idx} className="w-8 h-12 md:w-11 md:h-18 bg-[#E195AB] border-2 border-white rounded-lg shadow-md flex items-center justify-center">
-                              <span className="text-[#FFF5D7] font-black text-[9px] md:text-xs tracking-tighter transform -rotate-12 select-none">UNO</span>
+                            <div key={idx} className="w-7 h-10 xs:w-8 xs:h-12 md:w-11 md:h-18 bg-[#E195AB] border-1.5 sm:border-2 border-white rounded-lg shadow-md flex items-center justify-center">
+                              <span className="text-[#FFF5D7] font-black text-[8px] xs:text-[9px] md:text-xs tracking-tighter transform -rotate-12 select-none">UNO</span>
                             </div>
                           ))}
                         </div>
-                        <div className="mt-1 text-slate-600 font-bold text-[10px] md:text-xs">{p.hand.length} kartu</div>
+                        <div className="mt-0.5 sm:mt-1 text-slate-600 dark:text-slate-400 font-bold text-[9px] sm:text-[10px] md:text-xs">{p.hand.length} kartu</div>
                       </div>
                     );
                   })}
@@ -869,8 +869,8 @@ export const UnoGameSection: React.FC = () => {
                 <div className="flex flex-col items-center justify-center gap-3 md:gap-4 my-2 md:my-auto shrink-0">
                   {/* Current Active Color Indicator */}
                   {gameState.currentColor && (
-                    <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-white/90 border-2 border-[#FFCCE1] text-xs font-bold text-slate-800 shadow-sm">
-                      <span className="text-slate-500 uppercase tracking-wider text-[10px]">Warna Aktif:</span>
+                    <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 border-2 border-[#FFCCE1] dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm">
+                      <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Warna Aktif:</span>
                       <div className="flex items-center gap-1.5 font-black">
                         <div className={`w-3.5 h-3.5 rounded-full ${
                           gameState.currentColor === 'Red' ? 'bg-rose-500' :
@@ -878,7 +878,7 @@ export const UnoGameSection: React.FC = () => {
                           gameState.currentColor === 'Green' ? 'bg-emerald-500' :
                           gameState.currentColor === 'Yellow' ? 'bg-amber-400' : 'bg-slate-400'
                         }`} />
-                        <span className="text-slate-800">{
+                        <span className="text-slate-800 dark:text-slate-100">{
                           gameState.currentColor === 'Red' ? 'Merah' :
                           gameState.currentColor === 'Blue' ? 'Biru' :
                           gameState.currentColor === 'Green' ? 'Hijau' :
@@ -897,11 +897,11 @@ export const UnoGameSection: React.FC = () => {
                           isMyTurn ? 'cursor-pointer hover:-translate-y-1 hover:ring-4 hover:ring-[#E195AB]/50' : 'opacity-80'
                         }`}
                       >
-                        <div className="w-10 h-16 md:w-14 md:h-22 bg-white/20 rounded-[50%] flex items-center justify-center transform -rotate-12 border border-white/40">
+                        <div className="w-10 h-16 md:w-14 md:h-22 bg-white/20 dark:bg-slate-900/20 rounded-[50%] flex items-center justify-center transform -rotate-12 border border-white/40">
                           <span className="text-[#FFF5D7] font-black text-sm md:text-xl transform -rotate-12 tracking-tighter drop-shadow select-none">UNO</span>
                         </div>
                       </div>
-                      <span className="text-[11px] font-bold text-slate-600">Dek Ambil</span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Dek Ambil</span>
                     </div>
 
                     {/* Discard Pile (Top Card) */}
@@ -911,24 +911,24 @@ export const UnoGameSection: React.FC = () => {
                           {renderCard(gameState.topCard)}
                         </div>
                       )}
-                      <span className="text-[11px] font-bold text-slate-600">Kartu Buang</span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Kartu Buang</span>
                     </div>
                   </div>
                   
                   {/* Turn Direction */}
-                  <div className="flex items-center gap-2 bg-white px-3.5 py-1 rounded-full border border-[#FFCCE1] text-xs font-bold text-slate-700 shadow-2xs">
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-3.5 py-1 rounded-full border border-[#FFCCE1] dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs">
                     <span>Arah Putaran:</span>
                     <ArrowRight className={`w-3.5 h-3.5 text-[#E195AB] transform transition-transform duration-500 ${gameState.direction === -1 ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
 
                 {/* Local Player Hand Bar */}
-                <div className="shrink-0 flex flex-col items-center w-full mt-auto pt-2 pb-1 bg-white/90 backdrop-blur-md rounded-2xl border-2 border-[#FFCCE1] shadow-xl sticky bottom-0 z-20">
+                <div className="shrink-0 flex flex-col items-center w-full mt-auto pt-2 pb-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border-2 border-[#FFCCE1] dark:border-slate-800 shadow-xl sticky bottom-0 z-20">
                   <div className="mb-1.5">
                     <h4 className={`font-black text-xs px-4 py-1 rounded-full border transition-all ${
                       isMyTurn 
                         ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm animate-pulse' 
-                        : 'bg-[#FFF5D7] text-slate-700 border-[#FFCCE1]'
+                        : 'bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#FFCCE1] dark:border-slate-700'
                     }`}>
                       {isMyTurn ? '⚡ GILIRAN ANDA!' : 'Menunggu giliran pemain lain...'}
                     </h4>
@@ -955,15 +955,15 @@ export const UnoGameSection: React.FC = () => {
                     onClick={() => setColorPickerVisible(null)}
                   >
                     <div 
-                      className="bg-white border-2 border-[#FFCCE1] p-6 rounded-3xl shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3 animate-in zoom-in-95 duration-150"
+                      className="bg-white dark:bg-slate-900 border-2 border-[#FFCCE1] dark:border-slate-800 p-6 rounded-3xl shadow-2xl max-w-xs w-full text-center flex flex-col items-center gap-3 animate-in zoom-in-95 duration-150"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center gap-1.5 text-[#E195AB] font-bold text-xs uppercase tracking-wider">
                         <Sparkles className="w-4 h-4" />
                         Pilih Warna Kartu
                       </div>
-                      <h3 className="text-lg font-black text-slate-800">Kartu Wild / Bebas</h3>
-                      <p className="text-slate-600 text-xs">Pilih warna untuk giliran berikutnya</p>
+                      <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">Kartu Wild / Bebas</h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs">Pilih warna untuk giliran berikutnya</p>
 
                       <div className="grid grid-cols-2 gap-2.5 w-full mt-1">
                         {(['Red', 'Blue', 'Green', 'Yellow'] as Color[]).map((c) => {
@@ -986,7 +986,7 @@ export const UnoGameSection: React.FC = () => {
                               onClick={() => handlePlayCard(targetCard, c)}
                               className={`${bgMap[c]} font-black py-3 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all text-xs tracking-wide cursor-pointer`}
                             >
-                              <div className="w-3 h-3 rounded-full bg-white/40 border border-white/60" />
+                              <div className="w-3 h-3 rounded-full bg-white/40 dark:bg-slate-900/40 border border-white/60" />
                               {colorLabels[c]}
                             </button>
                           );
@@ -995,7 +995,7 @@ export const UnoGameSection: React.FC = () => {
 
                       <button
                         onClick={() => setColorPickerVisible(null)}
-                        className="text-slate-500 hover:text-slate-800 text-xs font-bold pt-1 cursor-pointer"
+                        className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-100 text-xs font-bold pt-1 cursor-pointer"
                       >
                         Batal
                       </button>
@@ -1007,21 +1007,21 @@ export const UnoGameSection: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="w-full lg:w-72 bg-[#FFF5D7]/40 border-t lg:border-t-0 lg:border-l border-[#FFCCE1] flex flex-col shrink-0">
+          <div className="w-full lg:w-72 bg-[#FFF5D7]/40 dark:bg-slate-900/60 border-t lg:border-t-0 lg:border-l border-[#FFCCE1] dark:border-slate-800 flex flex-col shrink-0">
             {/* Players List Sidebar */}
             <div className="p-4 overflow-y-auto max-h-40 lg:max-h-none">
               <h4 className="text-[11px] font-black text-[#E195AB] uppercase tracking-wider mb-3">Daftar Pemain</h4>
               <div className="space-y-2">
                 {gameState.players.map((p, i) => (
-                  <div key={p.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-[#FFCCE1] shadow-2xs">
+                  <div key={p.id} className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-[#FFCCE1] dark:border-slate-800 shadow-2xs">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${gameState.currentTurn === i && gameState.status === 'playing' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
-                      <span className={`font-bold text-xs ${p.id === localPlayerId ? 'text-[#E195AB] font-extrabold' : 'text-slate-700'} flex items-center gap-1.5`}>
+                      <div className={`w-2 h-2 rounded-full ${gameState.currentTurn === i && gameState.status === 'playing' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`}></div>
+                      <span className={`font-bold text-xs ${p.id === localPlayerId ? 'text-[#E195AB] font-extrabold' : 'text-slate-700 dark:text-slate-300'} flex items-center gap-1.5`}>
                         <span>{p.name} {p.id === localPlayerId ? '(Anda)' : ''}</span>
-                        {isAdminName(p.name) && <AdminBadge />}
+                        {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-700 bg-[#FFF5D7] border border-[#FFCCE1] px-2 py-0.5 rounded-md">{p.hand.length} 🃏</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded-md">{p.hand.length} 🃏</span>
                   </div>
                 ))}
               </div>
@@ -1051,7 +1051,7 @@ export const UnoGameSection: React.FC = () => {
               initial={{ scale: 1.8, opacity: 1 }}
               animate={{ scale: 0, opacity: 0 }}
               transition={{ duration: 1, ease: 'linear' }}
-              className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#FFCCE1] bg-[#FFF5D7]/50 pointer-events-none"
+              className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#FFCCE1] dark:border-slate-800 bg-[#FFF5D7]/50 pointer-events-none"
             />
 
             {/* Simple Circular UNO Button */}

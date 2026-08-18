@@ -252,6 +252,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteUser = (username: string) => {
+    if (username.toLowerCase() === 'encore' || username.toLowerCase() === 'developer') {
+      return { success: false, message: 'Developer account cannot be deleted' };
+    }
     setStoredAccounts((prev) => prev.filter((u) => u.username.toLowerCase() !== username.toLowerCase()));
 
     // Delete asynchronously from Supabase database
@@ -265,6 +268,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserRole = (username: string, role: 'user' | 'admin') => {
+    if (username.toLowerCase() === 'encore' || username.toLowerCase() === 'developer') {
+      return { success: false, message: 'Developer account role cannot be changed' };
+    }
     let accountToUpdate: StoredUserAccount | undefined;
 
     setStoredAccounts((prev) =>

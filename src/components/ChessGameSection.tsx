@@ -36,7 +36,7 @@ import { COUNTRIES } from '../data/countries';
 import { subscribeSupabaseChessRoom, SupabaseRoomHandler, generateRoomCode, publishRoomToGlobalLobby } from '../lib/supabaseChess';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { AdminBadge, isAdminName } from './AdminBadge';
+import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
 
 type GameMode = 'pass' | 'online';
@@ -790,7 +790,6 @@ export const ChessGameSection: React.FC = () => {
     setMoveHistory([]);
     setGameResult(null);
     setHintSquare(null);
-    setIsThinking(false);
     setWhiteTime(timeControl);
     setBlackTime(timeControl);
     setIsTimerActive(false);
@@ -830,30 +829,12 @@ export const ChessGameSection: React.FC = () => {
     const moves = game.moves({ verbose: true });
     if (moves.length === 0) return;
 
-    // Pick top evaluation move
-    let bestMove = moves[0];
-    let bestScore = game.turn() === 'w' ? -Infinity : Infinity;
+    // Pick a random move for the hint
+    const randomIndex = Math.floor(Math.random() * moves.length);
+    const randomMove = moves[randomIndex];
 
-    for (const move of moves) {
-      game.move(move);
-      const score = evaluateBoard(game.board());
-      game.undo();
-
-      if (game.turn() === 'w') {
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = move;
-        }
-      } else {
-        if (score < bestScore) {
-          bestScore = score;
-          bestMove = move;
-        }
-      }
-    }
-
-    if (bestMove) {
-      setHintSquare({ from: bestMove.from as Square, to: bestMove.to as Square });
+    if (randomMove) {
+      setHintSquare({ from: randomMove.from as Square, to: randomMove.to as Square });
     }
   };
 
@@ -1015,7 +996,7 @@ export const ChessGameSection: React.FC = () => {
             <Crown className="w-4 h-4 text-[#E195AB]" />
             <span>GRANDMASTER CHESS</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Play Chess <span className="text-[#E195AB]">Interactive</span>
           </h1>
         </motion.div>
@@ -1025,7 +1006,7 @@ export const ChessGameSection: React.FC = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6 p-4 rounded-2xl bg-white/80 backdrop-blur-xl border-2 border-[#FFCCE1] shadow-lg flex flex-wrap items-center justify-between gap-4"
+          className="mb-6 p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 shadow-lg flex flex-wrap items-center justify-between gap-4"
         >
           {/* Mode Selector */}
           <div className="flex items-center gap-2">
@@ -1037,7 +1018,7 @@ export const ChessGameSection: React.FC = () => {
               className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 gameMode === 'pass'
                   ? 'bg-[#E195AB] text-white shadow-md'
-                  : 'bg-[#FFF5D7] text-[#E195AB] hover:bg-[#FFCCE1]'
+                  : 'bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] hover:bg-[#FFCCE1] dark:hover:bg-slate-700 border border-[#FFCCE1]/50 dark:border-slate-700'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -1054,7 +1035,7 @@ export const ChessGameSection: React.FC = () => {
               className={`px-3 py-1.5 rounded-xl font-sans text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 gameMode === 'online'
                   ? 'bg-[#E195AB] text-white shadow-md'
-                  : 'bg-[#FFF5D7] text-[#E195AB] hover:bg-[#FFCCE1]'
+                  : 'bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] hover:bg-[#FFCCE1] dark:hover:bg-slate-700 border border-[#FFCCE1]/50 dark:border-slate-700'
               }`}
             >
               <Globe className="w-4 h-4" />
@@ -1064,9 +1045,9 @@ export const ChessGameSection: React.FC = () => {
 
 
           {/* Time Control Selector */}
-          <div className="flex items-center gap-1.5 bg-[#FFF5D7] p-1 rounded-xl border border-[#FFCCE1]">
-            <Clock className="w-3.5 h-3.5 text-[#E195AB] ml-1" />
-            <span className="text-[11px] font-mono text-slate-500 font-bold pr-1">Timer:</span>
+          <div className="flex items-center gap-1.5 bg-[#FFF5D7] dark:bg-slate-800 p-1 rounded-xl border border-[#FFCCE1] dark:border-slate-700">
+            <Clock className="w-3.5 h-3.5 text-[#E195AB] dark:text-[#FFCCE1] ml-1" />
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold pr-1">Timer:</span>
             {[
               { time: 0, label: '∞' },
               { time: 180, label: '3m' },
@@ -1084,7 +1065,7 @@ export const ChessGameSection: React.FC = () => {
                 className={`px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   timeControl === item.time
                     ? 'bg-[#E195AB] text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-[#FFCCE1]/50'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-[#FFCCE1]/50 dark:hover:bg-slate-700'
                 }`}
               >
                 {item.label}
@@ -1101,7 +1082,7 @@ export const ChessGameSection: React.FC = () => {
                 className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-colors flex items-center gap-1 cursor-pointer ${
                   autoFlip
                     ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
-                    : 'bg-[#FFF5D7] text-[#E195AB] border-[#FFCCE1]'
+                    : 'bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border-[#FFCCE1] dark:border-slate-700 hover:bg-[#FFCCE1] dark:hover:bg-slate-700'
                 }`}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${autoFlip ? 'animate-spin-slow' : ''}`} />
@@ -1111,21 +1092,21 @@ export const ChessGameSection: React.FC = () => {
             <button
               onClick={showHint}
               title="Get Hint"
-              className="p-2 rounded-xl bg-amber-100 text-amber-700 border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 hover:bg-amber-200 dark:hover:bg-amber-900 transition-colors cursor-pointer"
             >
               <Lightbulb className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsFlipped(!isFlipped)}
               title="Flip Board"
-              className="p-2 rounded-xl bg-[#FFF5D7] text-[#E195AB] border border-[#FFCCE1] hover:bg-[#FFCCE1] transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border border-[#FFCCE1] dark:border-slate-700 hover:bg-[#FFCCE1] dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <FlipHorizontal className="w-4 h-4" />
             </button>
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               title="Toggle Audio"
-              className="p-2 rounded-xl bg-[#FFF5D7] text-[#E195AB] border border-[#FFCCE1] hover:bg-[#FFCCE1] transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border border-[#FFCCE1] dark:border-slate-700 hover:bg-[#FFCCE1] dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
@@ -1199,7 +1180,7 @@ export const ChessGameSection: React.FC = () => {
         )}
 
         {/* Turn Indicator Banner */}
-        <div className="w-full max-w-[560px] mx-auto mb-3 px-4 py-2 rounded-xl bg-white/90 backdrop-blur-md border border-[#FFCCE1] shadow-sm flex items-center justify-between text-xs font-bold text-slate-800">
+        <div className="w-full max-w-[560px] mx-auto mb-3 px-4 py-2 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-[#FFCCE1] dark:border-slate-800 shadow-sm flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-100">
           <div className="flex items-center gap-2">
             <span
               className={`w-3 h-3 rounded-full ${
@@ -1220,13 +1201,13 @@ export const ChessGameSection: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 font-mono text-[11px] text-slate-500">
+          <div className="flex items-center gap-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
             {gameMode === 'pass' ? (
-              <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border border-[#FFCCE1]/50 dark:border-slate-700 font-bold">
                 Local Pass & Play
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] text-[#E195AB] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-md bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border border-[#FFCCE1]/50 dark:border-slate-700 font-bold flex items-center gap-1">
                 <Globe className="w-3 h-3" />
                 Online Multiplayer
               </span>
@@ -1236,28 +1217,28 @@ export const ChessGameSection: React.FC = () => {
 
         {/* Main Chess Layout (Board + Sidebar) */}
         {(!activeRoom || activeRoom.isStarted) && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
           {/* Left Column: Board & Player Info */}
           <div className="lg:col-span-8 flex flex-col items-center">
             
             {/* Top Player Card (Black or Opponent) */}
-            <div className="w-full max-w-[560px] mb-3 p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-[#FFCCE1] shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            <div className="w-full max-w-[560px] mb-2.5 sm:mb-3 p-2.5 sm:p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-[#FFCCE1] dark:border-slate-800 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 dark:bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-sm shrink-0">
                   {gameMode === 'online' && activeRoom ? (
-                    <span className="text-base">
+                    <span className="text-sm sm:text-base">
                       {isFlipped
                         ? activeRoom.whitePlayer?.flag || '⚪'
                         : activeRoom.blackPlayer?.flag || '⚫'}
                     </span>
                   ) : (
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   )}
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <span>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                    <span className="truncate">
                       {gameMode === 'online' && activeRoom
                         ? isFlipped
                           ? activeRoom.whitePlayer?.name || 'Waiting for Player 1...'
@@ -1266,7 +1247,20 @@ export const ChessGameSection: React.FC = () => {
                         ? 'Player 1 (White)'
                         : 'Player 2 (Black)'}
                     </span>
-                    {isAdminName(
+                    {isDeveloperName(
+                      gameMode === 'online' && activeRoom
+                        ? isFlipped
+                          ? activeRoom.whitePlayer?.name
+                          : activeRoom.blackPlayer?.name
+                        : null
+                    ) && <DeveloperBadge />}
+                    {!isDeveloperName(
+                      gameMode === 'online' && activeRoom
+                        ? isFlipped
+                          ? activeRoom.whitePlayer?.name
+                          : activeRoom.blackPlayer?.name
+                        : null
+                    ) && isAdminName(
                       gameMode === 'online' && activeRoom
                         ? isFlipped
                           ? activeRoom.whitePlayer?.name
@@ -1274,18 +1268,18 @@ export const ChessGameSection: React.FC = () => {
                         : null
                     ) && <AdminBadge />}
                     {game.turn() === (isFlipped ? 'w' : 'b') && !game.isGameOver() && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
                     )}
                   </div>
                   {/* Captured pieces */}
-                  <div className="flex items-center gap-1 mt-0.5 min-h-[16px]">
+                  <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5 min-h-[16px] overflow-x-auto">
                     {(isFlipped ? capturedByWhite : capturedByBlack).map((t, idx) => (
-                      <span key={idx} className="w-4 h-4 opacity-90 inline-block">
+                      <span key={idx} className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-90 inline-block shrink-0">
                         <PieceSVG type={t} color={isFlipped ? 'b' : 'w'} />
                       </span>
                     ))}
                     {(isFlipped ? whiteAdvantage : blackAdvantage) > 0 && (
-                      <span className="text-[10px] font-mono font-bold text-emerald-600 ml-1">
+                      <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 ml-1">
                         +{(isFlipped ? whiteAdvantage : blackAdvantage)}
                       </span>
                     )}
@@ -1296,20 +1290,20 @@ export const ChessGameSection: React.FC = () => {
               {/* Top Player Timer */}
               {timeControl > 0 && (
                 <div
-                  className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-mono text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 shrink-0 ml-2 ${
                     game.turn() === (isFlipped ? 'w' : 'b') && (isTimerActive || gameMode === 'online')
                       ? 'bg-rose-500 text-white shadow-md animate-pulse'
-                      : 'bg-slate-100 text-slate-700'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                   }`}
                 >
-                  <Clock className="w-3.5 h-3.5" />
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>{formatTime(isFlipped ? whiteTime : blackTime)}</span>
                 </div>
               )}
             </div>
 
             {/* Chess Board Frame */}
-            <div className="relative w-full max-w-[560px] aspect-square rounded-2xl overflow-hidden shadow-2xl border-4 border-[#FFCCE1] bg-white gpu-smooth">
+            <div className="relative w-full max-w-[min(100%,560px)] aspect-square rounded-2xl overflow-hidden shadow-2xl border-2 sm:border-4 border-[#FFCCE1] dark:border-slate-800 bg-white dark:bg-slate-900 gpu-smooth">
               <div className="grid grid-cols-8 grid-rows-8 w-full h-full">
                 {Array.from({ length: 8 }).map((_, r) =>
                   Array.from({ length: 8 }).map((_, c) => renderSquare(r, c))
@@ -1318,22 +1312,22 @@ export const ChessGameSection: React.FC = () => {
             </div>
 
             {/* Bottom Player Card (White or You) */}
-            <div className="w-full max-w-[560px] mt-3 p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-[#FFCCE1] shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1] text-[#E195AB] flex items-center justify-center font-bold text-sm shadow-sm">
+            <div className="w-full max-w-[560px] mt-2.5 sm:mt-3 p-2.5 sm:p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-[#FFCCE1] dark:border-slate-800 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] flex items-center justify-center font-bold text-xs sm:text-sm shadow-sm shrink-0">
                   {gameMode === 'online' && activeRoom ? (
-                    <span className="text-base">
+                    <span className="text-sm sm:text-base">
                       {isFlipped
                         ? activeRoom.blackPlayer?.flag || '⚫'
                         : activeRoom.whitePlayer?.flag || '⚪'}
                     </span>
                   ) : (
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   )}
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <span>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                    <span className="truncate">
                       {gameMode === 'online' && activeRoom
                         ? isFlipped
                           ? activeRoom.blackPlayer?.name || 'Waiting for Player 2...'
@@ -1342,7 +1336,20 @@ export const ChessGameSection: React.FC = () => {
                         ? 'Player 2 (Black)'
                         : 'Player 1 (White)'}
                     </span>
-                    {isAdminName(
+                    {isDeveloperName(
+                      gameMode === 'online' && activeRoom
+                        ? isFlipped
+                          ? activeRoom.blackPlayer?.name
+                          : activeRoom.whitePlayer?.name
+                        : null
+                    ) && <DeveloperBadge />}
+                    {!isDeveloperName(
+                      gameMode === 'online' && activeRoom
+                        ? isFlipped
+                          ? activeRoom.blackPlayer?.name
+                          : activeRoom.whitePlayer?.name
+                        : null
+                    ) && isAdminName(
                       gameMode === 'online' && activeRoom
                         ? isFlipped
                           ? activeRoom.blackPlayer?.name
@@ -1361,7 +1368,7 @@ export const ChessGameSection: React.FC = () => {
                       </span>
                     ))}
                     {(isFlipped ? blackAdvantage : whiteAdvantage) > 0 && (
-                      <span className="text-[10px] font-mono font-bold text-emerald-600 ml-1">
+                      <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 ml-1">
                         +{(isFlipped ? blackAdvantage : whiteAdvantage)}
                       </span>
                     )}
@@ -1375,7 +1382,7 @@ export const ChessGameSection: React.FC = () => {
                   className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold flex items-center gap-1.5 ${
                     game.turn() === (isFlipped ? 'b' : 'w') && (isTimerActive || gameMode === 'online')
                       ? 'bg-rose-500 text-white shadow-md animate-pulse'
-                      : 'bg-slate-100 text-slate-700'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5" />
@@ -1390,19 +1397,19 @@ export const ChessGameSection: React.FC = () => {
           <div className="lg:col-span-4 space-y-5">
             
             {/* Status & Action Buttons */}
-            <div className="p-5 rounded-2xl bg-white/90 backdrop-blur-xl border-2 border-[#FFCCE1] shadow-lg space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#FFCCE1]">
+            <div className="p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 shadow-lg space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#FFCCE1] dark:border-slate-800">
                 <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-[#E195AB]" />
-                  <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
+                  <Trophy className="w-4 h-4 text-[#E195AB] dark:text-[#FFCCE1]" />
+                  <span className="font-bold text-xs uppercase tracking-wide text-slate-800 dark:text-slate-100">
                     Game Status
                   </span>
                 </div>
                 <span
                   className={`px-2.5 py-1 rounded-full font-mono text-[11px] font-bold ${
                     game.inCheck()
-                      ? 'bg-rose-100 text-rose-600'
-                      : 'bg-[#FFF5D7] text-[#E195AB]'
+                      ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                      : 'bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border border-[#FFCCE1]/50 dark:border-slate-700'
                   }`}
                 >
                   {game.inCheck()
@@ -1424,7 +1431,7 @@ export const ChessGameSection: React.FC = () => {
                       }
                     }}
                     disabled={!activeRoom || game.isGameOver()}
-                    className="px-2.5 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 disabled:opacity-40 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl border border-amber-200 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/60 disabled:opacity-40 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Flag className="w-3.5 h-3.5" />
                     <span>Resign</span>
@@ -1440,7 +1447,7 @@ export const ChessGameSection: React.FC = () => {
                       }
                     }}
                     disabled={!activeRoom || game.isGameOver()}
-                    className="px-2.5 py-2 rounded-xl bg-[#FFF5D7] border border-[#FFCCE1] text-[#E195AB] text-[11px] font-bold hover:bg-[#FFCCE1] disabled:opacity-40 transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] text-[11px] font-bold hover:bg-[#FFCCE1] dark:hover:bg-slate-700 disabled:opacity-40 transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer"
                   >
                     <Handshake className="w-3.5 h-3.5" />
                     <span>Draw</span>
@@ -1458,7 +1465,7 @@ export const ChessGameSection: React.FC = () => {
                       setActiveRoom(null);
                       setYourSide(null);
                     }}
-                    className="px-2.5 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-bold hover:bg-rose-100 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    className="px-2.5 py-2 rounded-xl border border-rose-200 dark:border-rose-800/80 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Leave</span>
@@ -1469,14 +1476,14 @@ export const ChessGameSection: React.FC = () => {
                   <button
                     onClick={undoMove}
                     disabled={moveHistory.length === 0 }
-                    className="px-3 py-2 rounded-xl border border-[#FFCCE1] bg-[#FFF5D7] text-[#E195AB] text-xs font-bold hover:bg-[#FFCCE1] disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="px-3 py-2 rounded-xl border border-[#FFCCE1] dark:border-slate-700 bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] text-xs font-bold hover:bg-[#FFCCE1] dark:hover:bg-slate-700 disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Undo</span>
                   </button>
                   <button
                     onClick={resetGame}
-                    className="px-3 py-2 rounded-xl bg-[#E195AB] text-white text-xs font-bold hover:bg-[#FFCCE1] hover:text-[#E195AB] transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                    className="px-3 py-2 rounded-xl bg-[#E195AB] text-white text-xs font-bold hover:bg-[#d68097] transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
                   >
                     <Zap className="w-3.5 h-3.5" />
                     <span>New Game</span>
@@ -1504,12 +1511,12 @@ export const ChessGameSection: React.FC = () => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
-                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 shadow-2xl max-w-sm w-full text-center space-y-4"
+                  className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-[#FFCCE1] dark:border-slate-800 p-6 shadow-2xl max-w-sm w-full text-center space-y-4"
                 >
-                  <h3 className="font-sans font-bold text-lg text-slate-800">
+                  <h3 className="font-sans font-bold text-lg text-slate-800 dark:text-slate-100">
                     Promote Pawn
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Select a piece to promote your pawn to:
                   </p>
                   <div className="grid grid-cols-4 gap-3 pt-2">
@@ -1522,12 +1529,12 @@ export const ChessGameSection: React.FC = () => {
                       <button
                         key={item.type}
                         onClick={() => handlePromotionChoice(item.type)}
-                        className="p-3 rounded-2xl bg-[#FFF5D7] border border-[#FFCCE1] hover:border-[#E195AB] hover:bg-[#FFCCE1] transition-all flex flex-col items-center gap-1 cursor-pointer"
+                        className="p-3 rounded-2xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 hover:border-[#E195AB] hover:bg-[#FFCCE1] dark:hover:bg-slate-700 transition-all flex flex-col items-center gap-1 cursor-pointer"
                       >
                         <div className="w-8 h-8">
                           <PieceSVG type={item.type} color={game.turn()} />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-700">{item.label}</span>
+                        <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -1552,16 +1559,16 @@ export const ChessGameSection: React.FC = () => {
                   initial={{ scale: 0.9, opacity: 0, y: 20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                  className="bg-white rounded-3xl border-2 border-[#FFCCE1] p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
+                  className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-[#FFCCE1] dark:border-slate-800 p-6 sm:p-8 shadow-2xl max-w-md w-full text-center space-y-5"
                 >
-                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] border-2 border-[#FFCCE1] flex items-center justify-center text-[#E195AB]">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FFF5D7] dark:bg-slate-800 border-2 border-[#FFCCE1] dark:border-slate-700 flex items-center justify-center text-[#E195AB] dark:text-[#FFCCE1]">
                     <Handshake className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-sans font-extrabold text-2xl text-slate-800">
+                    <h3 className="font-sans font-extrabold text-2xl text-slate-800 dark:text-slate-100">
                       🤝 Tawaran Remis!
                     </h3>
-                    <p className="text-sm font-semibold text-slate-600 leading-relaxed">
+                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">
                       Lawan Anda (
                       <span className="font-bold text-[#E195AB]">
                         {activeRoom.drawOffer === 'w'
@@ -1581,7 +1588,7 @@ export const ChessGameSection: React.FC = () => {
                           socket.emit('respond_draw', { roomId: activeRoom.roomId, accept: false });
                         }
                       }}
-                      className="py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-all cursor-pointer"
+                      className="py-3 rounded-2xl bg-slate-100 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 transition-all cursor-pointer"
                     >
                       Tolak
                     </button>
