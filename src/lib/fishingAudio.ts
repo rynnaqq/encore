@@ -57,6 +57,9 @@ export type FishingSoundType =
   | 'bite' 
   | 'tap' 
   | 'caught' 
+  | 'legendary'
+  | 'mythic_fanfare'
+  | 'upgrade'
   | 'escape' 
   | 'reeling' 
   | 'release' 
@@ -353,6 +356,82 @@ export function playFishingSound(type: FishingSoundType, enabled = true) {
 
         noiseSource.start(now);
         noiseSource.stop(now + 0.09);
+        break;
+      }
+
+      case 'legendary': {
+        // Triumphant Fanfare for Legendary Catches (C5 -> E5 -> G5 -> C6)
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = i === 3 ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.12);
+          
+          const dur = i === 3 ? 0.6 : 0.2;
+          gain.gain.setValueAtTime(0.001, now + i * 0.12);
+          gain.gain.linearRampToValueAtTime(0.28, now + i * 0.12 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + dur);
+
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + i * 0.12);
+          osc.stop(now + i * 0.12 + dur);
+        });
+        break;
+      }
+
+      case 'mythic_fanfare': {
+        // Epic Cosmic / God-tier Chime Fanfare with sub-bass impact
+        // Sub-bass hit
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(120, now);
+        subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.8);
+        subGain.gain.setValueAtTime(0.35, now);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        subOsc.connect(subGain);
+        subGain.connect(masterGain);
+        subOsc.start(now);
+        subOsc.stop(now + 0.8);
+
+        // Cosmic ascending shimmer notes
+        const shimmerNotes = [261.63, 392.00, 523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51, 1567.98];
+        shimmerNotes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+          const dur = idx >= shimmerNotes.length - 2 ? 0.9 : 0.35;
+          gain.gain.setValueAtTime(0.001, now + idx * 0.08);
+          gain.gain.linearRampToValueAtTime(0.22, now + idx * 0.08 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + dur);
+
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + dur);
+        });
+        break;
+      }
+
+      case 'upgrade': {
+        // Bright Coin / Power-up Chime
+        const coinNotes = [987.77, 1318.51];
+        coinNotes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.08);
+          gain.gain.setValueAtTime(0.2, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.28);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.3);
+        });
         break;
       }
 

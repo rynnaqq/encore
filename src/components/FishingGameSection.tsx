@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins, ShoppingBag, BarChart3, CloudRain, Zap, Check, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FishGraphic } from './FishGraphic';
 import { playFishingSound, unlockAudio, FishingSoundType } from '../lib/fishingAudio';
 
 type GameState = 'idle' | 'preparing' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'caught' | 'escaped';
-type TimeOfDay = 'pagi' | 'senja' | 'malam';
+type TimeOfDay = 'pagi' | 'senja' | 'malam' | 'badai';
 
 interface FloatingText {
   id: string;
@@ -17,10 +17,10 @@ interface FloatingText {
   color: string;
 }
 
-interface FishType {
+export interface FishType {
   id: string;
   name: string;
-  rarity: 'Biasa' | 'Langka' | 'Sangat Langka' | 'Legendaris';
+  rarity: 'Biasa' | 'Langka' | 'Sangat Langka' | 'Legendaris' | 'Mitos';
   color: string;
   secondaryColor: string;
   badgeBg: string;
@@ -28,63 +28,142 @@ interface FishType {
   minWeight: number;
   maxWeight: number;
   points: number;
+  coins: number;
   description: string;
 }
 
-const FISH_DATABASE: FishType[] = [
-  // Biasa
-  { id: 'shoe', name: 'Sepatu Boots Tua', rarity: 'Biasa', color: '#a8a29e', secondaryColor: '#57534e', badgeBg: '#e7e5e4', difficulty: 0.35, minWeight: 0.3, maxWeight: 0.9, points: 25, description: 'Boot tua basah yang tersangkut di dasar sungai.' },
-  { id: 'teri', name: 'Ikan Teri Neon', rarity: 'Biasa', color: '#38bdf8', secondaryColor: '#0284c7', badgeBg: '#e0f2fe', difficulty: 0.6, minWeight: 0.1, maxWeight: 0.4, points: 50, description: 'Ikan hias mungil berkilau biru neon saat terkena cahaya.' },
-  { id: 'nila', name: 'Ikan Nila Emas', rarity: 'Biasa', color: '#facc15', secondaryColor: '#ca8a04', badgeBg: '#fef9c3', difficulty: 1.0, minWeight: 0.8, maxWeight: 2.8, points: 100, description: 'Sisiknya kuning berkilau seperti emas murni.' },
-  { id: 'mujair', name: 'Ikan Mujair Bintik', rarity: 'Biasa', color: '#64748b', secondaryColor: '#334155', badgeBg: '#f1f5f9', difficulty: 0.8, minWeight: 0.5, maxWeight: 1.5, points: 80, description: 'Ikan air tawar yang tangguh dan mudah berkembang biak.' },
-  { id: 'wader', name: 'Ikan Wader Pari', rarity: 'Biasa', color: '#cbd5e1', secondaryColor: '#94a3b8', badgeBg: '#f8fafc', difficulty: 0.5, minWeight: 0.05, maxWeight: 0.2, points: 40, description: 'Ikan kecil perak yang hidup bergerombol di perairan dangkal.' },
-  { id: 'sepat', name: 'Ikan Sepat Rawa', rarity: 'Biasa', color: '#9ca3af', secondaryColor: '#4b5563', badgeBg: '#f3f4f6', difficulty: 0.65, minWeight: 0.1, maxWeight: 0.3, points: 35, description: 'Suka bersembunyi di balik tanaman air.' },
-  { id: 'kepiting', name: 'Kepiting Kecil', rarity: 'Biasa', color: '#f87171', secondaryColor: '#b91c1c', badgeBg: '#fef2f2', difficulty: 0.9, minWeight: 0.2, maxWeight: 0.8, points: 60, description: 'Suka mencapit umpanmu dengan capitnya yang kecil.' },
-  { id: 'ranting', name: 'Ranting Pohon', rarity: 'Biasa', color: '#78350f', secondaryColor: '#451a03', badgeBg: '#fffbeb', difficulty: 0.2, minWeight: 0.5, maxWeight: 2.0, points: 10, description: 'Hanya sepotong kayu yang tersangkut.' },
-  { id: 'kaleng', name: 'Kaleng Bekas', rarity: 'Biasa', color: '#94a3b8', secondaryColor: '#475569', badgeBg: '#f8fafc', difficulty: 0.3, minWeight: 0.1, maxWeight: 0.5, points: 15, description: 'Sampah yang terbuang. Jagalah kebersihan lingkungan!' },
-  { id: 'betik', name: 'Ikan Betik', rarity: 'Biasa', color: '#65a30d', secondaryColor: '#3f6212', badgeBg: '#f7fee7', difficulty: 0.7, minWeight: 0.2, maxWeight: 0.6, points: 55, description: 'Ikan kuat yang bisa hidup di air keruh.' },
-  
-  // Langka
-  { id: 'lele', name: 'Ikan Lele Raksasa', rarity: 'Langka', color: '#475569', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 1.6, minWeight: 3.5, maxWeight: 8.5, points: 250, description: 'Kumisnya panjang dan perlawanannya sangat sengit!' },
-  { id: 'gabus', name: 'Ikan Gabus Loreng', rarity: 'Langka', color: '#4d7c0f', secondaryColor: '#14532d', badgeBg: '#f0fdf4', difficulty: 1.8, minWeight: 2.0, maxWeight: 6.5, points: 300, description: 'Predator air tawar dengan gigi tajam dan corak loreng.' },
-  { id: 'gurame', name: 'Gurame Padang', rarity: 'Langka', color: '#fb923c', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.4, minWeight: 2.5, maxWeight: 5.0, points: 280, description: 'Pipih, lezat, dan memiliki warna cerah memikat.' },
-  { id: 'patin', name: 'Ikan Patin Sungai', rarity: 'Langka', color: '#cbd5e1', secondaryColor: '#64748b', badgeBg: '#f8fafc', difficulty: 1.5, minWeight: 2.0, maxWeight: 10.0, points: 260, description: 'Dagingnya tebal dan tarikannya cukup kuat.' },
-  { id: 'kura', name: 'Kura-kura Sungai', rarity: 'Langka', color: '#166534', secondaryColor: '#064e3b', badgeBg: '#f0fdf4', difficulty: 1.9, minWeight: 1.5, maxWeight: 4.0, points: 320, description: 'Tempurungnya keras, sangat berat saat ditarik.' },
-  { id: 'belut', name: 'Belut Listrik', rarity: 'Langka', color: '#eab308', secondaryColor: '#854d0e', badgeBg: '#fefce8', difficulty: 2.0, minWeight: 1.0, maxWeight: 3.5, points: 350, description: 'Hati-hati! Ikan ini bisa memberikan sengatan kecil.' },
-  { id: 'udang', name: 'Udang Galah Raksasa', rarity: 'Langka', color: '#f97316', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.7, minWeight: 0.5, maxWeight: 1.5, points: 290, description: 'Capitnya panjang berwarna biru, rasanya pasti lezat.' },
-  
-  // Sangat Langka
-  { id: 'koi', name: 'Ikan Mas Koi Royal', rarity: 'Sangat Langka', color: '#f87171', secondaryColor: '#fef2f2', badgeBg: '#fee2e2', difficulty: 2.3, minWeight: 2.5, maxWeight: 6.0, points: 500, description: 'Simbol keberuntungan bertotol merah putih indah.' },
-  { id: 'arwana', name: 'Arwana Super Red', rarity: 'Sangat Langka', color: '#dc2626', secondaryColor: '#7f1d1d', badgeBg: '#fef2f2', difficulty: 2.6, minWeight: 1.5, maxWeight: 4.5, points: 650, description: 'Raja akuarium dengan sisik merah merona yang mahal harganya.' },
-  { id: 'belida', name: 'Ikan Belida Lopis', rarity: 'Sangat Langka', color: '#9ca3af', secondaryColor: '#374151', badgeBg: '#f3f4f6', difficulty: 2.4, minWeight: 3.0, maxWeight: 7.0, points: 600, description: 'Bentuknya unik seperti pisau, sangat langka di alam liar.' },
-  { id: 'pari', name: 'Pari Air Tawar', rarity: 'Sangat Langka', color: '#d6d3d1', secondaryColor: '#78716c', badgeBg: '#fafaf9', difficulty: 2.5, minWeight: 5.0, maxWeight: 15.0, points: 550, description: 'Bentuknya pipih melebar, sangat jarang terlihat.' },
-  { id: 'pesut', name: 'Pesut Mahakam', rarity: 'Sangat Langka', color: '#bfdbfe', secondaryColor: '#60a5fa', badgeBg: '#eff6ff', difficulty: 2.8, minWeight: 10.0, maxWeight: 30.0, points: 700, description: 'Mamalia air tawar yang cerdas dan bersahabat.' },
-  { id: 'piranha', name: 'Piranha Merah', rarity: 'Sangat Langka', color: '#ef4444', secondaryColor: '#991b1b', badgeBg: '#fef2f2', difficulty: 2.7, minWeight: 0.8, maxWeight: 2.5, points: 680, description: 'Ikan predator buas dengan gigi setajam silet.' },
-  
-  // Legendaris
-  { id: 'megalodon', name: 'Hiu Megalodon Purba', rarity: 'Legendaris', color: '#38bdf8', secondaryColor: '#f1f5f9', badgeBg: '#bae6fd', difficulty: 3.2, minWeight: 20.0, maxWeight: 60.0, points: 1200, description: 'Predator samudra purba yang legendaris! Sangat langka.' },
-  { id: 'kraken', name: 'Bayi Kraken', rarity: 'Legendaris', color: '#a855f7', secondaryColor: '#581c87', badgeBg: '#faf5ff', difficulty: 3.5, minWeight: 15.0, maxWeight: 45.0, points: 1500, description: 'Makhluk mitologi berwujud gurita raksasa berukuran kecil.' },
-  { id: 'naga', name: 'Naga Air Zamrud', rarity: 'Legendaris', color: '#10b981', secondaryColor: '#047857', badgeBg: '#ecfdf5', difficulty: 3.8, minWeight: 25.0, maxWeight: 80.0, points: 2000, description: 'Naga gaib penunggu kedalaman, memancarkan aura magis hijau.' },
-  { id: 'leviathan', name: 'Leviathan Air Tawar', rarity: 'Legendaris', color: '#1e3a8a', secondaryColor: '#172554', badgeBg: '#eff6ff', difficulty: 3.9, minWeight: 50.0, maxWeight: 150.0, points: 2500, description: 'Raksasa mitologi yang menguasai perairan dalam.' },
-  { id: 'cumi', name: 'Cumi-cumi Raksasa', rarity: 'Legendaris', color: '#f43f5e', secondaryColor: '#9f1239', badgeBg: '#fff1f2', difficulty: 3.6, minWeight: 30.0, maxWeight: 70.0, points: 1800, description: 'Tentakelnya sangat kuat, bisa menyemburkan tinta hitam.' },
-  { id: 'hiuhantu', name: 'Hiu Hantu Tembus Pandang', rarity: 'Legendaris', color: '#f8fafc', secondaryColor: '#cbd5e1', badgeBg: '#f1f5f9', difficulty: 3.7, minWeight: 10.0, maxWeight: 25.0, points: 1900, description: 'Tubuhnya transparan, hanya terlihat matanya yang bersinar.' },
-  { id: 'duyung', name: 'Putri Duyung Emas', rarity: 'Legendaris', color: '#fcd34d', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 4.0, minWeight: 40.0, maxWeight: 65.0, points: 3000, description: 'Sosok mitos cantik yang membawa keberuntungan tiada tara.' }
+export interface RodItem {
+  id: string;
+  name: string;
+  price: number;
+  icon: string;
+  description: string;
+  reelSpeedBonus: number;
+  strengthBonus: number;
+  luckBonus: number;
+  color: string;
+}
+
+export interface BaitItem {
+  id: string;
+  name: string;
+  price: number;
+  icon: string;
+  description: string;
+  biteSpeedBonus: number;
+  rareBonus: number;
+  mythicBonus: number;
+}
+
+export const RODS_DATABASE: RodItem[] = [
+  { id: 'bamboo', name: 'Joran Bambu Klasik', price: 0, icon: '🎋', description: 'Joran tradisional dari bambu petung pilihan.', reelSpeedBonus: 0, strengthBonus: 0, luckBonus: 0, color: '#eab308' },
+  { id: 'carbon', name: 'Joran Serat Karbon Pro', price: 500, icon: '🎣', description: 'Ringan & lentur, kecepatan tarik +25% & ketahanan +20%.', reelSpeedBonus: 0.25, strengthBonus: 0.20, luckBonus: 0.15, color: '#38bdf8' },
+  { id: 'gold', name: 'Joran Naga Emas Hoki', price: 1500, icon: '🔱', description: 'Berlapis emas murni, peluang ikan Langka & Koin +50%.', reelSpeedBonus: 0.40, strengthBonus: 0.35, luckBonus: 0.40, color: '#facc15' },
+  { id: 'poseidon', name: 'Trisula Poseidon Atlantis', price: 4000, icon: '⚡', description: 'Pusaka dewa samudra, peluang Mitos +150% & Auto-Reel Burst!', reelSpeedBonus: 0.65, strengthBonus: 0.50, luckBonus: 0.90, color: '#a855f7' }
 ];
 
-const getRandomFish = (): FishType => {
+export const BAITS_DATABASE: BaitItem[] = [
+  { id: 'worm', name: 'Cacing Tanah', price: 0, icon: '🪱', description: 'Umpan dasar tak terbatas.', biteSpeedBonus: 0, rareBonus: 0, mythicBonus: 0 },
+  { id: 'pellet', name: 'Pelet Aroma Master', price: 30, icon: '🧆', description: 'Ikan menyambar 50% lebih cepat.', biteSpeedBonus: 0.5, rareBonus: 0.15, mythicBonus: 0 },
+  { id: 'shrimp', name: 'Udang Laut Fosfor', price: 80, icon: '🦐', description: 'Peluang ikan Langka & Sangat Langka meningkat drastis.', biteSpeedBonus: 0.35, rareBonus: 0.45, mythicBonus: 0.15 },
+  { id: 'star', name: 'Umpan Bintang Mitos', price: 200, icon: '⭐', description: 'Memikat ikan Legendaris & Mitos Purba dari kedalaman.', biteSpeedBonus: 0.45, rareBonus: 0.70, mythicBonus: 0.85 }
+];
+
+export const FISH_DATABASE: FishType[] = [
+  // Biasa (Common)
+  { id: 'shoe', name: 'Sepatu Boots Tua', rarity: 'Biasa', color: '#a8a29e', secondaryColor: '#57534e', badgeBg: '#e7e5e4', difficulty: 0.35, minWeight: 0.3, maxWeight: 0.9, points: 25, coins: 12, description: 'Boot tua basah yang tersangkut di dasar sungai.' },
+  { id: 'teri', name: 'Ikan Teri Neon', rarity: 'Biasa', color: '#38bdf8', secondaryColor: '#0284c7', badgeBg: '#e0f2fe', difficulty: 0.6, minWeight: 0.1, maxWeight: 0.4, points: 50, coins: 25, description: 'Ikan hias mungil berkilau biru neon saat terkena cahaya.' },
+  { id: 'nila', name: 'Ikan Nila Emas', rarity: 'Biasa', color: '#facc15', secondaryColor: '#ca8a04', badgeBg: '#fef9c3', difficulty: 1.0, minWeight: 0.8, maxWeight: 2.8, points: 100, coins: 50, description: 'Sisiknya kuning berkilau seperti emas murni.' },
+  { id: 'mujair', name: 'Ikan Mujair Bintik', rarity: 'Biasa', color: '#64748b', secondaryColor: '#334155', badgeBg: '#f1f5f9', difficulty: 0.8, minWeight: 0.5, maxWeight: 1.5, points: 80, coins: 40, description: 'Ikan air tawar yang tangguh dan mudah berkembang biak.' },
+  { id: 'wader', name: 'Ikan Wader Pari', rarity: 'Biasa', color: '#cbd5e1', secondaryColor: '#94a3b8', badgeBg: '#f8fafc', difficulty: 0.5, minWeight: 0.05, maxWeight: 0.2, points: 40, coins: 20, description: 'Ikan kecil perak yang hidup bergerombol di perairan dangkal.' },
+  { id: 'sepat', name: 'Ikan Sepat Rawa', rarity: 'Biasa', color: '#9ca3af', secondaryColor: '#4b5563', badgeBg: '#f3f4f6', difficulty: 0.65, minWeight: 0.1, maxWeight: 0.3, points: 35, coins: 18, description: 'Suka bersembunyi di balik tanaman air.' },
+  { id: 'kepiting', name: 'Kepiting Kecil', rarity: 'Biasa', color: '#f87171', secondaryColor: '#b91c1c', badgeBg: '#fef2f2', difficulty: 0.9, minWeight: 0.2, maxWeight: 0.8, points: 60, coins: 30, description: 'Suka mencapit umpanmu dengan capitnya yang kecil.' },
+  { id: 'ranting', name: 'Ranting Pohon', rarity: 'Biasa', color: '#78350f', secondaryColor: '#451a03', badgeBg: '#fffbeb', difficulty: 0.2, minWeight: 0.5, maxWeight: 2.0, points: 10, coins: 5, description: 'Hanya sepotong kayu yang tersangkut.' },
+  { id: 'kaleng', name: 'Kaleng Bekas', rarity: 'Biasa', color: '#94a3b8', secondaryColor: '#475569', badgeBg: '#f8fafc', difficulty: 0.3, minWeight: 0.1, maxWeight: 0.5, points: 15, coins: 8, description: 'Sampah yang terbuang. Jagalah kebersihan lingkungan!' },
+  { id: 'betik', name: 'Ikan Betik', rarity: 'Biasa', color: '#65a30d', secondaryColor: '#3f6212', badgeBg: '#f7fee7', difficulty: 0.7, minWeight: 0.2, maxWeight: 0.6, points: 55, coins: 28, description: 'Ikan kuat yang bisa hidup di air keruh.' },
+  { id: 'guppy', name: 'Ikan Guppy Pelangi', rarity: 'Biasa', color: '#f472b6', secondaryColor: '#ec4899', badgeBg: '#fdf2f8', difficulty: 0.55, minWeight: 0.05, maxWeight: 0.2, points: 65, coins: 32, description: 'Ekornya mekar indah seperti kipas beraneka warna.' },
+  { id: 'keong', name: 'Keong Emas Sawah', rarity: 'Biasa', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 0.25, minWeight: 0.1, maxWeight: 0.4, points: 30, coins: 15, description: 'Cangkang keong kuning mengkilap di dasar lumpur.' },
+  
+  // Langka (Rare)
+  { id: 'lele', name: 'Ikan Lele Raksasa', rarity: 'Langka', color: '#475569', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 1.6, minWeight: 3.5, maxWeight: 8.5, points: 250, coins: 120, description: 'Kumisnya panjang dan perlawanannya sangat sengit!' },
+  { id: 'gabus', name: 'Ikan Gabus Loreng', rarity: 'Langka', color: '#4d7c0f', secondaryColor: '#14532d', badgeBg: '#f0fdf4', difficulty: 1.8, minWeight: 2.0, maxWeight: 6.5, points: 300, coins: 150, description: 'Predator air tawar dengan gigi tajam dan corak loreng.' },
+  { id: 'gurame', name: 'Gurame Padang', rarity: 'Langka', color: '#fb923c', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.4, minWeight: 2.5, maxWeight: 5.0, points: 280, coins: 140, description: 'Pipih, lezat, dan memiliki warna cerah memikat.' },
+  { id: 'patin', name: 'Ikan Patin Sungai', rarity: 'Langka', color: '#cbd5e1', secondaryColor: '#64748b', badgeBg: '#f8fafc', difficulty: 1.5, minWeight: 2.0, maxWeight: 10.0, points: 260, coins: 130, description: 'Dagingnya tebal dan tarikannya cukup kuat.' },
+  { id: 'kura', name: 'Kura-kura Sungai', rarity: 'Langka', color: '#166534', secondaryColor: '#064e3b', badgeBg: '#f0fdf4', difficulty: 1.9, minWeight: 1.5, maxWeight: 4.0, points: 320, coins: 160, description: 'Tempurungnya keras, sangat berat saat ditarik.' },
+  { id: 'belut', name: 'Belut Listrik', rarity: 'Langka', color: '#eab308', secondaryColor: '#854d0e', badgeBg: '#fefce8', difficulty: 2.0, minWeight: 1.0, maxWeight: 3.5, points: 350, coins: 180, description: 'Hati-hati! Ikan ini bisa memberikan sengatan kecil.' },
+  { id: 'udang', name: 'Udang Galah Raksasa', rarity: 'Langka', color: '#f97316', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.7, minWeight: 0.5, maxWeight: 1.5, points: 290, coins: 145, description: 'Capitnya panjang berwarna biru, rasanya pasti lezat.' },
+  { id: 'channa', name: 'Ikan Channa Maru', rarity: 'Langka', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fef3c7', difficulty: 2.1, minWeight: 1.8, maxWeight: 5.5, points: 380, coins: 195, description: 'Channa berkepala ular dengan motif bunga kuning keemasan.' },
+  { id: 'bawal', name: 'Ikan Bawal Bintang', rarity: 'Langka', color: '#94a3b8', secondaryColor: '#334155', badgeBg: '#f8fafc', difficulty: 1.75, minWeight: 1.2, maxWeight: 3.8, points: 310, coins: 155, description: 'Ikan berbadan lebar dan bertenaga besar saat melawan kail.' },
+  { id: 'lobster', name: 'Lobster Biru Samudra', rarity: 'Langka', color: '#0284c7', secondaryColor: '#0369a1', badgeBg: '#e0f2fe', difficulty: 2.2, minWeight: 0.8, maxWeight: 2.2, points: 400, coins: 210, description: 'Warna birunya sangat mencolok dan langka di alam liar.' },
+  
+  // Sangat Langka (Epic)
+  { id: 'koi', name: 'Ikan Mas Koi Royal', rarity: 'Sangat Langka', color: '#f87171', secondaryColor: '#fef2f2', badgeBg: '#fee2e2', difficulty: 2.3, minWeight: 2.5, maxWeight: 6.0, points: 500, coins: 280, description: 'Simbol keberuntungan bertotol merah putih indah.' },
+  { id: 'arwana', name: 'Arwana Super Red', rarity: 'Sangat Langka', color: '#dc2626', secondaryColor: '#7f1d1d', badgeBg: '#fef2f2', difficulty: 2.6, minWeight: 1.5, maxWeight: 4.5, points: 650, coins: 380, description: 'Raja akuarium dengan sisik merah merona yang mahal harganya.' },
+  { id: 'belida', name: 'Ikan Belida Lopis', rarity: 'Sangat Langka', color: '#9ca3af', secondaryColor: '#374151', badgeBg: '#f3f4f6', difficulty: 2.4, minWeight: 3.0, maxWeight: 7.0, points: 600, coins: 340, description: 'Bentuknya unik seperti pisau, sangat langka di alam liar.' },
+  { id: 'pari', name: 'Pari Air Tawar', rarity: 'Sangat Langka', color: '#d6d3d1', secondaryColor: '#78716c', badgeBg: '#fafaf9', difficulty: 2.5, minWeight: 5.0, maxWeight: 15.0, points: 550, coins: 310, description: 'Bentuknya pipih melebar, sangat jarang terlihat.' },
+  { id: 'pesut', name: 'Pesut Mahakam', rarity: 'Sangat Langka', color: '#bfdbfe', secondaryColor: '#60a5fa', badgeBg: '#eff6ff', difficulty: 2.8, minWeight: 10.0, maxWeight: 30.0, points: 700, coins: 420, description: 'Mamalia air tawar yang cerdas dan bersahabat.' },
+  { id: 'piranha', name: 'Piranha Merah', rarity: 'Sangat Langka', color: '#ef4444', secondaryColor: '#991b1b', badgeBg: '#fef2f2', difficulty: 2.7, minWeight: 0.8, maxWeight: 2.5, points: 680, coins: 400, description: 'Ikan predator buas dengan gigi setajam silet.' },
+  { id: 'arapaima', name: 'Ikan Arapaima Gigas', rarity: 'Sangat Langka', color: '#b91c1c', secondaryColor: '#1e293b', badgeBg: '#fee2e2', difficulty: 2.9, minWeight: 20.0, maxWeight: 75.0, points: 800, coins: 480, description: 'Raksasa sungai Amazon berlidah tulang dan bersisik merah.' },
+  { id: 'aligator', name: 'Ikan Aligator Gar', rarity: 'Sangat Langka', color: '#334155', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 2.85, minWeight: 8.0, maxWeight: 25.0, points: 720, coins: 430, description: 'Moncongnya panjang mirip buaya dengan deretan taring tajam.' },
+  { id: 'peacock', name: 'Ikan Peacock Bass', rarity: 'Sangat Langka', color: '#10b981', secondaryColor: '#f59e0b', badgeBg: '#ecfdf5', difficulty: 2.65, minWeight: 2.0, maxWeight: 6.0, points: 640, coins: 370, description: 'Corak ekornya menyerupai mata merak dengan kilau hijau zamrud.' },
+  
+  // Legendaris (Legendary)
+  { id: 'megalodon', name: 'Hiu Megalodon Purba', rarity: 'Legendaris', color: '#38bdf8', secondaryColor: '#f1f5f9', badgeBg: '#bae6fd', difficulty: 3.4, minWeight: 30.0, maxWeight: 80.0, points: 1400, coins: 900, description: 'Predator samudra purba yang legendaris! Sangat langka.' },
+  { id: 'kraken', name: 'Bayi Kraken', rarity: 'Legendaris', color: '#a855f7', secondaryColor: '#581c87', badgeBg: '#faf5ff', difficulty: 3.6, minWeight: 15.0, maxWeight: 45.0, points: 1600, coins: 1100, description: 'Makhluk mitologi berwujud gurita raksasa berukuran kecil.' },
+  { id: 'naga', name: 'Naga Air Zamrud', rarity: 'Legendaris', color: '#10b981', secondaryColor: '#047857', badgeBg: '#ecfdf5', difficulty: 3.8, minWeight: 25.0, maxWeight: 80.0, points: 2000, coins: 1400, description: 'Naga gaib penunggu kedalaman, memancarkan aura magis hijau.' },
+  { id: 'leviathan', name: 'Leviathan Air Tawar', rarity: 'Legendaris', color: '#1e3a8a', secondaryColor: '#172554', badgeBg: '#eff6ff', difficulty: 4.0, minWeight: 50.0, maxWeight: 150.0, points: 2500, coins: 1800, description: 'Raksasa mitologi yang menguasai perairan dalam.' },
+  { id: 'cumi', name: 'Cumi-cumi Raksasa', rarity: 'Legendaris', color: '#f43f5e', secondaryColor: '#9f1239', badgeBg: '#fff1f2', difficulty: 3.7, minWeight: 30.0, maxWeight: 70.0, points: 1800, coins: 1250, description: 'Tentakelnya sangat kuat, bisa menyemburkan tinta hitam.' },
+  { id: 'hiuhantu', name: 'Hiu Hantu Tembus Pandang', rarity: 'Legendaris', color: '#f8fafc', secondaryColor: '#cbd5e1', badgeBg: '#f1f5f9', difficulty: 3.75, minWeight: 10.0, maxWeight: 25.0, points: 1900, coins: 1300, description: 'Tubuhnya transparan, hanya terlihat matanya yang bersinar.' },
+  { id: 'duyung', name: 'Putri Duyung Emas', rarity: 'Legendaris', color: '#fcd34d', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 4.1, minWeight: 40.0, maxWeight: 65.0, points: 3000, coins: 2200, description: 'Sosok mitos cantik yang membawa keberuntungan tiada tara.' },
+  { id: 'oarfish', name: 'Ikan Naga Oarfish Samudra', rarity: 'Legendaris', color: '#e2e8f0', secondaryColor: '#ef4444', badgeBg: '#f8fafc', difficulty: 3.85, minWeight: 35.0, maxWeight: 90.0, points: 2200, coins: 1600, description: 'Ikan pita raksasa penjelajah palung laut terdalam dengan mahkota merah.' },
+
+  // Mitos / Dewa (Mythic - Ultra Rare 1%)
+  { id: 'shenlong', name: 'Naga Emas Shenlong', rarity: 'Mitos', color: '#facc15', secondaryColor: '#854d0e', badgeBg: '#fef08a', difficulty: 4.8, minWeight: 100.0, maxWeight: 350.0, points: 6000, coins: 5000, description: 'Naga langit suci pembawa berkah kekayaan tiada tara, bermahkota mustika naga.' },
+  { id: 'phoenix', name: 'Phoenix Abadi Samudra', rarity: 'Mitos', color: '#06b6d4', secondaryColor: '#0891b2', badgeBg: '#cffafe', difficulty: 4.6, minWeight: 80.0, maxWeight: 280.0, points: 5500, coins: 4500, description: 'Burung mitos bersayap air es abadi yang terlahir dari tetesan embun samudra.' },
+  { id: 'atlantis', name: 'Dewa Penjaga Atlantis', rarity: 'Mitos', color: '#14b8a6', secondaryColor: '#0f766e', badgeBg: '#ccfbf1', difficulty: 5.0, minWeight: 120.0, maxWeight: 450.0, points: 7000, coins: 6000, description: 'Penguasa samudra kuno berzirah emas dan bertrisula keramat.' },
+  { id: 'cosmic', name: 'Ikan Bintang Galaksi', rarity: 'Mitos', color: '#6366f1', secondaryColor: '#4338ca', badgeBg: '#e0e7ff', difficulty: 5.2, minWeight: 150.0, maxWeight: 600.0, points: 8000, coins: 7500, description: 'Makhluk kosmik yang tercipta dari gugusan bintang galaksi dan nebula alam semesta.' }
+];
+
+export const calculateRarityRates = (rodId: string, baitId: string) => {
+  const rod = RODS_DATABASE.find(r => r.id === rodId) || RODS_DATABASE[0];
+  const bait = BAITS_DATABASE.find(b => b.id === baitId) || BAITS_DATABASE[0];
+
+  let mythicChance = 0.01 + rod.luckBonus * 0.008 + bait.mythicBonus * 0.015;
+  let legendaryChance = 0.05 + rod.luckBonus * 0.03 + bait.rareBonus * 0.035;
+  let epicChance = 0.14 + rod.luckBonus * 0.05 + bait.rareBonus * 0.06;
+  let rareChance = 0.30 + rod.luckBonus * 0.05 + bait.rareBonus * 0.08;
+  
+  const totalSpecial = mythicChance + legendaryChance + epicChance + rareChance;
+  const commonChance = Math.max(0.08, 1 - totalSpecial);
+
+  return {
+    common: commonChance,
+    rare: rareChance,
+    epic: epicChance,
+    legendary: legendaryChance,
+    mythic: mythicChance,
+  };
+};
+
+const getRandomFish = (rodId: string, baitId: string): FishType => {
+  const rates = calculateRarityRates(rodId, baitId);
   const rand = Math.random();
-  if (rand < 0.58) {
-    const biasa = FISH_DATABASE.filter(f => f.rarity === 'Biasa');
-    return biasa[Math.floor(Math.random() * biasa.length)];
-  } else if (rand < 0.88) {
-    const langka = FISH_DATABASE.filter(f => f.rarity === 'Langka');
-    return langka[Math.floor(Math.random() * langka.length)];
-  } else if (rand < 0.98) {
-    const sgtLangka = FISH_DATABASE.filter(f => f.rarity === 'Sangat Langka');
-    return sgtLangka[Math.floor(Math.random() * sgtLangka.length)];
-  } else {
+
+  if (rand < rates.mythic) {
+    const mythic = FISH_DATABASE.filter(f => f.rarity === 'Mitos');
+    return mythic[Math.floor(Math.random() * mythic.length)];
+  } else if (rand < rates.mythic + rates.legendary) {
     const legendaris = FISH_DATABASE.filter(f => f.rarity === 'Legendaris');
     return legendaris[Math.floor(Math.random() * legendaris.length)];
+  } else if (rand < rates.mythic + rates.legendary + rates.epic) {
+    const sgtLangka = FISH_DATABASE.filter(f => f.rarity === 'Sangat Langka');
+    return sgtLangka[Math.floor(Math.random() * sgtLangka.length)];
+  } else if (rand < rates.mythic + rates.legendary + rates.epic + rates.rare) {
+    const langka = FISH_DATABASE.filter(f => f.rarity === 'Langka');
+    return langka[Math.floor(Math.random() * langka.length)];
+  } else {
+    const biasa = FISH_DATABASE.filter(f => f.rarity === 'Biasa');
+    return biasa[Math.floor(Math.random() * biasa.length)];
   }
 };
 
@@ -162,13 +241,15 @@ const FishingJournal: React.FC<{
         <div className="flex-1 flex flex-col gap-3 relative z-10 pt-2">
           {pageSpecies.map((fish, index) => {
             const isDiscovered = discoveredSpecies.includes(fish.id);
+            const isMythic = fish.rarity === 'Mitos';
+            const isLegendary = fish.rarity === 'Legendaris';
             const rotation = index % 2 === 0 ? 'rotate-1' : '-rotate-1';
             return (
-              <div key={fish.id} className={`relative bg-white border-[2px] border-slate-300 p-1.5 sm:p-2 flex items-center gap-2 sm:gap-3 shadow-sm transform ${rotation} ${isDiscovered ? '' : 'grayscale opacity-60'}`}>
+              <div key={fish.id} className={`relative bg-white border-[2px] ${isMythic && isDiscovered ? 'border-purple-600 ring-2 ring-amber-400' : isLegendary && isDiscovered ? 'border-amber-500' : 'border-slate-300'} p-1.5 sm:p-2 flex items-center gap-2 sm:gap-3 shadow-sm transform ${rotation} ${isDiscovered ? '' : 'grayscale opacity-60'}`}>
                 {/* Tape */}
                 <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 bg-white/40 backdrop-blur-sm border border-slate-200/50 shadow-[0_1px_2px_rgba(0,0,0,0.1)] transform -rotate-2" />
                 
-                <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-sky-50 border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 ${isMythic && isDiscovered ? 'bg-gradient-to-tr from-purple-100 to-amber-100' : 'bg-sky-50'} border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner`}>
                   {isDiscovered ? (
                     <FishGraphic id={fish.id} size={32} />
                   ) : (
@@ -176,7 +257,10 @@ const FishingJournal: React.FC<{
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-black truncate text-slate-800 mb-0.5 font-serif">{isDiscovered ? fish.name : 'Unknown'}</div>
+                  <div className="text-xs sm:text-sm font-black truncate text-slate-800 mb-0.5 font-serif flex items-center gap-1">
+                    {isDiscovered ? fish.name : 'Unknown'}
+                    {isDiscovered && isMythic && <span className="text-amber-500 text-[10px]">⭐</span>}
+                  </div>
                   <div className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 inline-block border border-slate-800 text-slate-900 shadow-[1px_1px_0_0_rgba(0,0,0,0.5)] tracking-wider" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
                     {isDiscovered ? fish.rarity : '???'}
                   </div>
@@ -256,7 +340,7 @@ const FishingJournal: React.FC<{
             playFishingSound('click', soundEnabled);
             onClose();
           }}
-          className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-[350] transition-transform active:scale-95"
+          className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-[350] transition-transform active:scale-95 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -311,7 +395,7 @@ const FishingJournal: React.FC<{
             <button 
               onClick={handlePrev} 
               disabled={!!flippingState}
-              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100"
+              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100 cursor-pointer"
             >
               &lt; PREV
             </button>
@@ -320,11 +404,374 @@ const FishingJournal: React.FC<{
             <button 
               onClick={handleNext} 
               disabled={!!flippingState}
-              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100"
+              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100 cursor-pointer"
             >
               NEXT &gt;
             </button>
           ) : <div />}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const FishingOddsModal: React.FC<{
+  equippedRod: string;
+  equippedBait: string;
+  onClose: () => void;
+  soundEnabled?: boolean;
+}> = ({ equippedRod, equippedBait, onClose, soundEnabled }) => {
+  const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
+  const currentBait = BAITS_DATABASE.find(b => b.id === equippedBait) || BAITS_DATABASE[0];
+  const rates = calculateRarityRates(equippedRod, equippedBait);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-4 font-mono"
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="bg-amber-100 border-[6px] border-black p-5 sm:p-6 w-full max-w-[480px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative flex flex-col max-h-[85vh] overflow-y-auto">
+        <button
+          onClick={() => {
+            playFishingSound('click', soundEnabled);
+            onClose();
+          }}
+          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-2 border-b-[3px] border-black pb-2 mb-4 pr-6">
+          <BarChart3 className="w-6 h-6 text-blue-700" />
+          <h2 className="text-base sm:text-lg font-black text-slate-900">PELUANG IKAN (ODDS)</h2>
+        </div>
+
+        {/* Current Equip Buffs */}
+        <div className="bg-white border-[3px] border-black p-3 mb-4 space-y-1.5 text-[10px]">
+          <div className="font-black text-slate-700 text-[11px] mb-1">PERLENGKAPAN AKTIF:</div>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-600">Joran: {currentRod.icon} {currentRod.name}</span>
+            <span className="text-emerald-600 font-black">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-600">Umpan: {currentBait.icon} {currentBait.name}</span>
+            <span className="text-purple-600 font-black">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
+          </div>
+        </div>
+
+        {/* Rates Breakdown */}
+        <div className="space-y-2.5 mb-4">
+          <div className="bg-white border-[2px] border-black p-2.5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-slate-400 border border-black" />
+              <span className="text-xs font-black text-slate-800">BIASA (Common)</span>
+            </div>
+            <span className="text-xs font-black text-slate-700 font-mono">{(rates.common * 100).toFixed(1)}%</span>
+          </div>
+
+          <div className="bg-sky-50 border-[2px] border-blue-600 p-2.5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-blue-500 border border-black" />
+              <span className="text-xs font-black text-blue-800">LANGKA (Rare)</span>
+            </div>
+            <span className="text-xs font-black text-blue-800 font-mono">{(rates.rare * 100).toFixed(1)}%</span>
+          </div>
+
+          <div className="bg-purple-50 border-[2px] border-purple-600 p-2.5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-purple-500 border border-black" />
+              <span className="text-xs font-black text-purple-800">SANGAT LANGKA (Epic)</span>
+            </div>
+            <span className="text-xs font-black text-purple-800 font-mono">{(rates.epic * 100).toFixed(1)}%</span>
+          </div>
+
+          <div className="bg-amber-50 border-[2px] border-amber-600 p-2.5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-amber-400 border border-black animate-pulse" />
+              <span className="text-xs font-black text-amber-900">👑 LEGENDARIS</span>
+            </div>
+            <span className="text-xs font-black text-amber-900 font-mono">{(rates.legendary * 100).toFixed(1)}%</span>
+          </div>
+
+          <div className="bg-gradient-to-r from-rose-100 via-amber-100 to-purple-100 border-[3px] border-purple-800 p-2.5 flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-rose-500 border border-black animate-ping" />
+              <span className="text-xs font-black text-purple-950 flex items-center gap-1">
+                ⭐ MITOS / DEWA
+              </span>
+            </div>
+            <span className="text-xs font-black text-rose-700 font-mono">{(rates.mythic * 100).toFixed(1)}%</span>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-slate-600 italic text-center">
+          *Gunakan Joran Naga Emas / Trisula Poseidon dan Umpan Bintang Mitos untuk peluang tangkapan dewa tertinggi!
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+const FishingShopModal: React.FC<{
+  coins: number;
+  setCoins: React.Dispatch<React.SetStateAction<number>>;
+  equippedRod: string;
+  setEquippedRod: (id: string) => void;
+  ownedRods: string[];
+  setOwnedRods: React.Dispatch<React.SetStateAction<string[]>>;
+  equippedBait: string;
+  setEquippedBait: (id: string) => void;
+  baitCounts: Record<string, number>;
+  setBaitCounts: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  soundEnabled?: boolean;
+  onClose: () => void;
+}> = ({
+  coins,
+  setCoins,
+  equippedRod,
+  setEquippedRod,
+  ownedRods,
+  setOwnedRods,
+  equippedBait,
+  setEquippedBait,
+  baitCounts,
+  setBaitCounts,
+  soundEnabled,
+  onClose,
+}) => {
+  const [tab, setTab] = useState<'rods' | 'baits'>('rods');
+
+  const handleBuyRod = (rod: RodItem) => {
+    if (coins < rod.price) return;
+    playFishingSound('upgrade', soundEnabled);
+    setCoins(c => c - rod.price);
+    setOwnedRods(prev => [...prev, rod.id]);
+    setEquippedRod(rod.id);
+  };
+
+  const handleEquipRod = (rodId: string) => {
+    playFishingSound('click', soundEnabled);
+    setEquippedRod(rodId);
+  };
+
+  const handleBuyBait = (bait: BaitItem) => {
+    if (coins < bait.price) return;
+    playFishingSound('upgrade', soundEnabled);
+    setCoins(c => c - bait.price);
+    setBaitCounts(prev => ({
+      ...prev,
+      [bait.id]: (prev[bait.id] || 0) + 5,
+    }));
+    setEquippedBait(bait.id);
+  };
+
+  const handleEquipBait = (baitId: string) => {
+    playFishingSound('click', soundEnabled);
+    setEquippedBait(baitId);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono"
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="bg-amber-100 border-[6px] border-black p-4 sm:p-6 w-full max-w-[560px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative flex flex-col max-h-[88vh]">
+        <button
+          onClick={() => {
+            playFishingSound('click', soundEnabled);
+            onClose();
+          }}
+          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 z-10 cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-[3px] border-black pb-2 mb-3 pr-8">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-amber-800" />
+            <h2 className="text-sm sm:text-base font-black text-slate-900">TOKO ALAT PANCING</h2>
+          </div>
+          <div className="bg-amber-200 border-[2px] border-black px-2.5 py-1 flex items-center gap-1 font-black text-xs text-amber-950 shadow-sm">
+            <span>🪙 {coins}</span>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => {
+              playFishingSound('click', soundEnabled);
+              setTab('rods');
+            }}
+            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
+              tab === 'rods' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_rgba(0,0,0,1)]' : 'bg-white text-slate-600 hover:bg-amber-50'
+            }`}
+          >
+            🎣 JORAN PANCING
+          </button>
+          <button
+            onClick={() => {
+              playFishingSound('click', soundEnabled);
+              setTab('baits');
+            }}
+            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
+              tab === 'baits' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_rgba(0,0,0,1)]' : 'bg-white text-slate-600 hover:bg-amber-50'
+            }`}
+          >
+            🪱 UMPAN IKAN
+          </button>
+        </div>
+
+        {/* Items List */}
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0 custom-scrollbar">
+          {tab === 'rods' ? (
+            RODS_DATABASE.map(rod => {
+              const isOwned = ownedRods.includes(rod.id);
+              const isEquipped = equippedRod === rod.id;
+              const canAfford = coins >= rod.price;
+
+              return (
+                <div
+                  key={rod.id}
+                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
+                    isEquipped ? 'ring-2 ring-blue-600 bg-blue-50/50' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-50 border-[2px] border-black flex items-center justify-center text-2xl shrink-0">
+                      {rod.icon}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900">{rod.name}</h4>
+                        {isEquipped && (
+                          <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 border border-black">
+                            DIPAKAI
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[9px] sm:text-[10px] text-slate-600 mt-0.5 leading-snug">{rod.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+                    {!isOwned && (
+                      <span className="text-xs font-black text-amber-700">🪙 {rod.price}</span>
+                    )}
+
+                    {isEquipped ? (
+                      <button
+                        disabled
+                        className="bg-emerald-600 text-white text-[10px] font-black px-3 py-1.5 border-[2px] border-black opacity-90 cursor-default"
+                      >
+                        ✓ DIGUNAKAN
+                      </button>
+                    ) : isOwned ? (
+                      <button
+                        onClick={() => handleEquipRod(rod.id)}
+                        className="bg-sky-400 hover:bg-sky-300 text-slate-900 text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer"
+                      >
+                        GUNAKAN
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBuyRod(rod)}
+                        disabled={!canAfford}
+                        className={`text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer ${
+                          canAfford
+                            ? 'bg-amber-400 hover:bg-amber-300 text-slate-900'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                        }`}
+                      >
+                        BELI
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            BAITS_DATABASE.map(bait => {
+              const isEquipped = equippedBait === bait.id;
+              const count = bait.id === 'worm' ? '∞' : (baitCounts[bait.id] || 0);
+              const canAfford = coins >= bait.price;
+
+              return (
+                <div
+                  key={bait.id}
+                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
+                    isEquipped ? 'ring-2 ring-purple-600 bg-purple-50/50' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-50 border-[2px] border-black flex items-center justify-center text-2xl shrink-0">
+                      {bait.icon}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900">{bait.name}</h4>
+                        {isEquipped && (
+                          <span className="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 border border-black">
+                            AKTIF
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[9px] sm:text-[10px] text-slate-600 mt-0.5 leading-snug">{bait.description}</p>
+                      <div className="text-[9px] font-bold text-slate-500 mt-1">
+                        Stok: <span className="text-blue-700 font-black">{count}</span> {bait.id !== 'worm' ? 'biji' : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+                    {bait.price > 0 && (
+                      <span className="text-xs font-black text-amber-700">🪙 {bait.price} / 5x</span>
+                    )}
+
+                    <div className="flex gap-1.5">
+                      {bait.price > 0 && (
+                        <button
+                          onClick={() => handleBuyBait(bait)}
+                          disabled={!canAfford}
+                          className={`text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer ${
+                            canAfford
+                              ? 'bg-amber-400 hover:bg-amber-300 text-slate-900'
+                              : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                          }`}
+                        >
+                          BELI (5x)
+                        </button>
+                      )}
+
+                      {!isEquipped ? (
+                        <button
+                          onClick={() => handleEquipBait(bait.id)}
+                          disabled={bait.id !== 'worm' && (baitCounts[bait.id] || 0) <= 0}
+                          className="bg-sky-400 hover:bg-sky-300 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-slate-900 text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer"
+                        >
+                          PAKAI
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black opacity-90 cursor-default"
+                        >
+                          ✓ AKTIF
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </motion.div>
@@ -347,6 +794,7 @@ export const FishingGameSection: React.FC = () => {
   const [scale, setScale] = useState({ x: 1, y: 1 });
   const [canvasHeight, setCanvasHeight] = useState(600);
   const [score, setScore] = useState(0);
+  const [coins, setCoins] = useState(150);
   const [caughtCount, setCaughtCount] = useState(0);
   const [combo, setCombo] = useState(0);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('pagi');
@@ -358,6 +806,15 @@ export const FishingGameSection: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<string[]>([]);
   const [isJournalOpen, setIsJournalOpen] = useState(false);
+  const [isOddsOpen, setIsOddsOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isScreenShaking, setIsScreenShaking] = useState(false);
+
+  // Equipment & Inventory
+  const [equippedRod, setEquippedRod] = useState('bamboo');
+  const [ownedRods, setOwnedRods] = useState<string[]>(['bamboo']);
+  const [equippedBait, setEquippedBait] = useState('worm');
+  const [baitCounts, setBaitCounts] = useState<Record<string, number>>({ pellet: 5, shrimp: 2, star: 0 });
 
   const [activeUser, setActiveUser] = useState<string | null>(null);
 
@@ -369,21 +826,36 @@ export const FishingGameSection: React.FC = () => {
         try {
           const parsed = JSON.parse(savedData);
           setScore(parsed.score || 0);
+          setCoins(parsed.coins !== undefined ? parsed.coins : 150);
           setCaughtCount(parsed.caughtCount || 0);
           setDiscoveredSpecies(parsed.discoveredSpecies || []);
+          setEquippedRod(parsed.equippedRod || 'bamboo');
+          setOwnedRods(parsed.ownedRods || ['bamboo']);
+          setEquippedBait(parsed.equippedBait || 'worm');
+          setBaitCounts(parsed.baitCounts || { pellet: 5, shrimp: 2, star: 0 });
         } catch (e) {
           console.error("Failed to parse fishing data", e);
         }
       } else {
         setScore(0);
+        setCoins(150);
         setCaughtCount(0);
         setDiscoveredSpecies([]);
+        setEquippedRod('bamboo');
+        setOwnedRods(['bamboo']);
+        setEquippedBait('worm');
+        setBaitCounts({ pellet: 5, shrimp: 2, star: 0 });
       }
       setActiveUser(currentUser.username);
     } else {
       setScore(0);
+      setCoins(150);
       setCaughtCount(0);
       setDiscoveredSpecies([]);
+      setEquippedRod('bamboo');
+      setOwnedRods(['bamboo']);
+      setEquippedBait('worm');
+      setBaitCounts({ pellet: 5, shrimp: 2, star: 0 });
       setActiveUser(null);
     }
   }, [currentUser]);
@@ -393,12 +865,17 @@ export const FishingGameSection: React.FC = () => {
     if (currentUser && activeUser === currentUser.username) {
       const dataToSave = {
         score,
+        coins,
         caughtCount,
         discoveredSpecies,
+        equippedRod,
+        ownedRods,
+        equippedBait,
+        baitCounts,
       };
       localStorage.setItem(`fishing_data_${currentUser.username}`, JSON.stringify(dataToSave));
     }
-  }, [score, caughtCount, discoveredSpecies, currentUser, activeUser]);
+  }, [score, coins, caughtCount, discoveredSpecies, equippedRod, ownedRods, equippedBait, baitCounts, currentUser, activeUser]);
 
   const waterHeight = Math.max(260, Math.floor(canvasHeight * 0.45));
   const waterSurfaceY = canvasHeight - waterHeight + 10;
@@ -585,7 +1062,11 @@ export const FishingGameSection: React.FC = () => {
 
         setGameState('waiting');
 
-        const waitTime = Math.random() * 2500 + 1200;
+        // Bait bite wait factor
+        const activeBait = BAITS_DATABASE.find(b => b.id === equippedBait) || BAITS_DATABASE[0];
+        const biteWaitFactor = Math.max(0.4, 1 - activeBait.biteSpeedBonus * 0.5);
+        const waitTime = (Math.random() * 2200 + 1000) * biteWaitFactor;
+
         biteTimeoutRef.current = setTimeout(() => {
           setGameState(prev => {
             if (prev === 'waiting') {
@@ -628,8 +1109,27 @@ export const FishingGameSection: React.FC = () => {
     } else if (gameState === 'biting') {
       if (escapeTimeoutRef.current) clearTimeout(escapeTimeoutRef.current);
       playSound('tap');
-      const randomFish = getRandomFish();
+
+      const randomFish = getRandomFish(equippedRod, equippedBait);
       currentFishRef.current = randomFish;
+
+      // Consume 1 special bait
+      if (equippedBait !== 'worm') {
+        setBaitCounts(prev => {
+          const nextCount = Math.max(0, (prev[equippedBait] || 0) - 1);
+          if (nextCount === 0) {
+            setEquippedBait('worm');
+          }
+          return { ...prev, [equippedBait]: nextCount };
+        });
+      }
+
+      // Screen shake on rare/mythic hook
+      if (randomFish.rarity === 'Mitos' || randomFish.rarity === 'Legendaris') {
+        setIsScreenShaking(true);
+        setTimeout(() => setIsScreenShaking(false), 500);
+      }
+
       const weightVal = (Math.random() * (randomFish.maxWeight - randomFish.minWeight) + randomFish.minWeight).toFixed(2);
       const lengthVal = (parseFloat(weightVal) * 11 + Math.random() * 6 + 6).toFixed(1);
 
@@ -641,23 +1141,45 @@ export const FishingGameSection: React.FC = () => {
     } else if (gameState === 'reeling') {
       playSound('reeling');
       triggerSplash(bobberPos.x, bobberPos.y);
-      reelProgressRef.current += 15;
+
+      const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
+      const pullIncrement = 15 * (1 + currentRod.reelSpeedBonus);
+      reelProgressRef.current += pullIncrement;
+
       if (reelProgressRef.current >= 100) {
         reelProgressRef.current = 100;
-        playSound('caught');
         const caughtFish = currentFishRef.current;
+
+        if (caughtFish?.rarity === 'Mitos') {
+          playSound('mythic_fanfare');
+          setIsScreenShaking(true);
+          setTimeout(() => setIsScreenShaking(false), 1200);
+        } else if (caughtFish?.rarity === 'Legendaris') {
+          playSound('legendary');
+          setIsScreenShaking(true);
+          setTimeout(() => setIsScreenShaking(false), 800);
+        } else {
+          playSound('caught');
+        }
+
         const basePts = caughtFish?.points || 100;
         const comboBonus = combo * 25;
         const perfectBonus = isPerfectCast ? 50 : 0;
         const totalPts = basePts + comboBonus + perfectBonus;
 
+        const coinMultiplier = equippedRod === 'gold' ? 1.5 : 1.0;
+        const earnedCoins = Math.round((caughtFish?.coins || 20) * coinMultiplier);
+
         setScore(s => s + totalPts);
+        setCoins(c => c + earnedCoins);
         setCaughtCount(c => c + 1);
         setCombo(c => c + 1);
+
         if (caughtFish) {
           setDiscoveredSpecies(prev => prev.includes(caughtFish.id) ? prev : [...prev, caughtFish.id]);
         }
         triggerFloatingText(`+${totalPts} PTS!`, bobberPos.x, bobberPos.y - 60, '#34d399');
+        triggerFloatingText(`+${earnedCoins} 🪙`, bobberPos.x + 30, bobberPos.y - 40, '#facc15');
         setGameState('caught');
       }
       setReelProgress(reelProgressRef.current);
@@ -674,12 +1196,15 @@ export const FishingGameSection: React.FC = () => {
     }
   };
 
-  // Reeling decay interval
+  // Reeling decay interval with rod strength bonus
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (gameState === 'reeling' && fish) {
+      const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
+      const decayRate = Math.max(0.45, (fish.difficulty * 1.05) * (1 - currentRod.strengthBonus * 0.4));
+
       interval = setInterval(() => {
-        reelProgressRef.current -= fish.difficulty * 1.05;
+        reelProgressRef.current -= decayRate;
         if (reelProgressRef.current <= 0) {
           reelProgressRef.current = 0;
           playSound('escape');
@@ -696,7 +1221,7 @@ export const FishingGameSection: React.FC = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [gameState, fish]);
+  }, [gameState, fish, equippedRod]);
 
   // Fishing rod bending angle calculation
   let rodAngleDeg = -12;
@@ -772,6 +1297,19 @@ export const FishingGameSection: React.FC = () => {
             50% { transform: translate(-50%, -50%) translateY(4px); }
           }
 
+          @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-4px, 4px) rotate(-1deg); }
+            40% { transform: translate(4px, -3px) rotate(1deg); }
+            60% { transform: translate(-3px, -2px) rotate(-1deg); }
+            80% { transform: translate(3px, 3px) rotate(1deg); }
+          }
+
+          @keyframes rainFall {
+            0% { transform: translateY(-100px) translateX(0); }
+            100% { transform: translateY(700px) translateX(-150px); }
+          }
+
           .animate-water {
             animation: waterWave 1.8s linear infinite;
           }
@@ -789,7 +1327,7 @@ export const FishingGameSection: React.FC = () => {
       </style>
 
       {/* Top Header Navigation & Stats */}
-      <div className="absolute top-4 left-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-[200] flex flex-col gap-2 pointer-events-none">
         {/* Top Row: Back Button & Controls */}
         <div className="flex justify-between items-start gap-2">
           <button
@@ -805,7 +1343,44 @@ export const FishingGameSection: React.FC = () => {
 
           {/* Controls */}
           <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pointer-events-auto">
-            {/* Time Selector */}
+            {/* Coins Button / Quick Shop */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsShopOpen(true);
+              }}
+              className="bg-amber-200 hover:bg-amber-300 text-slate-900 border-[4px] border-black px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
+              title="Buka Toko Alat Pancing"
+            >
+              <Coins className="w-3.5 h-3.5 text-amber-800" />
+              <span className="text-[9px] sm:text-[10px] font-black text-amber-950">{coins}</span>
+            </button>
+
+            {/* Shop Button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsShopOpen(true);
+              }}
+              className="bg-amber-100 hover:bg-amber-200 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              title="Toko Alat Pancing (Joran & Umpan)"
+            >
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-900" />
+            </button>
+
+            {/* Odds / Drop Rates Button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsOddsOpen(true);
+              }}
+              className="bg-amber-100 hover:bg-amber-200 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              title="Peluang & Rarity Ikan"
+            >
+              <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
+            </button>
+
+            {/* Time / Weather Selector */}
             <div className="bg-amber-100 border-[4px] border-black p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
               <button
                 onClick={() => {
@@ -813,7 +1388,7 @@ export const FishingGameSection: React.FC = () => {
                   setTimeOfDay('pagi');
                 }}
                 className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
-                title="Pagi (Day)"
+                title="Pagi Cerah"
               >
                 <Sun className="w-3.5 h-3.5 text-amber-700" />
               </button>
@@ -823,7 +1398,7 @@ export const FishingGameSection: React.FC = () => {
                   setTimeOfDay('senja');
                 }}
                 className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
-                title="Senja (Sunset)"
+                title="Senja Keemasan"
               >
                 <Flame className="w-3.5 h-3.5 text-orange-800" />
               </button>
@@ -833,9 +1408,19 @@ export const FishingGameSection: React.FC = () => {
                   setTimeOfDay('malam');
                 }}
                 className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
-                title="Malam (Night)"
+                title="Malam Berbintang"
               >
                 <Moon className="w-3.5 h-3.5 text-amber-300" />
+              </button>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setTimeOfDay('badai');
+                }}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'badai' ? 'bg-slate-800 text-sky-300 border border-black' : 'hover:bg-amber-200'}`}
+                title="Badai Petir Hujan"
+              >
+                <CloudRain className="w-3.5 h-3.5 text-sky-400" />
               </button>
             </div>
 
@@ -856,7 +1441,7 @@ export const FishingGameSection: React.FC = () => {
                 setIsJournalOpen(true);
               }}
               className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-              title="Fishing Journal"
+              title="Jurnal Ikan"
             >
               <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
             </button>
@@ -875,13 +1460,21 @@ export const FishingGameSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Row: Stats */}
-        <div className="flex justify-end pointer-events-none">
+        {/* Bottom Row: Stats & Equipped Gear */}
+        <div className="flex flex-wrap justify-end gap-2 pointer-events-none">
           <div className="bg-amber-100 text-slate-900 border-[4px] border-black px-2.5 py-1.5 sm:px-3.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] pointer-events-auto">
             <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
             <span className="text-[9px] sm:text-[10px] font-bold">PTS: <span className="text-blue-600">{score}</span></span>
             <span className="text-slate-400">|</span>
             <span className="text-[9px] sm:text-[10px] font-bold">FISH: <span className="text-emerald-700">{caughtCount}</span></span>
+            <span className="text-slate-400">|</span>
+            <span className="text-[9px] sm:text-[10px] font-bold">
+              {RODS_DATABASE.find(r => r.id === equippedRod)?.icon} {RODS_DATABASE.find(r => r.id === equippedRod)?.name.split(' ')[1]}
+            </span>
+            <span className="text-slate-400">|</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-purple-700">
+              {BAITS_DATABASE.find(b => b.id === equippedBait)?.icon} {equippedBait !== 'worm' ? `(${baitCounts[equippedBait] || 0})` : ''}
+            </span>
             {combo > 1 && (
               <>
                 <span className="text-slate-400">|</span>
@@ -955,7 +1548,9 @@ export const FishingGameSection: React.FC = () => {
           transform: `scale(${scale.x}, ${scale.y})`,
           transformOrigin: 'center',
         }}
-        className="relative overflow-hidden shadow-[0_0_0_6px_#000,0_0_0_12px_#38bdf8] shrink-0 bg-sky-300"
+        className={`relative overflow-hidden shadow-[0_0_0_6px_#000,0_0_0_12px_#38bdf8] shrink-0 bg-sky-300 ${
+          isScreenShaking ? 'animate-[shake_0.2s_infinite]' : ''
+        }`}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       >
@@ -998,6 +1593,30 @@ export const FishingGameSection: React.FC = () => {
             </>
           )}
 
+          {timeOfDay === 'badai' && (
+            <>
+              <div className="absolute top-0 inset-x-0 bg-[#0f172a]" style={{ bottom: waterHeight + 285 }} />
+              <div className="absolute inset-x-0 h-[70px] bg-[#1e293b]" style={{ bottom: waterHeight + 215 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#334155]" style={{ bottom: waterHeight + 140 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#475569]" style={{ bottom: waterHeight + 65 }} />
+              <div className="absolute inset-x-0 h-[65px] bg-[#64748b]" style={{ bottom: waterHeight }} />
+
+              {/* Storm Rain Streaks */}
+              {Array.from({ length: 35 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="absolute w-[2px] h-[30px] bg-sky-200/50"
+                  style={{
+                    left: `${(idx * 24) % 800}px`,
+                    top: '-50px',
+                    animation: `rainFall ${0.6 + (idx % 4) * 0.15}s linear infinite`,
+                    animationDelay: `${(idx * 0.08)}s`,
+                  }}
+                />
+              ))}
+            </>
+          )}
+
           {/* Sun / Moon Graphic */}
           <div className="absolute right-[70px]" style={{ bottom: waterHeight + 170 }}>
             {timeOfDay === 'malam' ? (
@@ -1005,6 +1624,12 @@ export const FishingGameSection: React.FC = () => {
                 <div className="w-[52px] h-[52px] bg-[#FEF08A] rounded-full border-[4px] border-[#FDE047] shadow-[0_0_30px_rgba(254,240,138,0.8)]" />
                 <div className="absolute top-2 left-2 w-3 h-3 bg-amber-200/50 rounded-full" />
                 <div className="absolute bottom-3 right-3 w-4 h-4 bg-amber-200/40 rounded-full" />
+              </div>
+            ) : timeOfDay === 'badai' ? (
+              <div className="relative">
+                <div className="w-[60px] h-[36px] bg-slate-700 rounded-full border-[3px] border-slate-900 shadow-md flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-yellow-400 animate-bounce" />
+                </div>
               </div>
             ) : (
               <div className="relative">
@@ -1025,9 +1650,9 @@ export const FishingGameSection: React.FC = () => {
             style={{ bottom: waterHeight + 190 }}
           >
             <div className="relative">
-              <div className="w-[75px] h-[16px] bg-white absolute top-0 left-[20px]" />
-              <div className="w-[120px] h-[20px] bg-white absolute top-[16px] left-[0px]" />
-              <div className="w-[95px] h-[8px] bg-sky-100 absolute top-[36px] left-[10px]" />
+              <div className={`w-[75px] h-[16px] absolute top-0 left-[20px] ${timeOfDay === 'badai' ? 'bg-slate-700' : 'bg-white'}`} />
+              <div className={`w-[120px] h-[20px] absolute top-[16px] left-[0px] ${timeOfDay === 'badai' ? 'bg-slate-800' : 'bg-white'}`} />
+              <div className={`w-[95px] h-[8px] absolute top-[36px] left-[10px] ${timeOfDay === 'badai' ? 'bg-slate-900' : 'bg-sky-100'}`} />
             </div>
           </motion.div>
 
@@ -1038,9 +1663,9 @@ export const FishingGameSection: React.FC = () => {
             style={{ bottom: waterHeight + 140 }}
           >
             <div className="relative">
-              <div className="w-[55px] h-[14px] bg-white absolute top-0 left-[15px]" />
-              <div className="w-[85px] h-[16px] bg-white absolute top-[14px] left-[0px]" />
-              <div className="w-[65px] h-[6px] bg-sky-100 absolute top-[30px] left-[10px]" />
+              <div className={`w-[55px] h-[14px] absolute top-0 left-[15px] ${timeOfDay === 'badai' ? 'bg-slate-700' : 'bg-white'}`} />
+              <div className={`w-[85px] h-[16px] absolute top-[14px] left-[0px] ${timeOfDay === 'badai' ? 'bg-slate-800' : 'bg-white'}`} />
+              <div className={`w-[65px] h-[6px] absolute top-[30px] left-[10px] ${timeOfDay === 'badai' ? 'bg-slate-900' : 'bg-sky-100'}`} />
             </div>
           </motion.div>
 
@@ -1150,106 +1775,72 @@ export const FishingGameSection: React.FC = () => {
               <div className="w-[20px] h-[10px] bg-yellow-400 rounded-full border border-amber-600" />
               <div className="w-[6px] h-[8px] bg-amber-500 clip-triangle" />
             </div>
+          </div>
 
-            <div
-              className="absolute top-[130px] opacity-60 flex items-center gap-1"
-              style={{ animation: 'fishSwimRight 18s linear infinite' }}
-            >
-              <div className="w-[26px] h-[12px] bg-sky-300 rounded-full border border-sky-600" />
-              <div className="w-[8px] h-[10px] bg-sky-500 clip-triangle" />
+          {/* ================= WOODEN PIER DECK ================= */}
+          <div className="absolute left-0 w-[240px] h-[28px] bg-[#92400e] border-y-[4px] border-black shadow-[0_6px_0_rgba(0,0,0,0.4)]" style={{ bottom: waterHeight + 10 }}>
+            {/* Pier Planks Pattern */}
+            <div className="flex h-full">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="w-[20px] h-full border-r-[2px] border-[#451a03] bg-[#b45309]" />
+              ))}
+            </div>
+            {/* Lantern on pier post */}
+            <div className="absolute -top-[35px] left-[30px] flex flex-col items-center">
+              <div className="w-[14px] h-[18px] bg-[#fef08a] border-[2px] border-black shadow-[0_0_15px_rgba(254,240,138,0.9)]" />
+              <div className="w-[6px] h-[16px] bg-[#451a03]" />
+            </div>
+            {/* Wooden Bucket */}
+            <div className="absolute -top-[22px] left-[85px] w-[20px] h-[22px] bg-[#78350f] border-[2px] border-black rounded-b-sm">
+              <div className="w-full h-[4px] bg-[#38bdf8] mt-1" />
             </div>
           </div>
 
-          {/* ================= PIER & FISHERMAN ================= */}
-          <div className="absolute left-0 w-[230px] h-[32px] bg-[#78350f] border-y-[4px] border-[#451a03] shadow-[0_6px_0_rgba(0,0,0,0.4)]" style={{ bottom: waterHeight - 30 }}>
-            {/* Pier vertical supports going into water */}
-            <div className="absolute top-full left-[20px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
-            <div className="absolute top-full left-[110px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
-            <div className="absolute top-full left-[200px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
-            
-            <div className="absolute top-0 bottom-0 left-[45px] w-[3px] bg-[#451a03]" />
-            <div className="absolute top-0 bottom-0 left-[90px] w-[3px] bg-[#451a03]" />
-            <div className="absolute top-0 bottom-0 left-[135px] w-[3px] bg-[#451a03]" />
-            <div className="absolute top-0 bottom-0 left-[180px] w-[3px] bg-[#451a03]" />
+          {/* ================= FISHERMAN CHARACTER ================= */}
+          <div className="absolute left-[130px] z-10" style={{ bottom: waterHeight + 36 }}>
+            {/* Fisherman Sprite */}
+            <div className="relative w-[60px] h-[80px]">
+              {/* Straw Conical Hat */}
+              <div className="absolute top-[0px] left-[5px] w-[50px] h-[18px] bg-[#d97706] border-[3px] border-black" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+              {/* Head */}
+              <div className="absolute top-[16px] left-[18px] w-[24px] h-[22px] bg-[#fed7aa] border-[2px] border-black" />
+              {/* Beard */}
+              <div className="absolute top-[28px] left-[26px] w-[14px] h-[12px] bg-slate-300 border-[2px] border-black" />
+              {/* Eye */}
+              <div className="absolute top-[22px] left-[32px] w-[4px] h-[4px] bg-black" />
+              {/* Blue Denim Shirt / Body */}
+              <div className="absolute top-[38px] left-[15px] w-[30px] h-[28px] bg-[#0284c7] border-[3px] border-black" />
+              {/* Pants */}
+              <div className="absolute top-[64px] left-[18px] w-[24px] h-[16px] bg-[#334155] border-[2px] border-black" />
 
-            {/* Tackle Bucket */}
-            <div className="absolute -top-[24px] left-[32px] w-[20px] h-[24px] bg-slate-700 border-[2px] border-black rounded-b-sm">
-              <div className="absolute top-[2px] inset-x-[2px] h-[6px] bg-sky-300" />
-            </div>
-            {/* Tackle Box */}
-            <div className="absolute -top-[16px] left-[68px] w-[22px] h-[16px] bg-red-600 border-[2px] border-black">
-              <div className="absolute top-[2px] left-[6px] w-[10px] h-[3px] bg-yellow-400" />
-            </div>
-
-            {/* Glowing Pier Lantern */}
-            <div className="absolute -top-[32px] left-[180px] z-20">
-              <div className="w-[12px] h-[4px] bg-amber-900 border border-black mx-auto" />
-              <div className="w-[16px] h-[18px] bg-amber-300 border-[2px] border-black relative overflow-hidden shadow-[0_0_15px_rgba(251,191,36,0.9)] animate-pulse">
-                <div className="absolute inset-0 bg-yellow-100 opacity-80" />
-                <div className="absolute top-1 left-1.5 w-1 h-2 bg-white rounded-full" />
-              </div>
-              <div className="w-[20px] h-[4px] bg-amber-950 border border-black mx-auto" />
-              {/* Light beam glow cone */}
-              <div className="absolute top-full -left-6 w-16 h-12 bg-gradient-to-b from-amber-300/30 to-transparent pointer-events-none rounded-b-full" />
-            </div>
-          </div>
-
-          {/* Fisherman Character */}
-          <div className="absolute left-[105px] z-10" style={{ bottom: waterHeight - 5 }}>
-            {/* Wooden Stool */}
-            <div className="absolute bottom-[0px] left-[10px] w-[28px] h-[18px] bg-[#451a03] border-[2px] border-black">
-              <div className="absolute top-[18px] left-[2px] w-[4px] h-[20px] bg-[#451a03]" />
-              <div className="absolute top-[18px] right-[2px] w-[4px] h-[20px] bg-[#451a03]" />
-            </div>
-
-            {/* Character Body */}
-            <div className="absolute bottom-[16px] left-[12px] w-[20px] h-[22px] bg-blue-800 border-[2px] border-black" />
-            <div className="absolute bottom-[36px] left-[8px] w-[26px] h-[32px] bg-amber-400 border-[2px] border-black rounded-t-sm">
-              <div className="absolute top-[4px] left-[11px] w-[4px] h-[24px] bg-amber-600" />
-            </div>
-
-            {/* Head & Cap */}
-            <div className="absolute bottom-[66px] left-[10px] w-[22px] h-[20px] bg-amber-200 border-[2px] border-black">
-              <div className="absolute top-[6px] right-[4px] w-[3px] h-[3px] bg-black" />
-              <div className="absolute bottom-0 inset-x-0 h-[6px] bg-amber-800" />
-            </div>
-            <div className="absolute bottom-[84px] left-[6px] w-[30px] h-[10px] bg-amber-500 border-[2px] border-black rounded-t-md">
-              <div className="absolute bottom-0 right-[-6px] w-[14px] h-[4px] bg-amber-600" />
-            </div>
-
-            {/* Reeling Sweat */}
-            {gameState === 'reeling' && (
-              <div className="absolute -top-[95px] left-[30px] text-sky-400 font-bold text-xs animate-bounce">
-                💦
-              </div>
-            )}
-
-            {/* Fisherman Arm & Fishing Rod */}
-            <div
-              className={`absolute bottom-[48px] left-[20px] origin-[4px_16px] transition-transform duration-200 ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
-              style={{ transform: `rotate(${rodAngleDeg}deg)` }}
-            >
-              <div className="w-[20px] h-[8px] bg-amber-400 border-[2px] border-black" />
-              <div className="absolute top-0 left-[18px] w-[8px] h-[8px] bg-amber-200 border-[2px] border-black" />
-              <div className="absolute top-[-4px] left-[16px] w-[28px] h-[8px] bg-amber-900 border-[2px] border-black" />
-              <div className="absolute top-[-8px] left-[26px] w-[10px] h-[10px] bg-slate-300 border-[2px] border-black rounded-full" />
-
-              {/* Flexible Curved Rod */}
-              <div className="absolute top-[-3px] left-[42px] w-[165px] h-[4px] bg-slate-900 border-t border-slate-600" />
-              <div className="absolute top-[-3px] left-[205px] w-[10px] h-[4px] bg-red-600">
-                <div ref={rodTipRef} className="absolute top-[2px] right-0 w-[1px] h-[1px] opacity-0 pointer-events-none" />
+              {/* Fishing Rod Anchor & Animated Rod */}
+              <div
+                className={`absolute top-[40px] left-[32px] origin-bottom-left transition-transform duration-100 ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
+                style={{ transform: `rotate(${rodAngleDeg}deg)` }}
+              >
+                {/* Rod Handle */}
+                <div className="w-[6px] h-[30px] bg-[#78350f] border-x border-black" />
+                {/* Reel Wheel */}
+                <div className="w-[12px] h-[12px] bg-slate-400 rounded-full border border-black -ml-[3px] mt-1" />
+                {/* Long Rod Pole */}
+                <div
+                  className="w-[4px] h-[140px] border-x border-black"
+                  style={{
+                    backgroundColor: RODS_DATABASE.find(r => r.id === equippedRod)?.color || '#facc15',
+                  }}
+                />
+                {/* Rod Tip Element */}
+                <div ref={rodTipRef} className="w-[8px] h-[8px] bg-red-600 rounded-full -ml-[2px] border border-black shadow-[0_0_6px_#ef4444]" />
               </div>
             </div>
           </div>
 
-          {/* ================= FISHING LINE ================= */}
+          {/* ================= REAL-TIME FISHING LINE ================= */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
-            <svg width="800" height={canvasHeight} className="absolute inset-0 pointer-events-none z-15" shapeRendering="geometricPrecision">
+            <svg width="800" height={canvasHeight} className="absolute inset-0 pointer-events-none z-20">
               <path
                 d={
                   gameState === 'reeling'
-                    ? `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.min(rodTipPos.y, bobberPos.y) - 20} ${bobberPos.x} ${bobberPos.y}`
-                    : gameState === 'casting'
                     ? `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.min(rodTipPos.y, bobberPos.y) - 35} ${bobberPos.x} ${bobberPos.y}`
                     : `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.max(rodTipPos.y, bobberPos.y) + 25} ${bobberPos.x} ${bobberPos.y}`
                 }
@@ -1346,6 +1937,36 @@ export const FishingGameSection: React.FC = () => {
             />
           )}
 
+          {/* Odds / Rates Modal */}
+          {isOddsOpen && (
+            <FishingOddsModal
+              key="odds-modal"
+              equippedRod={equippedRod}
+              equippedBait={equippedBait}
+              soundEnabled={soundEnabled}
+              onClose={() => setIsOddsOpen(false)}
+            />
+          )}
+
+          {/* Shop Modal */}
+          {isShopOpen && (
+            <FishingShopModal
+              key="shop-modal"
+              coins={coins}
+              setCoins={setCoins}
+              equippedRod={equippedRod}
+              setEquippedRod={setEquippedRod}
+              ownedRods={ownedRods}
+              setOwnedRods={setOwnedRods}
+              equippedBait={equippedBait}
+              setEquippedBait={setEquippedBait}
+              baitCounts={baitCounts}
+              setBaitCounts={setBaitCounts}
+              soundEnabled={soundEnabled}
+              onClose={() => setIsShopOpen(false)}
+            />
+          )}
+
           {/* Start Screen Modal */}
           {gameState === 'idle' && !hasStarted && (
             <motion.div
@@ -1397,78 +2018,124 @@ export const FishingGameSection: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Catch Result Modal */}
+          {/* Catch Result Modal - Ultra Enhanced for High / Mythic / Legendary Rarity */}
           {gameState === 'caught' && fish && fishStats && (
             <motion.div
               key="catch-modal"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4"
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-50 p-4"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="bg-amber-100 border-[6px] border-black p-6 w-full max-w-[420px] text-slate-900 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center relative overflow-hidden flex flex-col max-h-[550px]">
-                {/* Rotating Rays */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center">
-                  <div className="w-[600px] h-[600px] bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 animate-[rayRotate_12s_linear_infinite]" />
+              <div
+                className={`bg-amber-100 border-[6px] ${
+                  fish.rarity === 'Mitos'
+                    ? 'border-purple-600 shadow-[0_0_80px_rgba(168,85,247,0.9),10px_10px_0_0_rgba(0,0,0,1)]'
+                    : fish.rarity === 'Legendaris'
+                    ? 'border-amber-500 shadow-[0_0_60px_rgba(234,179,8,0.9),10px_10px_0_0_rgba(0,0,0,1)]'
+                    : 'border-black shadow-[10px_10px_0_0_rgba(0,0,0,1)]'
+                } p-6 w-full max-w-[440px] text-slate-900 text-center relative overflow-hidden flex flex-col max-h-[570px]`}
+              >
+                {/* Dramatic Rotating Cosmic & Golden Rays */}
+                <div className="absolute inset-0 opacity-25 pointer-events-none flex items-center justify-center">
+                  <div
+                    className={`w-[700px] h-[700px] ${
+                      fish.rarity === 'Mitos'
+                        ? 'bg-[conic-gradient(from_0deg,_#ec4899,_#a855f7,_#3b82f6,_#10b981,_#f59e0b,_#ec4899)]'
+                        : fish.rarity === 'Legendaris'
+                        ? 'bg-[conic-gradient(from_0deg,_#f59e0b,_#fef08a,_#d97706,_#fef08a,_#f59e0b)]'
+                        : 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500'
+                    } animate-[rayRotate_10s_linear_infinite]` }
+                  />
                 </div>
 
                 <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-2">
-                  <div className="bg-emerald-600 text-white border-[4px] border-black py-2 px-4 mb-4 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                    <h2 className="text-[18px] font-black text-yellow-300 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5" /> TERTANGKAP!
+                  {/* Grand Banner */}
+                  <div
+                    className={`py-2 px-4 mb-3 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-[4px] border-black ${
+                      fish.rarity === 'Mitos'
+                        ? 'bg-gradient-to-r from-purple-700 via-pink-600 to-amber-500 text-white animate-pulse'
+                        : fish.rarity === 'Legendaris'
+                        ? 'bg-amber-500 text-slate-950 font-black'
+                        : 'bg-emerald-600 text-white'
+                    }`}
+                  >
+                    <h2 className="text-[15px] sm:text-[17px] font-black text-yellow-300 flex items-center justify-center gap-2">
+                      {fish.rarity === 'Mitos' ? (
+                        <>⭐ TANGKAPAN MITOS PURBA! ⭐</>
+                      ) : fish.rarity === 'Legendaris' ? (
+                        <>👑 TANGKAPAN LEGENDARIS! 👑</>
+                      ) : (
+                        <><Sparkles className="w-5 h-5" /> TERTANGKAP!</>
+                      )}
                     </h2>
                   </div>
 
-                  <div className="flex justify-center my-4">
+                  {/* Fish Visual Container with Floating Animation */}
+                  <div className="flex justify-center my-3">
                     <div
-                      className="w-[130px] h-[130px] border-[4px] border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative bg-gradient-to-b from-sky-100 to-amber-100 overflow-hidden"
+                      className={`w-[140px] h-[140px] border-[4px] ${
+                        fish.rarity === 'Mitos'
+                          ? 'border-purple-600 bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-900 shadow-[0_0_30px_rgba(168,85,247,0.8)]'
+                          : fish.rarity === 'Legendaris'
+                          ? 'border-amber-500 bg-gradient-to-tr from-amber-200 to-yellow-100 shadow-[0_0_20px_rgba(234,179,8,0.7)]'
+                          : 'border-black bg-gradient-to-b from-sky-100 to-amber-100'
+                      } shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative overflow-hidden`}
                     >
                       <motion.div
-                        animate={{ y: [-3, 3, -3], rotate: [-2, 2, -2] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        animate={{ y: [-4, 4, -4], rotate: [-3, 3, -3] }}
+                        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <FishGraphic id={fish.id} size={110} />
+                        <FishGraphic id={fish.id} size={115} />
                       </motion.div>
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-6">
-                    <h3 className="text-[16px] font-black text-slate-900">{fish.name}</h3>
-                    <div className="inline-block px-3 py-1 text-slate-900 border-[2px] border-black text-[10px] font-bold uppercase" style={{ backgroundColor: fish.badgeBg }}>
+                  <div className="space-y-2 mb-4">
+                    <h3 className="text-[15px] sm:text-[17px] font-black text-slate-900">{fish.name}</h3>
+                    <div
+                      className="inline-block px-3 py-1 text-slate-900 border-[2px] border-black text-[10px] font-black uppercase tracking-wider"
+                      style={{ backgroundColor: fish.badgeBg }}
+                    >
                       RARITY: {fish.rarity}
                     </div>
-                    <p className="text-[10px] text-slate-700 italic px-2 mt-2 leading-snug">{fish.description}</p>
+                    <p className="text-[10px] text-slate-700 italic px-2 mt-1 leading-snug">{fish.description}</p>
 
-                    <div className="flex justify-center gap-4 mt-3 text-[10px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
+                    <div className="flex justify-center gap-3 mt-3 text-[10px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
                       <span>BERAT: <strong className="text-blue-700">{fishStats.weight} kg</strong></span>
                       <span>PANJANG: <strong className="text-blue-700">{fishStats.length} cm</strong></span>
                     </div>
 
-                    <div className="mt-2 text-[10px] font-black text-emerald-800">
-                      + {fish.points} SCORE PTS!
+                    <div className="flex justify-center items-center gap-3 mt-2 text-[10px] font-black">
+                      <span className="text-emerald-800 bg-emerald-100 px-2 py-1 border border-emerald-800">+ {fish.points} PTS</span>
+                      <span className="text-amber-900 bg-amber-200 px-2 py-1 border border-amber-800">🪙 +{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))} KOIN</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  {/* Actions: Simpan / Jual */}
+                  <div className="flex gap-3 mt-4">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         playSound('click');
                         setGameState('idle');
                       }}
-                      className="flex-1 py-3.5 bg-amber-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-amber-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                      className="flex-1 py-3 bg-amber-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-amber-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
                     >
                       SIMPAN
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        playSound('release');
+                        playSound('upgrade');
+                        const extraCoins = Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1));
+                        setCoins(c => c + extraCoins);
+                        triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
                         setGameState('idle');
                       }}
-                      className="flex-1 py-3.5 bg-sky-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-sky-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                      className="flex-1 py-3 bg-emerald-500 text-white border-[4px] border-black font-black text-xs hover:bg-emerald-400 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
                     >
-                      LEPAS
+                      JUAL (+{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))}🪙)
                     </button>
                   </div>
                 </div>
