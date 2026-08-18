@@ -187,6 +187,24 @@ async function startServer() {
     });
   }, 1000);
 
+  // Periodic room garbage collection (every 2 minutes) to prevent memory leaks
+  setInterval(() => {
+    const now = Date.now();
+    const MAX_INACTIVE_MS = 30 * 60 * 1000; // 30 minutes
+    for (const [roomId, room] of rooms.entries()) {
+      const isAbandoned = !room.whitePlayer && !room.blackPlayer && (!room.spectators || room.spectators.length === 0);
+      const isExpired = now - room.createdAt > MAX_INACTIVE_MS;
+      if (isAbandoned || (room.isGameOver && isExpired)) {
+        rooms.delete(roomId);
+      }
+    }
+    for (const [roomId, snlRoom] of snlRooms.entries()) {
+      if (!snlRoom.players || snlRoom.players.length === 0) {
+        snlRooms.delete(roomId);
+      }
+    }
+  }, 120 * 1000);
+
   // Socket.IO event handlers
   io.on('connection', (socket: Socket) => {
     let currentRoomId: string | null = null;
@@ -969,75 +987,127 @@ async function startServer() {
 
   
 
-  // --- Comments API ---
+  // --- Comments API (Asynchronous & Sanitized) ---
 
   const COMMENTS_FILE = path.join(process.cwd(), 'comments.json');
   
-  const readComments = () => {
-    if (fs.existsSync(COMMENTS_FILE)) {
-      try {
-        return JSON.parse(fs.readFileSync(COMMENTS_FILE, 'utf8'));
-      } catch (e) {
-        return [];
+  const readComments = async (): Promise<any[]> => {
+    try {
+      if (fs.existsSync(COMMENTS_FILE)) {
+        const data = await fs.promises.readFile(COMMENTS_FILE, 'utf8');
+        return JSON.parse(data);
       }
+    } catch (e) {
+      console.error('Error reading comments.json:', e);
     }
     return [];
   };
 
-  const writeComments = (comments) => {
-    fs.writeFileSync(COMMENTS_FILE, JSON.stringify(comments, null, 2));
+  const writeComments = async (comments: any[]): Promise<boolean> => {
+    try {
+      await fs.promises.writeFile(COMMENTS_FILE, JSON.stringify(comments, null, 2), 'utf8');
+      return true;
+    } catch (e) {
+      console.error('Error writing comments.json:', e);
+      return false;
+    }
   };
 
-  app.get('/api/comments', (req, res) => {
-    res.json(readComments());
-  });
+  const sanitizeInput = (str: unknown, maxLen = 2000): string => {
+    if (typeof str !== 'string') return '';
+    return str
+      .slice(0, maxLen)
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .trim();
+  };
 
-  app.post('/api/comments', (req, res) => {
-    const { username, text, photoBase64 } = req.body;
-    if (!username || !text) {
-      return res.status(400).json({ error: 'Username and text are required' });
+  app.get('/api/comments', async (req, res) => {
+    try {
+      const comments = await readComments();
+      res.json(comments);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to retrieve comments' });
     }
-    
-    const newComment = {
-      id: Date.now().toString(),
-      username,
-      text,
-      photoBase64: photoBase64 || null,
-      timestamp: Date.now()
-    };
-    
-    const comments = readComments();
-    comments.push(newComment);
-    writeComments(comments);
-    
-    res.status(201).json(newComment);
   });
 
-  app.put('/api/comments/:id', (req, res) => {
-    const { id } = req.params;
-    const { text } = req.body;
-    
-    const comments = readComments();
-    const commentIndex = comments.findIndex(c => c.id === id);
-    
-    if (commentIndex === -1) {
-      return res.status(404).json({ error: 'Comment not found' });
+  app.post('/api/comments', async (req, res) => {
+    try {
+      const { username, text, photoBase64 } = req.body || {};
+      const cleanUsername = sanitizeInput(username, 50);
+      const cleanText = sanitizeInput(text, 2000);
+
+      if (!cleanUsername || !cleanText) {
+        return res.status(400).json({ error: 'Valid username and comment text are required' });
+      }
+
+      let safePhoto: string | null = null;
+      if (typeof photoBase64 === 'string' && photoBase64.startsWith('data:image/')) {
+        if (photoBase64.length <= 3 * 1024 * 1024) {
+          safePhoto = photoBase64;
+        }
+      }
+      
+      const newComment = {
+        id: Date.now().toString(),
+        username: cleanUsername,
+        text: cleanText,
+        photoBase64: safePhoto,
+        timestamp: Date.now()
+      };
+      
+      const comments = await readComments();
+      comments.push(newComment);
+      await writeComments(comments);
+      
+      res.status(201).json(newComment);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to post comment' });
     }
-    
-    comments[commentIndex].text = text;
-    writeComments(comments);
-    
-    res.json(comments[commentIndex]);
   });
 
-  app.delete('/api/comments/:id', (req, res) => {
-    const { id } = req.params;
-    
-    let comments = readComments();
-    comments = comments.filter(c => c.id !== id);
-    writeComments(comments);
-    
-    res.json({ success: true });
+  app.put('/api/comments/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { text } = req.body || {};
+      const cleanText = sanitizeInput(text, 2000);
+
+      if (!cleanText) {
+        return res.status(400).json({ error: 'Updated comment text cannot be empty' });
+      }
+      
+      const comments = await readComments();
+      const commentIndex = comments.findIndex(c => c.id === id);
+      
+      if (commentIndex === -1) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+      
+      comments[commentIndex].text = cleanText;
+      comments[commentIndex].updatedAt = Date.now();
+      await writeComments(comments);
+      
+      res.json(comments[commentIndex]);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to update comment' });
+    }
+  });
+
+  app.delete('/api/comments/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      let comments = await readComments();
+      const initialLength = comments.length;
+      comments = comments.filter(c => c.id !== id);
+      
+      if (comments.length === initialLength) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+
+      await writeComments(comments);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to delete comment' });
+    }
   });
 
   // Vite middleware in dev mode

@@ -32,10 +32,10 @@ import { getSupabaseClient } from './supabaseClient';
  * CREATE POLICY "Public update guest_accounts" ON public.guest_accounts FOR UPDATE USING (true);
  * CREATE POLICY "Public delete guest_accounts" ON public.guest_accounts FOR DELETE USING (true);
  * 
- * -- Insert initial Admin user directly in SQL Editor:
+ * -- Secure admin initialization via password hash:
  * INSERT INTO public.admin_accounts (username, password, role)
- * VALUES ('AdminKawaaii', 'seramaula432', 'admin')
- * ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password;
+ * VALUES ('AdminKawaaii', '$2a$10$YOUR_BCRYPT_HASH_HERE', 'admin')
+ * ON CONFLICT (username) DO NOTHING;
  */
 
 export interface StoredUserAccount {

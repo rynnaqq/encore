@@ -1,6 +1,6 @@
 import { ThemeProvider } from "./context/ThemeContext";
 import { FloatingBackground } from './components/FloatingBackground';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -8,17 +8,38 @@ import { AboutSection } from './components/AboutSection';
 import { CommentSection } from './components/CommentSection';
 import { AboutModal } from './components/AboutModal';
 import { ChangelogModal } from './components/ChangelogModal';
-import { FishingGameSection } from './components/FishingGameSection';
-import { ChessGameSection } from './components/ChessGameSection';
-import { UnoGameSection } from './components/UnoGameSection';
-import { SnakeAndLaddersSection } from './components/SnakeAndLaddersSection';
-import { AdminPage } from './components/AdminPage';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
-import { LoginPage } from './components/LoginPage';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Lazy load heavy game sections and pages for optimal performance
+const FishingGameSection = lazy(() =>
+  import('./components/FishingGameSection').then((m) => ({ default: m.FishingGameSection }))
+);
+const ChessGameSection = lazy(() =>
+  import('./components/ChessGameSection').then((m) => ({ default: m.ChessGameSection }))
+);
+const UnoGameSection = lazy(() =>
+  import('./components/UnoGameSection').then((m) => ({ default: m.UnoGameSection }))
+);
+const SnakeAndLaddersSection = lazy(() =>
+  import('./components/SnakeAndLaddersSection').then((m) => ({ default: m.SnakeAndLaddersSection }))
+);
+const AdminPage = lazy(() =>
+  import('./components/AdminPage').then((m) => ({ default: m.AdminPage }))
+);
+const LoginPage = lazy(() =>
+  import('./components/LoginPage').then((m) => ({ default: m.LoginPage }))
+);
+
+const SuspenseFallback: React.FC = () => (
+  <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3 text-slate-400">
+    <div className="w-8 h-8 rounded-full border-2 border-[#E195AB] border-t-transparent animate-spin" />
+    <span className="text-xs font-mono tracking-wider text-slate-500 uppercase">Loading game module...</span>
+  </div>
+);
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -104,134 +125,136 @@ function AnimatedRoutes({
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location}>
-        <Route
-          path="/"
-          element={
-            <motion.div
-              key="route-home"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <HeroSection onOpenAboutModal={handleOpenAboutModal} />
-              <AboutSection onOpenModal={handleOpenAboutModal} />
-              <CommentSection />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/fishing"
-          element={
-            <motion.div
-              key="route-fishing"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <FishingGameSection />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/chess"
-          element={
-            <motion.div
-              key="route-chess"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <ChessGameSection />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/snake-ladders"
-          element={
-            <ProtectedGameRoute targetPath="/snake-ladders">
+      <Suspense fallback={<SuspenseFallback />}>
+        <Routes location={location}>
+          <Route
+            path="/"
+            element={
               <motion.div
-                key="route-snake-ladders"
+                key="route-home"
                 variants={pageVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
                 className="gpu-smooth"
               >
-                <SnakeAndLaddersSection />
+                <HeroSection onOpenAboutModal={handleOpenAboutModal} />
+                <AboutSection onOpenModal={handleOpenAboutModal} />
+                <CommentSection />
               </motion.div>
-            </ProtectedGameRoute>
-          }
-        />
-        <Route
-          path="/uno"
-          element={
-            <ProtectedGameRoute targetPath="/uno">
+            }
+          />
+          <Route
+            path="/fishing"
+            element={
               <motion.div
-                key="route-uno"
+                key="route-fishing"
                 variants={pageVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
                 className="gpu-smooth"
               >
-                <UnoGameSection />
+                <FishingGameSection />
               </motion.div>
-            </ProtectedGameRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <motion.div
-              key="route-admin"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <AdminPage />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <motion.div
-              key="route-login"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <LoginPage />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <motion.div
-              key="route-register"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="gpu-smooth"
-            >
-              <LoginPage />
-            </motion.div>
-          }
-        />
-      </Routes>
+            }
+          />
+          <Route
+            path="/chess"
+            element={
+              <motion.div
+                key="route-chess"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <ChessGameSection />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/snake-ladders"
+            element={
+              <ProtectedGameRoute targetPath="/snake-ladders">
+                <motion.div
+                  key="route-snake-ladders"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="gpu-smooth"
+                >
+                  <SnakeAndLaddersSection />
+                </motion.div>
+              </ProtectedGameRoute>
+            }
+          />
+          <Route
+            path="/uno"
+            element={
+              <ProtectedGameRoute targetPath="/uno">
+                <motion.div
+                  key="route-uno"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="gpu-smooth"
+                >
+                  <UnoGameSection />
+                </motion.div>
+              </ProtectedGameRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <motion.div
+                key="route-admin"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <AdminPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <motion.div
+                key="route-login"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <LoginPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <motion.div
+                key="route-register"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="gpu-smooth"
+              >
+                <LoginPage />
+              </motion.div>
+            }
+          />
+        </Routes>
+      </Suspense>
     </AnimatePresence>
   );
 }
@@ -329,7 +352,6 @@ function MainLayout({ isLoading }: { isLoading: boolean }) {
   );
 }
 
-
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -359,4 +381,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
