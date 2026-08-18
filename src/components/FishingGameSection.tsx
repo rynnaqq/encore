@@ -809,6 +809,10 @@ export const FishingGameSection: React.FC = () => {
   const [isOddsOpen, setIsOddsOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isScreenShaking, setIsScreenShaking] = useState(false);
+  const [caughtActionUnlocked, setCaughtActionUnlocked] = useState(false);
+  const [sellConfirmation, setSellConfirmation] = useState(false);
+  const [flashScreen, setFlashScreen] = useState(false);
+  const [confettiParticles, setConfettiParticles] = useState<{ id: number; emoji: string; x: number; y: number; delay: number; speed: number; scale: number }[]>([]);
 
   // Equipment & Inventory
   const [equippedRod, setEquippedRod] = useState('bamboo');
@@ -1150,17 +1154,47 @@ export const FishingGameSection: React.FC = () => {
         reelProgressRef.current = 100;
         const caughtFish = currentFishRef.current;
 
+        setFlashScreen(true);
+        setTimeout(() => setFlashScreen(false), 250);
+
+        setCaughtActionUnlocked(false);
+        setSellConfirmation(false);
+
+        // Generate dynamic festive particles for celebration
+        const particleCount = caughtFish?.rarity === 'Mitos' ? 45 : caughtFish?.rarity === 'Legendaris' ? 30 : 18;
+        const emojis = caughtFish?.rarity === 'Mitos' 
+          ? ['✨', '⭐', '💫', '💎', '👑', '🌟', '🔥', '⚡', '🎆'] 
+          : caughtFish?.rarity === 'Legendaris'
+          ? ['👑', '⭐', '✨', '🏆', '💎', '🌟']
+          : ['✨', '⭐', '🎉', '🐟'];
+        
+        const newParticles = Array.from({ length: particleCount }).map((_, i) => ({
+          id: i,
+          emoji: emojis[Math.floor(Math.random() * emojis.length)],
+          x: Math.random() * 700 + 50,
+          y: Math.random() * 500 + 50,
+          delay: Math.random() * 0.4,
+          speed: Math.random() * 1.5 + 1.2,
+          scale: Math.random() * 0.8 + 0.8,
+        }));
+        setConfettiParticles(newParticles);
+
         if (caughtFish?.rarity === 'Mitos') {
           playSound('mythic_fanfare');
           setIsScreenShaking(true);
-          setTimeout(() => setIsScreenShaking(false), 1200);
+          setTimeout(() => setIsScreenShaking(false), 1400);
         } else if (caughtFish?.rarity === 'Legendaris') {
           playSound('legendary');
           setIsScreenShaking(true);
-          setTimeout(() => setIsScreenShaking(false), 800);
+          setTimeout(() => setIsScreenShaking(false), 900);
         } else {
           playSound('caught');
         }
+
+        const unlockDelay = caughtFish?.rarity === 'Mitos' ? 2200 : caughtFish?.rarity === 'Legendaris' ? 1500 : 900;
+        setTimeout(() => {
+          setCaughtActionUnlocked(true);
+        }, unlockDelay);
 
         const basePts = caughtFish?.points || 100;
         const comboBonus = combo * 25;
@@ -1310,6 +1344,22 @@ export const FishingGameSection: React.FC = () => {
             100% { transform: translateY(700px) translateX(-150px); }
           }
 
+          @keyframes particleFloatUp {
+            0% { transform: translateY(0) scale(0.6); opacity: 0; }
+            25% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+            100% { transform: translateY(-160px) scale(0.4); opacity: 0; }
+          }
+
+          @keyframes rainbowShift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+          }
+
+          @keyframes shockwaveExpand {
+            0% { transform: scale(0.6); opacity: 0.9; }
+            100% { transform: scale(2.6); opacity: 0; }
+          }
+
           .animate-water {
             animation: waterWave 1.8s linear infinite;
           }
@@ -1322,6 +1372,15 @@ export const FishingGameSection: React.FC = () => {
           }
           .animate-bobber-float {
             animation: bobberGentleFloat 1.8s ease-in-out infinite;
+          }
+          .animate-particle-float {
+            animation: particleFloatUp 2s ease-out infinite;
+          }
+          .animate-rainbow-shift {
+            animation: rainbowShift 4s linear infinite;
+          }
+          .animate-shockwave {
+            animation: shockwaveExpand 1.6s ease-out infinite;
           }
         `}
       </style>
@@ -2047,72 +2106,109 @@ export const FishingGameSection: React.FC = () => {
             </motion.div>
           )}
 
+          {/* Fullscreen Celebration Screen Flash */}
+          {flashScreen && (
+            <div className="absolute inset-0 bg-white z-[60] pointer-events-none animate-ping" />
+          )}
+
           {/* Catch Result Modal - Ultra Enhanced for High / Mythic / Legendary Rarity */}
           {gameState === 'caught' && fish && fishStats && (
             <motion.div
               key="catch-modal"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-50 p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-50 p-3 sm:p-4 overflow-hidden"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div
+              {/* Fullscreen Celebration Confetti & Sparkles */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+                {confettiParticles.map(p => (
+                  <div
+                    key={p.id}
+                    className="absolute text-base select-none animate-particle-float"
+                    style={{
+                      left: `${p.x}px`,
+                      top: `${p.y}px`,
+                      animationDelay: `${p.delay}s`,
+                      animationDuration: `${p.speed}s`,
+                      transform: `scale(${p.scale})`,
+                    }}
+                  >
+                    {p.emoji}
+                  </div>
+                ))}
+              </div>
+
+              {/* Pulsating Shockwave Rings for High Tier Catches */}
+              {(fish.rarity === 'Mitos' || fish.rarity === 'Legendaris') && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <div className="w-[280px] h-[280px] rounded-full border-[4px] border-amber-400/80 animate-shockwave" />
+                  <div className="w-[280px] h-[280px] rounded-full border-[4px] border-purple-500/80 animate-shockwave" style={{ animationDelay: '0.6s' }} />
+                </div>
+              )}
+
+              {/* Dramatic Rotating Cosmic & Golden Sunburst Rays */}
+              <div className="absolute inset-0 opacity-30 pointer-events-none flex items-center justify-center">
+                <div
+                  className={`w-[850px] h-[850px] ${
+                    fish.rarity === 'Mitos'
+                      ? 'bg-[conic-gradient(from_0deg,_#ec4899,_#a855f7,_#3b82f6,_#10b981,_#f59e0b,_#ec4899)]'
+                      : fish.rarity === 'Legendaris'
+                      ? 'bg-[conic-gradient(from_0deg,_#f59e0b,_#fef08a,_#d97706,_#fef08a,_#f59e0b)]'
+                      : 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500'
+                  } animate-[rayRotate_8s_linear_infinite]`}
+                />
+              </div>
+
+              {/* Main Trophy Card */}
+              <motion.div
+                initial={{ scale: 0.3, y: 40, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ type: 'spring', damping: 14, stiffness: 180 }}
                 className={`bg-amber-100 border-[6px] ${
                   fish.rarity === 'Mitos'
-                    ? 'border-purple-600 shadow-[0_0_80px_rgba(168,85,247,0.9),10px_10px_0_0_rgba(0,0,0,1)]'
+                    ? 'border-purple-600 shadow-[0_0_90px_rgba(168,85,247,1),0_0_120px_rgba(236,72,153,0.8),10px_10px_0_0_#000]'
                     : fish.rarity === 'Legendaris'
-                    ? 'border-amber-500 shadow-[0_0_60px_rgba(234,179,8,0.9),10px_10px_0_0_rgba(0,0,0,1)]'
+                    ? 'border-amber-500 shadow-[0_0_70px_rgba(234,179,8,1),10px_10px_0_0_#000]'
                     : 'border-black shadow-[10px_10px_0_0_rgba(0,0,0,1)]'
-                } p-6 w-full max-w-[440px] text-slate-900 text-center relative overflow-hidden flex flex-col max-h-[570px]`}
+                } p-5 sm:p-6 w-full max-w-[440px] text-slate-900 text-center relative z-10 flex flex-col max-h-[580px] overflow-hidden`}
               >
-                {/* Dramatic Rotating Cosmic & Golden Rays */}
-                <div className="absolute inset-0 opacity-25 pointer-events-none flex items-center justify-center">
-                  <div
-                    className={`w-[700px] h-[700px] ${
-                      fish.rarity === 'Mitos'
-                        ? 'bg-[conic-gradient(from_0deg,_#ec4899,_#a855f7,_#3b82f6,_#10b981,_#f59e0b,_#ec4899)]'
-                        : fish.rarity === 'Legendaris'
-                        ? 'bg-[conic-gradient(from_0deg,_#f59e0b,_#fef08a,_#d97706,_#fef08a,_#f59e0b)]'
-                        : 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500'
-                    } animate-[rayRotate_10s_linear_infinite]` }
-                  />
-                </div>
-
                 <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-2">
                   {/* Grand Banner */}
                   <div
-                    className={`py-2 px-4 mb-3 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-[4px] border-black ${
+                    className={`py-2.5 px-4 mb-3 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-[4px] border-black ${
                       fish.rarity === 'Mitos'
-                        ? 'bg-gradient-to-r from-purple-700 via-pink-600 to-amber-500 text-white animate-pulse'
+                        ? 'bg-gradient-to-r from-purple-800 via-pink-600 to-amber-500 text-white animate-pulse'
                         : fish.rarity === 'Legendaris'
                         ? 'bg-amber-500 text-slate-950 font-black'
                         : 'bg-emerald-600 text-white'
                     }`}
                   >
-                    <h2 className="text-[15px] sm:text-[17px] font-black text-yellow-300 flex items-center justify-center gap-2">
+                    <h2 className="text-[14px] sm:text-[16px] font-black text-yellow-300 flex items-center justify-center gap-2">
                       {fish.rarity === 'Mitos' ? (
-                        <>⭐ TANGKAPAN MITOS PURBA! ⭐</>
+                        <>⭐ 👑 TANGKAPAN MITOS PURBA DEWA! 👑 ⭐</>
                       ) : fish.rarity === 'Legendaris' ? (
-                        <>👑 TANGKAPAN LEGENDARIS! 👑</>
+                        <>👑 🏆 TANGKAPAN LEGENDARIS! 🏆 👑</>
                       ) : (
-                        <><Sparkles className="w-5 h-5" /> TERTANGKAP!</>
+                        <><Sparkles className="w-5 h-5 text-yellow-300" /> TERTANGKAP!</>
                       )}
                     </h2>
                   </div>
 
-                  {/* Fish Visual Container with Floating Animation */}
-                  <div className="flex justify-center my-3">
+                  {/* Fish Showcase Pedestal with Floating Animation */}
+                  <div className="flex justify-center my-2">
                     <div
                       className={`w-[140px] h-[140px] border-[4px] ${
                         fish.rarity === 'Mitos'
-                          ? 'border-purple-600 bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-900 shadow-[0_0_30px_rgba(168,85,247,0.8)]'
+                          ? 'border-purple-600 bg-gradient-to-tr from-slate-950 via-purple-950 to-indigo-900 shadow-[0_0_35px_rgba(168,85,247,0.9)]'
                           : fish.rarity === 'Legendaris'
-                          ? 'border-amber-500 bg-gradient-to-tr from-amber-200 to-yellow-100 shadow-[0_0_20px_rgba(234,179,8,0.7)]'
+                          ? 'border-amber-500 bg-gradient-to-tr from-amber-200 to-yellow-100 shadow-[0_0_25px_rgba(234,179,8,0.8)]'
                           : 'border-black bg-gradient-to-b from-sky-100 to-amber-100'
                       } shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative overflow-hidden`}
                     >
                       <motion.div
-                        animate={{ y: [-4, 4, -4], rotate: [-3, 3, -3] }}
+                        animate={{ y: [-5, 5, -5], rotate: [-4, 4, -4] }}
                         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                       >
                         <FishGraphic id={fish.id} size={115} />
@@ -2120,7 +2216,7 @@ export const FishingGameSection: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-1.5 mb-3">
                     <h3 className="text-[15px] sm:text-[17px] font-black text-slate-900">{fish.name}</h3>
                     <div
                       className="inline-block px-3 py-1 text-slate-900 border-[2px] border-black text-[10px] font-black uppercase tracking-wider"
@@ -2130,45 +2226,109 @@ export const FishingGameSection: React.FC = () => {
                     </div>
                     <p className="text-[10px] text-slate-700 italic px-2 mt-1 leading-snug">{fish.description}</p>
 
-                    <div className="flex justify-center gap-3 mt-3 text-[10px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
+                    <div className="flex justify-center gap-3 mt-2 text-[10px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
                       <span>BERAT: <strong className="text-blue-700">{fishStats.weight} kg</strong></span>
                       <span>PANJANG: <strong className="text-blue-700">{fishStats.length} cm</strong></span>
                     </div>
 
                     <div className="flex justify-center items-center gap-3 mt-2 text-[10px] font-black">
-                      <span className="text-emerald-800 bg-emerald-100 px-2 py-1 border border-emerald-800">+ {fish.points} PTS</span>
-                      <span className="text-amber-900 bg-amber-200 px-2 py-1 border border-amber-800">🪙 +{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))} KOIN</span>
+                      <span className="text-emerald-800 bg-emerald-100 px-2.5 py-1 border border-emerald-800 shadow-sm">
+                        + {fish.points} PTS
+                      </span>
+                      <span className="text-amber-900 bg-amber-200 px-2.5 py-1 border border-amber-800 shadow-sm">
+                        🪙 +{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))} KOIN
+                      </span>
                     </div>
                   </div>
 
-                  {/* Actions: Simpan / Jual */}
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playSound('click');
-                        setGameState('idle');
-                      }}
-                      className="flex-1 py-3 bg-amber-400 text-slate-900 border-[4px] border-black font-black text-xs hover:bg-amber-300 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                  {/* Accidental Click Protection & Action Area */}
+                  {!caughtActionUnlocked ? (
+                    <div className="mt-4 py-3 px-4 bg-slate-900 border-[3px] border-amber-400 text-yellow-300 text-[10px] font-black tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.5)]">
+                      <Sparkles className="w-4 h-4 animate-spin text-amber-400" />
+                      <span className="animate-pulse">✨ MEMBUKA KEAJAIBAN TANGKAPAN...</span>
+                    </div>
+                  ) : sellConfirmation ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="mt-3 p-3 bg-red-950/95 border-[3px] border-red-500 text-white space-y-2 shadow-[0_0_25px_rgba(239,68,68,0.7)]"
                     >
-                      SIMPAN
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playSound('upgrade');
-                        const extraCoins = Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1));
-                        setCoins(c => c + extraCoins);
-                        triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
-                        setGameState('idle');
-                      }}
-                      className="flex-1 py-3 bg-emerald-500 text-white border-[4px] border-black font-black text-xs hover:bg-emerald-400 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                      <div className="flex items-center justify-center gap-1.5 text-red-400 text-[11px] font-black">
+                        <Shield className="w-4 h-4 text-amber-400" />
+                        <span>KONFIRMASI JUAL IKAN LANGKA</span>
+                      </div>
+                      <p className="text-[9px] text-slate-200 leading-snug">
+                        Ikan <strong>{fish.name}</strong> ({fish.rarity}) sangat langka dan berharga. Yakin ingin menjualnya seharga <strong>+{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))} 🪙</strong>?
+                      </p>
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playSound('click');
+                            setSellConfirmation(false);
+                          }}
+                          className="flex-1 py-2.5 bg-amber-400 text-slate-950 border-[3px] border-black font-black text-[10px] hover:bg-amber-300 shadow-[3px_3px_0_0_#000] cursor-pointer active:translate-y-0.5"
+                        >
+                          BATAL (SIMPAN)
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playSound('upgrade');
+                            const extraCoins = Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1));
+                            setCoins(c => c + extraCoins);
+                            triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
+                            setGameState('idle');
+                          }}
+                          className="flex-1 py-2.5 bg-red-600 text-white border-[3px] border-black font-black text-[10px] hover:bg-red-500 shadow-[3px_3px_0_0_#000] cursor-pointer active:translate-y-0.5"
+                        >
+                          YA, TETAP JUAL
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex gap-3 mt-4"
                     >
-                      JUAL (+{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))}🪙)
-                    </button>
-                  </div>
+                      {/* Main Primary Action: SIMPAN KE JURNAL (Gold Pulsating) */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playSound('click');
+                          setGameState('idle');
+                        }}
+                        className="flex-1 py-3.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 border-[4px] border-black font-black text-xs hover:brightness-110 transition-all shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Check className="w-4 h-4 text-emerald-800" />
+                        <span>SIMPAN KE JURNAL</span>
+                      </button>
+
+                      {/* Secondary Action: JUAL */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (fish.rarity === 'Mitos' || fish.rarity === 'Legendaris') {
+                            playSound('click');
+                            setSellConfirmation(true);
+                          } else {
+                            playSound('upgrade');
+                            const extraCoins = Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1));
+                            setCoins(c => c + extraCoins);
+                            triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
+                            setGameState('idle');
+                          }
+                        }}
+                        className="py-3.5 px-3 sm:px-4 bg-emerald-600 text-white border-[4px] border-black font-black text-xs hover:bg-emerald-500 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer flex items-center gap-1"
+                      >
+                        <Coins className="w-3.5 h-3.5 text-yellow-300" />
+                        <span>JUAL (+{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))}🪙)</span>
+                      </button>
+                    </motion.div>
+                  )}
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
