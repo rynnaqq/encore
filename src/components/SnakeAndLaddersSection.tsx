@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Dices, Trophy, Users, Plus, ChevronLeft, Settings, Copy, Check, UsersRound, Send, RotateCcw, User, ArrowRight } from 'lucide-react';
+import { Dices, Trophy, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';

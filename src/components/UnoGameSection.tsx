@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { GameState, Card, Player, Color, generateDeck, isValidPlay } from '../lib/unoLogic';
-import { Copy, Play, UserPlus, Users, ArrowRight, MessageSquare, ShieldAlert, Sparkles, AlertCircle } from 'lucide-react';
+import { Copy, Users, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
 import { VictoryModal } from './VictoryModal';
@@ -43,16 +42,6 @@ export const UnoGameSection: React.FC = () => {
   
   const [colorPickerVisible, setColorPickerVisible] = useState<{cardId: string} | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Developer PIN state
-  const [isUnlocked, setIsUnlocked] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('uno_unlocked') === 'true';
-    }
-    return false;
-  });
-  const [pin, setPin] = useState('');
-  const [pinError, setPinError] = useState('');
 
   // Host Only Ref to always have latest state in callbacks
   const stateRef = useRef<GameState | null>(null);
@@ -563,46 +552,6 @@ export const UnoGameSection: React.FC = () => {
       });
     }
   };
-
-  const handleUnlock = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin === '010309') { // Developer PIN
-      setIsUnlocked(true);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('uno_unlocked', 'true');
-      }
-    } else {
-      setPinError('Invalid PIN');
-    }
-  };
-
-  if (!isUnlocked) {
-    return (
-      <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center">
-          <ShieldAlert className="w-14 h-14 text-[#E195AB] mx-auto mb-4" />
-          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">Akses Pengembang Required</h2>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">Game ini masih dalam akses terbatas. Masukkan PIN pengembang untuk melanjutkan.</p>
-          <form onSubmit={handleUnlock}>
-            <input
-              type="password"
-              placeholder="Masukkan PIN Pengembang"
-              value={pin}
-              onChange={(e) => { setPin(e.target.value); setPinError(''); }}
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 focus:border-[#E195AB] focus:ring-4 focus:ring-[#E195AB]/20 bg-slate-50 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-100 mb-4 outline-none text-center"
-            />
-            {pinError && <p className="text-rose-500 text-xs font-bold mb-4">{pinError}</p>}
-            <button
-              type="submit"
-              className="w-full bg-[#E195AB] hover:bg-[#d88299] text-white font-bold py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
-            >
-              Buka Game
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   if (!gameState) {
     return (

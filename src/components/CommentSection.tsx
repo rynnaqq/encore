@@ -551,7 +551,6 @@ export const CommentSection: React.FC = () => {
             <AnimatePresence>
               {topLevelComments.map((comment, index) => {
                 const threadReplies = repliesByRootId[comment.id] || [];
-                if (threadReplies.length > 0) console.log('Comment', comment.id, 'has replies:', threadReplies);
                 
                 return (
                 <motion.div
