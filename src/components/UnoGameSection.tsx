@@ -103,10 +103,11 @@ export const UnoGameSection: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (channelRef.current) supabase?.removeChannel(channelRef.current);
-      else if (channel) supabase?.removeChannel(channel);
+      if (channelRef.current) {
+        getSupabaseClient()?.removeChannel(channelRef.current);
+      }
     };
-  }, [channel, supabase]);
+  }, []);
 
   const broadcastState = (state: GameState, ch?: RealtimeChannel) => {
     const c = ch || channelRef.current || channel;
@@ -252,12 +253,21 @@ export const UnoGameSection: React.FC = () => {
   };
 
   const joinChannel = (roomId: string, initialHostState?: GameState) => {
-    if (channelRef.current) supabase?.removeChannel(channelRef.current);
-    else if (channel) supabase?.removeChannel(channel);
+    const client = getSupabaseClient();
+    if (!client) {
+      setErrorMsg('Multiplayer credentials not configured.');
+      setIsConnecting(false);
+      return;
+    }
 
-    const newChannel = supabase!.channel(`uno-${roomId}`, {
+    if (channelRef.current) {
+      client.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const newChannel = client.channel(`uno-${roomId}`, {
       config: { 
-        broadcast: { self: true },
+        broadcast: { ack: false, self: true },
         presence: { key: localPlayerId }
       }
     });
@@ -266,8 +276,10 @@ export const UnoGameSection: React.FC = () => {
     newChannel.on('broadcast', { event: 'SYNC_STATE' }, ({ payload }) => {
       if (payload?.state) {
         setIsConnecting(false);
+        setErrorMsg('');
         setGameState(payload.state);
         stateRef.current = payload.state;
+        if (payload.state.hostId === localPlayerId) setIsHost(true);
       }
     });
 
@@ -284,6 +296,8 @@ export const UnoGameSection: React.FC = () => {
           broadcastState(state, newChannel);
         } else if (state.status === 'waiting' && state.players.length < 4) {
           state.players.push({ id: payload.id, name: payload.name, hand: [], isHost: false });
+          if (!state.logs) state.logs = [];
+          state.logs.push(`${payload.name} bergabung ke dalam room.`);
           setGameState(state);
           stateRef.current = state;
           broadcastState(state, newChannel);
@@ -361,9 +375,9 @@ export const UnoGameSection: React.FC = () => {
       handlePresenceSync();
     });
 
-    newChannel.subscribe(async (status) => {
+    newChannel.subscribe((status, err) => {
       if (status === 'SUBSCRIBED') {
-        await newChannel.track({ id: localPlayerId, name: playerName });
+        newChannel.track({ id: localPlayerId, name: playerName });
         if (!initialHostState) {
           // I am a client joining or reconnecting
           newChannel.send({
@@ -377,10 +391,17 @@ export const UnoGameSection: React.FC = () => {
             retries++;
             if (stateRef.current && stateRef.current.players.some(p => p.id === localPlayerId)) {
               clearInterval(retryInterval);
-            } else if (retries >= 4) {
+              setIsConnecting(false);
+            } else if (retries >= 6) {
               clearInterval(retryInterval);
               if (!stateRef.current) {
+                setIsConnecting(false);
                 setErrorMsg('Room tidak ditemukan atau Host sedang offline.');
+                if (channelRef.current) {
+                  getSupabaseClient()?.removeChannel(channelRef.current);
+                  channelRef.current = null;
+                }
+                setChannel(null);
               }
             } else {
               newChannel.send({
@@ -392,8 +413,20 @@ export const UnoGameSection: React.FC = () => {
           }, 800);
         } else {
           // I am host restoring or creating room, broadcast state
-          broadcastState(initialHostState, newChannel);
+          setGameState(initialHostState);
+          stateRef.current = initialHostState;
+          setTimeout(() => {
+            broadcastState(initialHostState, newChannel);
+          }, 300);
         }
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+        setIsConnecting(false);
+        setErrorMsg('Gagal terhubung ke room.');
+        if (channelRef.current) {
+          getSupabaseClient()?.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+        setChannel(null);
       }
     });
 
