@@ -2118,9 +2118,36 @@ export const FishingGameSection: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-50 p-3 sm:p-4 overflow-hidden"
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/92 z-50 p-3 sm:p-4 overflow-hidden"
               onPointerDown={(e) => e.stopPropagation()}
             >
+              {/* Organic Celestial Aurora & Nebula Glows (No harsh rotating square) */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
+                {/* Multi-layered soft atmospheric glow */}
+                <div
+                  className={`w-[520px] h-[520px] rounded-full blur-3xl opacity-60 animate-pulse ${
+                    fish.rarity === 'Mitos'
+                      ? 'bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-400'
+                      : fish.rarity === 'Legendaris'
+                      ? 'bg-gradient-to-tr from-amber-500 via-yellow-400 to-orange-500'
+                      : 'bg-gradient-to-tr from-sky-500 to-emerald-400'
+                  }`}
+                />
+                <div
+                  className="w-[360px] h-[360px] rounded-full blur-2xl opacity-40 bg-cyan-400 animate-pulse"
+                  style={{ animationDelay: '1.2s' }}
+                />
+
+                {/* Subtle Ethereal Halo Rings for Mythic/Legendary */}
+                {(fish.rarity === 'Mitos' || fish.rarity === 'Legendaris') && (
+                  <>
+                    <div className="absolute w-[420px] h-[420px] rounded-full border border-amber-400/30 animate-[divineRing_24s_linear_infinite]" />
+                    <div className="absolute w-[500px] h-[500px] rounded-full border border-purple-400/20 border-dashed animate-[divineRing_36s_linear_infinite_reverse]" />
+                    <div className="absolute w-[300px] h-[300px] rounded-full border-[3px] border-amber-300/40 animate-shockwave" />
+                  </>
+                )}
+              </div>
+
               {/* Fullscreen Celebration Confetti & Sparkles */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 {confettiParticles.map(p => (
@@ -2140,44 +2167,23 @@ export const FishingGameSection: React.FC = () => {
                 ))}
               </div>
 
-              {/* Pulsating Shockwave Rings for High Tier Catches */}
-              {(fish.rarity === 'Mitos' || fish.rarity === 'Legendaris') && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  <div className="w-[280px] h-[280px] rounded-full border-[4px] border-amber-400/80 animate-shockwave" />
-                  <div className="w-[280px] h-[280px] rounded-full border-[4px] border-purple-500/80 animate-shockwave" style={{ animationDelay: '0.6s' }} />
-                </div>
-              )}
-
-              {/* Dramatic Rotating Cosmic & Golden Sunburst Rays */}
-              <div className="absolute inset-0 opacity-30 pointer-events-none flex items-center justify-center">
-                <div
-                  className={`w-[850px] h-[850px] ${
-                    fish.rarity === 'Mitos'
-                      ? 'bg-[conic-gradient(from_0deg,_#ec4899,_#a855f7,_#3b82f6,_#10b981,_#f59e0b,_#ec4899)]'
-                      : fish.rarity === 'Legendaris'
-                      ? 'bg-[conic-gradient(from_0deg,_#f59e0b,_#fef08a,_#d97706,_#fef08a,_#f59e0b)]'
-                      : 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500'
-                  } animate-[rayRotate_8s_linear_infinite]`}
-                />
-              </div>
-
               {/* Main Trophy Card */}
               <motion.div
-                initial={{ scale: 0.3, y: 40, opacity: 0 }}
+                initial={{ scale: 0.35, y: 35, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
-                transition={{ type: 'spring', damping: 14, stiffness: 180 }}
+                transition={{ type: 'spring', damping: 15, stiffness: 190 }}
                 className={`bg-amber-100 border-[6px] ${
                   fish.rarity === 'Mitos'
-                    ? 'border-purple-600 shadow-[0_0_90px_rgba(168,85,247,1),0_0_120px_rgba(236,72,153,0.8),10px_10px_0_0_#000]'
+                    ? 'border-purple-600 shadow-[0_0_60px_rgba(168,85,247,0.9),0_0_100px_rgba(234,179,8,0.6),10px_10px_0_0_#000]'
                     : fish.rarity === 'Legendaris'
-                    ? 'border-amber-500 shadow-[0_0_70px_rgba(234,179,8,1),10px_10px_0_0_#000]'
+                    ? 'border-amber-500 shadow-[0_0_50px_rgba(234,179,8,0.8),10px_10px_0_0_#000]'
                     : 'border-black shadow-[10px_10px_0_0_rgba(0,0,0,1)]'
                 } p-5 sm:p-6 w-full max-w-[440px] text-slate-900 text-center relative z-10 flex flex-col max-h-[580px] overflow-hidden`}
               >
                 <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-2">
                   {/* Grand Banner */}
                   <div
-                    className={`py-2.5 px-4 mb-3 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-[4px] border-black ${
+                    className={`py-2.5 px-4 mb-2.5 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-[4px] border-black ${
                       fish.rarity === 'Mitos'
                         ? 'bg-gradient-to-r from-purple-800 via-pink-600 to-amber-500 text-white animate-pulse'
                         : fish.rarity === 'Legendaris'
@@ -2185,9 +2191,9 @@ export const FishingGameSection: React.FC = () => {
                         : 'bg-emerald-600 text-white'
                     }`}
                   >
-                    <h2 className="text-[14px] sm:text-[16px] font-black text-yellow-300 flex items-center justify-center gap-2">
+                    <h2 className="text-[13px] sm:text-[15px] font-black text-yellow-300 flex items-center justify-center gap-1.5 tracking-wide">
                       {fish.rarity === 'Mitos' ? (
-                        <>⭐ 👑 TANGKAPAN MITOS PURBA DEWA! 👑 ⭐</>
+                        <>⭐ 👑 SANG MAHA MITOS DEWA SAMUDRA! 👑 ⭐</>
                       ) : fish.rarity === 'Legendaris' ? (
                         <>👑 🏆 TANGKAPAN LEGENDARIS! 🏆 👑</>
                       ) : (
@@ -2196,20 +2202,35 @@ export const FishingGameSection: React.FC = () => {
                     </h2>
                   </div>
 
+                  {/* Mythic Lore Pill Tag */}
+                  {fish.rarity === 'Mitos' && (
+                    <div className="mb-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-purple-950 text-amber-300 border-[2px] border-amber-400 text-[8px] font-black tracking-widest shadow-sm">
+                        ⚡ PUSAKA SAMUDRA PURBA (1% ODDS) ⚡
+                      </span>
+                    </div>
+                  )}
+
                   {/* Fish Showcase Pedestal with Floating Animation */}
                   <div className="flex justify-center my-2">
                     <div
                       className={`w-[140px] h-[140px] border-[4px] ${
                         fish.rarity === 'Mitos'
-                          ? 'border-purple-600 bg-gradient-to-tr from-slate-950 via-purple-950 to-indigo-900 shadow-[0_0_35px_rgba(168,85,247,0.9)]'
+                          ? 'border-purple-600 bg-gradient-to-tr from-slate-950 via-purple-950 to-indigo-950 shadow-[0_0_35px_rgba(168,85,247,0.9)]'
                           : fish.rarity === 'Legendaris'
                           ? 'border-amber-500 bg-gradient-to-tr from-amber-200 to-yellow-100 shadow-[0_0_25px_rgba(234,179,8,0.8)]'
                           : 'border-black bg-gradient-to-b from-sky-100 to-amber-100'
                       } shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative overflow-hidden`}
                     >
+                      {/* Ambient Caustic Ripples inside Pedestal for Mythic */}
+                      {fish.rarity === 'Mitos' && (
+                        <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-300/30 via-purple-500/20 to-transparent" />
+                      )}
+
                       <motion.div
                         animate={{ y: [-5, 5, -5], rotate: [-4, 4, -4] }}
                         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                        className="relative z-10"
                       >
                         <FishGraphic id={fish.id} size={115} />
                       </motion.div>
