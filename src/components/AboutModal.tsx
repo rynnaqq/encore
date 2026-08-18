@@ -78,16 +78,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               </motion.div>
 
               {/* Top Header Controls Row */}
-              <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 relative z-10">
-                <motion.div
-                  animate={{ y: [0, -3, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-[#E195AB] dark:text-[#FFCCE1] text-[10px] sm:text-xs font-mono font-bold px-2.5 sm:px-3 py-1 rounded-full border border-[#FFCCE1] dark:border-slate-700 flex items-center gap-1.5 shadow-sm shrink-0"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Available for Projects</span>
-                </motion.div>
-
+              <div className="flex items-center justify-end gap-2 mb-3 sm:mb-4 relative z-10">
                 {/* Close Button */}
                 <button
                   onClick={onClose}

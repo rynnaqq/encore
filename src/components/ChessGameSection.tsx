@@ -12,7 +12,6 @@ import {
   VolumeX,
   FlipHorizontal,
   Lightbulb,
-  Crown,
   Trophy,
   Clock,
   RefreshCw,
@@ -983,10 +982,6 @@ export const ChessGameSection: React.FC = () => {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFCCE1] text-[#E195AB] font-mono text-xs sm:text-sm font-bold tracking-wide mb-3 shadow-sm">
-            <Crown className="w-4 h-4 text-[#E195AB]" />
-            <span>CHESS</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Play <span className="text-[#E195AB]">Chess</span>
           </h1>

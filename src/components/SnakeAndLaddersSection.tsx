@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Dices, Trophy, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight } from 'lucide-react';
+import { Dices, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -701,9 +701,6 @@ export const SnakeAndLaddersSection: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-sm mb-4 shadow-sm">
-            <Trophy className="w-4 h-4" /> Online Multiplayer
-          </div>
           <h2 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Snakes & <span className="text-[#E195AB]">Ladders</span>
           </h2>
