@@ -1777,60 +1777,89 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </div>
 
-          {/* ================= WOODEN PIER DECK ================= */}
-          <div className="absolute left-0 w-[240px] h-[28px] bg-[#92400e] border-y-[4px] border-black shadow-[0_6px_0_rgba(0,0,0,0.4)]" style={{ bottom: waterHeight + 10 }}>
-            {/* Pier Planks Pattern */}
-            <div className="flex h-full">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="w-[20px] h-full border-r-[2px] border-[#451a03] bg-[#b45309]" />
-              ))}
+          {/* ================= PIER & FISHERMAN ================= */}
+          <div className="absolute left-0 w-[230px] h-[32px] bg-[#78350f] border-y-[4px] border-[#451a03] shadow-[0_6px_0_rgba(0,0,0,0.4)]" style={{ bottom: waterHeight - 30 }}>
+            {/* Pier vertical supports going into water */}
+            <div className="absolute top-full left-[20px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
+            <div className="absolute top-full left-[110px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
+            <div className="absolute top-full left-[200px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
+            
+            <div className="absolute top-0 bottom-0 left-[45px] w-[3px] bg-[#451a03]" />
+            <div className="absolute top-0 bottom-0 left-[90px] w-[3px] bg-[#451a03]" />
+            <div className="absolute top-0 bottom-0 left-[135px] w-[3px] bg-[#451a03]" />
+            <div className="absolute top-0 bottom-0 left-[180px] w-[3px] bg-[#451a03]" />
+
+            {/* Tackle Bucket */}
+            <div className="absolute -top-[24px] left-[32px] w-[20px] h-[24px] bg-slate-700 border-[2px] border-black rounded-b-sm">
+              <div className="absolute top-[2px] inset-x-[2px] h-[6px] bg-sky-300" />
             </div>
-            {/* Lantern on pier post */}
-            <div className="absolute -top-[35px] left-[30px] flex flex-col items-center">
-              <div className="w-[14px] h-[18px] bg-[#fef08a] border-[2px] border-black shadow-[0_0_15px_rgba(254,240,138,0.9)]" />
-              <div className="w-[6px] h-[16px] bg-[#451a03]" />
+            {/* Tackle Box */}
+            <div className="absolute -top-[16px] left-[68px] w-[22px] h-[16px] bg-red-600 border-[2px] border-black">
+              <div className="absolute top-[2px] left-[6px] w-[10px] h-[3px] bg-yellow-400" />
             </div>
-            {/* Wooden Bucket */}
-            <div className="absolute -top-[22px] left-[85px] w-[20px] h-[22px] bg-[#78350f] border-[2px] border-black rounded-b-sm">
-              <div className="w-full h-[4px] bg-[#38bdf8] mt-1" />
+
+            {/* Glowing Pier Lantern */}
+            <div className="absolute -top-[32px] left-[180px] z-20">
+              <div className="w-[12px] h-[4px] bg-amber-900 border border-black mx-auto" />
+              <div className="w-[16px] h-[18px] bg-amber-300 border-[2px] border-black relative overflow-hidden shadow-[0_0_15px_rgba(251,191,36,0.9)] animate-pulse">
+                <div className="absolute inset-0 bg-yellow-100 opacity-80" />
+                <div className="absolute top-1 left-1.5 w-1 h-2 bg-white rounded-full" />
+              </div>
+              <div className="w-[20px] h-[4px] bg-amber-950 border border-black mx-auto" />
+              {/* Light beam glow cone */}
+              <div className="absolute top-full -left-6 w-16 h-12 bg-gradient-to-b from-amber-300/30 to-transparent pointer-events-none rounded-b-full" />
             </div>
           </div>
 
-          {/* ================= FISHERMAN CHARACTER ================= */}
-          <div className="absolute left-[130px] z-10" style={{ bottom: waterHeight + 36 }}>
-            {/* Fisherman Sprite */}
-            <div className="relative w-[60px] h-[80px]">
-              {/* Straw Conical Hat */}
-              <div className="absolute top-[0px] left-[5px] w-[50px] h-[18px] bg-[#d97706] border-[3px] border-black" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
-              {/* Head */}
-              <div className="absolute top-[16px] left-[18px] w-[24px] h-[22px] bg-[#fed7aa] border-[2px] border-black" />
-              {/* Beard */}
-              <div className="absolute top-[28px] left-[26px] w-[14px] h-[12px] bg-slate-300 border-[2px] border-black" />
-              {/* Eye */}
-              <div className="absolute top-[22px] left-[32px] w-[4px] h-[4px] bg-black" />
-              {/* Blue Denim Shirt / Body */}
-              <div className="absolute top-[38px] left-[15px] w-[30px] h-[28px] bg-[#0284c7] border-[3px] border-black" />
-              {/* Pants */}
-              <div className="absolute top-[64px] left-[18px] w-[24px] h-[16px] bg-[#334155] border-[2px] border-black" />
+          {/* Fisherman Character */}
+          <div className="absolute left-[105px] z-10" style={{ bottom: waterHeight - 5 }}>
+            {/* Wooden Stool */}
+            <div className="absolute bottom-[0px] left-[10px] w-[28px] h-[18px] bg-[#451a03] border-[2px] border-black">
+              <div className="absolute top-[18px] left-[2px] w-[4px] h-[20px] bg-[#451a03]" />
+              <div className="absolute top-[18px] right-[2px] w-[4px] h-[20px] bg-[#451a03]" />
+            </div>
 
-              {/* Fishing Rod Anchor & Animated Rod */}
+            {/* Character Body */}
+            <div className="absolute bottom-[16px] left-[12px] w-[20px] h-[22px] bg-blue-800 border-[2px] border-black" />
+            <div className="absolute bottom-[36px] left-[8px] w-[26px] h-[32px] bg-amber-400 border-[2px] border-black rounded-t-sm">
+              <div className="absolute top-[4px] left-[11px] w-[4px] h-[24px] bg-amber-600" />
+            </div>
+
+            {/* Head & Cap */}
+            <div className="absolute bottom-[66px] left-[10px] w-[22px] h-[20px] bg-amber-200 border-[2px] border-black">
+              <div className="absolute top-[6px] right-[4px] w-[3px] h-[3px] bg-black" />
+              <div className="absolute bottom-0 inset-x-0 h-[6px] bg-amber-800" />
+            </div>
+            <div className="absolute bottom-[84px] left-[6px] w-[30px] h-[10px] bg-amber-500 border-[2px] border-black rounded-t-md">
+              <div className="absolute bottom-0 right-[-6px] w-[14px] h-[4px] bg-amber-600" />
+            </div>
+
+            {/* Reeling Sweat */}
+            {gameState === 'reeling' && (
+              <div className="absolute -top-[95px] left-[30px] text-sky-400 font-bold text-xs animate-bounce">
+                💦
+              </div>
+            )}
+
+            {/* Fisherman Arm & Fishing Rod */}
+            <div
+              className={`absolute bottom-[48px] left-[20px] origin-[4px_16px] transition-transform duration-200 ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
+              style={{ transform: `rotate(${rodAngleDeg}deg)` }}
+            >
+              <div className="w-[20px] h-[8px] bg-amber-400 border-[2px] border-black" />
+              <div className="absolute top-0 left-[18px] w-[8px] h-[8px] bg-amber-200 border-[2px] border-black" />
+              <div className="absolute top-[-4px] left-[16px] w-[28px] h-[8px] bg-amber-900 border-[2px] border-black" />
+              <div className="absolute top-[-8px] left-[26px] w-[10px] h-[10px] bg-slate-300 border-[2px] border-black rounded-full" />
+
+              {/* Flexible Curved Rod with dynamic rod skin color */}
               <div
-                className={`absolute top-[40px] left-[32px] origin-bottom-left transition-transform duration-100 ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
-                style={{ transform: `rotate(${rodAngleDeg}deg)` }}
-              >
-                {/* Rod Handle */}
-                <div className="w-[6px] h-[30px] bg-[#78350f] border-x border-black" />
-                {/* Reel Wheel */}
-                <div className="w-[12px] h-[12px] bg-slate-400 rounded-full border border-black -ml-[3px] mt-1" />
-                {/* Long Rod Pole */}
-                <div
-                  className="w-[4px] h-[140px] border-x border-black"
-                  style={{
-                    backgroundColor: RODS_DATABASE.find(r => r.id === equippedRod)?.color || '#facc15',
-                  }}
-                />
-                {/* Rod Tip Element */}
-                <div ref={rodTipRef} className="w-[8px] h-[8px] bg-red-600 rounded-full -ml-[2px] border border-black shadow-[0_0_6px_#ef4444]" />
+                className="absolute top-[-3px] left-[42px] w-[165px] h-[4px] border-t border-black shadow-[0_0_4px_rgba(0,0,0,0.5)]"
+                style={{
+                  backgroundColor: RODS_DATABASE.find(r => r.id === equippedRod)?.color || '#facc15',
+                }}
+              />
+              <div className="absolute top-[-3px] left-[205px] w-[10px] h-[4px] bg-red-600">
+                <div ref={rodTipRef} className="absolute top-[2px] right-0 w-[1px] h-[1px] opacity-0 pointer-events-none" />
               </div>
             </div>
           </div>
