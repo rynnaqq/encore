@@ -222,6 +222,16 @@ async function startServer() {
       };
     };
 
+    const isPlayerWhite = (room: RoomState): boolean => {
+      const pid = playerProfile?.id;
+      return Boolean(room.whitePlayer && (room.whitePlayer.id === socket.id || (pid && room.whitePlayer.id === pid)));
+    };
+
+    const isPlayerBlack = (room: RoomState): boolean => {
+      const pid = playerProfile?.id;
+      return Boolean(room.blackPlayer && (room.blackPlayer.id === socket.id || (pid && room.blackPlayer.id === pid)));
+    };
+
     // Update profile listener
     socket.on('update_profile', (profile: PlayerInfo) => {
       if (profile && profile.name) {
@@ -229,9 +239,9 @@ async function startServer() {
         if (currentRoomId) {
           const room = rooms.get(currentRoomId);
           if (room) {
-            if (room.whitePlayer?.id === profile.id || (room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id))) {
+            if (isPlayerWhite(room) || room.whitePlayer?.id === profile.id) {
               room.whitePlayer = { ...profile };
-            } else if (room.blackPlayer?.id === profile.id || (room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id))) {
+            } else if (isPlayerBlack(room) || room.blackPlayer?.id === profile.id) {
               room.blackPlayer = { ...profile };
             }
             io.to(currentRoomId).emit('room_updated', sanitizeRoomForClient(room));
@@ -519,8 +529,8 @@ async function startServer() {
         }
 
         // Validate player turn
-        const isWhite = (room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id)) || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id);
-        const isBlack = (room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id)) || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id);
+        const isWhite = isPlayerWhite(room);
+        const isBlack = isPlayerBlack(room);
 
         if ((room.turn === 'w' && !isWhite) || (room.turn === 'b' && !isBlack)) {
           socket.emit('error_message', 'Not your turn!');
@@ -600,8 +610,8 @@ async function startServer() {
       const room = rooms.get(payload.roomId);
       if (!room || room.isGameOver) return;
 
-      const isWhite = (room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id)) || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id);
-      const isBlack = (room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id)) || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id);
+      const isWhite = isPlayerWhite(room);
+      const isBlack = isPlayerBlack(room);
 
       if (!isWhite && !isBlack) return;
 
@@ -627,8 +637,8 @@ async function startServer() {
       const room = rooms.get(payload.roomId);
       if (!room || room.isGameOver) return;
 
-      const isWhite = (room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id)) || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id);
-      const isBlack = (room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id)) || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id);
+      const isWhite = isPlayerWhite(room);
+      const isBlack = isPlayerBlack(room);
       if (!isWhite && !isBlack) return;
 
       const offerSide = isWhite ? 'w' : 'b';
@@ -688,12 +698,12 @@ async function startServer() {
       let senderSide: 'w' | 'b' | 'spectator' = 'spectator';
       let senderName = playerProfile?.name || 'Player';
 
-      if ((room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id))) {
+      if (isPlayerWhite(room)) {
         senderSide = 'w';
-        senderName = room.whitePlayer.name;
-      } else if ((room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id))) {
+        senderName = room.whitePlayer!.name;
+      } else if (isPlayerBlack(room)) {
         senderSide = 'b';
-        senderName = room.blackPlayer.name;
+        senderName = room.blackPlayer!.name;
       }
 
       const msg: ChatMessage = {
@@ -719,12 +729,11 @@ async function startServer() {
       const reqId = playerProfile?.id || socket.id;
       room.rematchRequests.add(reqId);
 
-      const requesterName =
-        (room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id))
-          ? room.whitePlayer.name
-          : (room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id))
-          ? room.blackPlayer.name
-          : 'Player';
+      const requesterName = isPlayerWhite(room)
+        ? room.whitePlayer!.name
+        : isPlayerBlack(room)
+        ? room.blackPlayer!.name
+        : 'Player';
 
       room.messages.push({
         id: `sys-${Date.now()}`,
@@ -779,8 +788,8 @@ async function startServer() {
       const room = rooms.get(currentRoomId);
       if (!room) return;
 
-      const isWhite = (room.whitePlayer?.id === socket.id || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id)) || (playerProfile?.id && room.whitePlayer?.id === playerProfile.id);
-      const isBlack = (room.blackPlayer?.id === socket.id || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id)) || (playerProfile?.id && room.blackPlayer?.id === playerProfile.id);
+      const isWhite = isPlayerWhite(room);
+      const isBlack = isPlayerBlack(room);
 
       if (isWhite) {
         const leaverName = room.whitePlayer?.name || 'Player 1';

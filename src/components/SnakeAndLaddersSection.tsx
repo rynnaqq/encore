@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dices, Plus, ChevronLeft, Copy, Check, UsersRound, Send, User, ArrowRight, Sparkles } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
@@ -103,7 +103,8 @@ export const SnakeAndLaddersSection: React.FC = () => {
   };
 
   const initChannel = (roomId: string, hosting: boolean, initialHostState?: SNLRoomState) => {
-    if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('your-supabase-project')) {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
        setErrorMsg('Multiplayer credentials not configured in Settings.');
        setIsConnecting(false);
        return null;
@@ -250,7 +251,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
               clearInterval(retryInterval);
               if (!roomRef.current) {
                 setIsConnecting(false);
-                supabase.removeChannel(newChannel);
+                getSupabaseClient()?.removeChannel(newChannel);
                 setChannel(null);
                 setErrorMsg('Room tidak ditemukan atau Host sedang offline.');
               }
@@ -265,7 +266,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
         }
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
         setIsConnecting(false);
-        supabase.removeChannel(newChannel);
+        getSupabaseClient()?.removeChannel(newChannel);
         setChannel(null);
         setErrorMsg('Gagal terhubung ke room.');
       }
@@ -428,7 +429,7 @@ export const SnakeAndLaddersSection: React.FC = () => {
       if (!isHost) {
         channel.send({ type: 'broadcast', event: 'leave_request', payload: { id: myId } });
       }
-      supabase.removeChannel(channel);
+      getSupabaseClient()?.removeChannel(channel);
       setChannel(null);
     }
     setRoom(null);
