@@ -54,6 +54,7 @@ function ScrollToTop() {
 function ProtectedGameRoute({ children, targetPath }: { children: React.ReactNode; targetPath: string }) {
   const { currentUser, openLoginModal } = useAuth();
   const navigate = useNavigate();
+  const [showBetaModal, setShowBetaModal] = useState<boolean>(true);
 
   useEffect(() => {
     if (!currentUser) {
@@ -68,7 +69,12 @@ function ProtectedGameRoute({ children, targetPath }: { children: React.ReactNod
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <BetaNoticeModal isOpen={showBetaModal} onClose={() => setShowBetaModal(false)} />
+      {children}
+    </>
+  );
 }
 
 function ProtectedAdminRoute({ children, targetPath }: { children: React.ReactNode; targetPath: string }) {
@@ -147,31 +153,35 @@ function AnimatedRoutes({
           <Route
             path="/fishing"
             element={
-              <motion.div
-                key="route-fishing"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="gpu-smooth"
-              >
-                <FishingGameSection />
-              </motion.div>
+              <ProtectedGameRoute targetPath="/fishing">
+                <motion.div
+                  key="route-fishing"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="gpu-smooth"
+                >
+                  <FishingGameSection />
+                </motion.div>
+              </ProtectedGameRoute>
             }
           />
           <Route
             path="/chess"
             element={
-              <motion.div
-                key="route-chess"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="gpu-smooth"
-              >
-                <ChessGameSection />
-              </motion.div>
+              <ProtectedGameRoute targetPath="/chess">
+                <motion.div
+                  key="route-chess"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="gpu-smooth"
+                >
+                  <ChessGameSection />
+                </motion.div>
+              </ProtectedGameRoute>
             }
           />
           <Route
@@ -262,18 +272,6 @@ function AnimatedRoutes({
 function MainLayout({ isLoading }: { isLoading: boolean }) {
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
-  const [isBetaNoticeModalOpen, setIsBetaNoticeModalOpen] = useState<boolean>(false);
-  
-  useEffect(() => {
-    if (isLoading) return;
-    // Open beta notice modal 1.5s after the website finishes loading
-    const t = setTimeout(() => setIsBetaNoticeModalOpen(true), 1500);
-    return () => clearTimeout(t);
-  }, [isLoading]);
-
-  const handleCloseBetaNotice = () => {
-    setIsBetaNoticeModalOpen(false);
-  };
   const location = useLocation();
 
   const handleOpenAboutModal = () => {
@@ -343,11 +341,6 @@ function MainLayout({ isLoading }: { isLoading: boolean }) {
         onClose={handleCloseAboutModal}
       />
 
-      {/* Pop-Up Game Beta Stage Notice Modal */}
-      <BetaNoticeModal
-        isOpen={isBetaNoticeModalOpen}
-        onClose={handleCloseBetaNotice}
-      />
       {!isFullscreenGame && <Footer />}
     </motion.div>
   );

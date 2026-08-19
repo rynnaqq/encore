@@ -55,8 +55,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       return;
     }
 
-    // Require login before entering Snake & Ladders or UNO Game
-    const isProtectedGame = id === 'snake' || id === 'uno' || path === '/snake-ladders' || path === '/uno';
+    // Require login before entering any game (Fishing, Chess, Snake & Ladders, UNO)
+    const isProtectedGame = id === 'fishing' || id === 'chess' || id === 'snake' || id === 'uno' || path === '/fishing' || path === '/chess' || path === '/snake-ladders' || path === '/uno';
     if (isProtectedGame && !currentUser) {
       openLoginModal(() => {
         navigate(path);
