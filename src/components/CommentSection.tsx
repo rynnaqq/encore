@@ -79,7 +79,7 @@ export const CommentSection: React.FC = () => {
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const toggleReplies = (id: string) => setExpandedReplies(prev => ({ ...prev, [id]: prev[id] === false ? true : false }));
+  const toggleReplies = (id: string) => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }));
 
   useEffect(() => {
     fetchComments();
@@ -945,14 +945,14 @@ export const CommentSection: React.FC = () => {
                         onClick={() => toggleReplies(comment.id)}
                         className="text-[#E195AB] hover:text-[#d68097] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer bg-[#E195AB]/10 hover:bg-[#E195AB]/15 px-2.5 py-1 rounded-lg border border-[#E195AB]/20"
                       >
-                        {expandedReplies[comment.id] !== false ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        <span>{expandedReplies[comment.id] !== false ? 'Sembunyikan Balasan' : `Lihat ${threadReplies.length} Balasan`}</span>
+                        {expandedReplies[comment.id] ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        <span>{expandedReplies[comment.id] ? 'Sembunyikan Balasan' : `Lihat ${threadReplies.length} Balasan`}</span>
                       </button>
                     </div>
                   )}
 
                   {/* Replies List */}
-                  {threadReplies.length > 0 && expandedReplies[comment.id] !== false && (
+                  {threadReplies.length > 0 && expandedReplies[comment.id] && (
                     <div className="ml-3 sm:ml-8 pl-2.5 sm:pl-4 border-l-2 border-slate-200/80 dark:border-slate-800 space-y-2.5 mt-1">
                       {threadReplies.map(reply => (
                         <div key={reply.id} className="bg-slate-50/80 dark:bg-slate-800/40 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 flex gap-2.5 sm:gap-3">
