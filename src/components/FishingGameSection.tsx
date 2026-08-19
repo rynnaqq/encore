@@ -1630,6 +1630,34 @@ export const FishingGameSection: React.FC = () => {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          @keyframes fireflyFloat {
+            0% { transform: translate(0, 0) scale(0.8); opacity: 0.2; }
+            50% { transform: translate(12px, -30px) scale(1.2); opacity: 0.95; }
+            100% { transform: translate(-8px, -65px) scale(0.6); opacity: 0; }
+          }
+          @keyframes reelCrankFast {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes foamSpread {
+            0% { transform: scale(0.6); opacity: 0.9; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+            100% { transform: scale(2.2); opacity: 0; }
+          }
+          @keyframes fishFight {
+            0%, 100% { transform: translate(0, 0) rotate(-14deg) scaleX(1); }
+            25% { transform: translate(8px, -5px) rotate(12deg) scaleX(1); }
+            50% { transform: translate(-10px, 6px) rotate(-16deg) scaleX(-1); }
+            75% { transform: translate(6px, 3px) rotate(10deg) scaleX(1); }
+          }
+          @keyframes vineSway {
+            0%, 100% { transform: rotate(-4deg); }
+            50% { transform: rotate(4deg); }
+          }
+          @keyframes sunbeamPulse {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.75; }
+          }
 
           .animate-water { animation: waterWave 1.8s linear infinite; }
           .animate-kelp { animation: kelpSway 3.2s ease-in-out infinite; transform-origin: bottom center; }
@@ -1638,6 +1666,12 @@ export const FishingGameSection: React.FC = () => {
           .animate-particle-float { animation: particleFloatUp 2s ease-out infinite; }
           .animate-shockwave { animation: shockwaveExpand 1.6s ease-out infinite; }
           .animate-reel-spin { animation: reelSpin 0.35s linear infinite; }
+          .animate-firefly { animation: fireflyFloat 3.5s ease-in-out infinite; }
+          .animate-reel-crank { animation: reelCrankFast 0.12s linear infinite; }
+          .animate-foam { animation: foamSpread 0.75s ease-out infinite; }
+          .animate-fish-fight { animation: fishFight 0.25s ease-in-out infinite; }
+          .animate-vine { animation: vineSway 4.5s ease-in-out infinite; transform-origin: top center; }
+          .animate-sunbeam { animation: sunbeamPulse 4s ease-in-out infinite; }
         `}
       </style>
 
@@ -2116,92 +2150,177 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Mountains */}
-          <div className="absolute left-0 w-full h-[140px]" style={{ bottom: waterHeight }}>
-            <svg width="800" height="140" className="absolute bottom-0 inset-x-0" shapeRendering="crispEdges">
-              <polygon points="30,140 120,35 210,140" fill="#475569" />
-              <polygon points="105,35 120,35 135,35 120,55" fill="#f8fafc" />
+          {/* Top Hanging Forest Canopy & Moss Vines */}
+          <div className="absolute top-0 left-0 pointer-events-none z-10">
+            <div className="flex gap-1.5">
+              <div className="w-[140px] h-[36px] bg-[#064e3b] rounded-br-3xl border-b-2 border-[#059669]" />
+              <div className="w-[90px] h-[26px] bg-[#047857] rounded-b-2xl" />
+              <div className="w-[60px] h-[18px] bg-[#059669] rounded-b-xl" />
+            </div>
+            {/* Swaying hanging vines */}
+            <div className="absolute top-[22px] left-[18px] w-[5px] h-[55px] bg-emerald-500 animate-vine rounded-b-full border-r border-emerald-800" />
+            <div className="absolute top-[26px] left-[48px] w-[4px] h-[40px] bg-emerald-400 animate-vine rounded-b-full" style={{ animationDelay: '1.2s' }} />
+            <div className="absolute top-[18px] left-[92px] w-[6px] h-[65px] bg-emerald-600 animate-vine rounded-b-full" style={{ animationDelay: '0.6s' }} />
+            <div className="absolute top-[20px] left-[140px] w-[4px] h-[35px] bg-emerald-500 animate-vine rounded-b-full" style={{ animationDelay: '1.8s' }} />
+          </div>
 
-              <polygon points="170,140 295,15 420,140" fill="#334155" />
-              <polygon points="275,15 295,15 315,15 295,40" fill="#f8fafc" />
+          <div className="absolute top-0 right-0 pointer-events-none z-10 flex flex-col items-end">
+            <div className="flex gap-1.5">
+              <div className="w-[70px] h-[22px] bg-[#059669] rounded-b-xl" />
+              <div className="w-[120px] h-[32px] bg-[#064e3b] rounded-bl-3xl border-b-2 border-[#059669]" />
+            </div>
+            <div className="absolute top-[20px] right-[24px] w-[5px] h-[48px] bg-emerald-500 animate-vine rounded-b-full" style={{ animationDelay: '0.9s' }} />
+            <div className="absolute top-[16px] right-[65px] w-[4px] h-[38px] bg-emerald-400 animate-vine rounded-b-full" style={{ animationDelay: '1.5s' }} />
+          </div>
 
-              <polygon points="440,140 550,45 660,140" fill="#475569" />
-              <polygon points="535,45 550,45 565,45 550,65" fill="#f8fafc" />
+          {/* Lush Mountain & Evergreen Pine Forest Backdrop */}
+          <div className="absolute left-0 w-full h-[155px]" style={{ bottom: waterHeight }}>
+            <svg width="800" height="155" className="absolute bottom-0 inset-x-0" shapeRendering="crispEdges">
+              {/* Distant Emerald Mountains */}
+              <polygon points="10,155 120,40 230,155" fill="#064e3b" />
+              <polygon points="100,40 120,40 140,40 120,60" fill="#a7f3d0" />
 
-              <polygon points="620,140 715,55 810,140" fill="#334155" />
+              <polygon points="160,155 300,20 440,155" fill="#065f46" />
+              <polygon points="280,20 300,20 320,20 300,45" fill="#d1fae5" />
+
+              <polygon points="410,155 540,50 670,155" fill="#047857" />
+              <polygon points="520,50 540,50 560,50 540,70" fill="#a7f3d0" />
+
+              <polygon points="600,155 710,35 820,155" fill="#064e3b" />
+              <polygon points="690,35 710,35 730,35 710,60" fill="#d1fae5" />
+
+              {/* Midground Dense Pine Forest Layer */}
+              <polygon points="35,155 65,75 95,155" fill="#14532d" />
+              <polygon points="80,155 110,85 140,155" fill="#166534" />
+              <polygon points="125,155 155,70 185,155" fill="#14532d" />
+              <polygon points="215,155 250,65 285,155" fill="#15803d" />
+              <polygon points="335,155 375,60 415,155" fill="#14532d" />
+              <polygon points="475,155 510,75 545,155" fill="#166534" />
+              <polygon points="625,155 660,70 695,155" fill="#14532d" />
+              <polygon points="725,155 760,80 795,155" fill="#15803d" />
             </svg>
 
-            <div className="absolute bottom-0 inset-x-0 h-[40px] bg-[#166534] flex items-end justify-between px-6">
-              <div className="w-[110px] h-[22px] bg-[#15803d] rounded-t-lg" />
-              <div className="w-[190px] h-[32px] bg-[#15803d] rounded-t-lg" />
-              <div className="w-[150px] h-[26px] bg-[#15803d] rounded-t-lg" />
+            {/* Foreground Lush Grass Ridges */}
+            <div className="absolute bottom-0 inset-x-0 h-[46px] bg-[#14532d] flex items-end justify-between px-3 border-t-2 border-[#22c55e]">
+              <div className="w-[130px] h-[30px] bg-[#16a34a] rounded-t-xl" />
+              <div className="w-[220px] h-[38px] bg-[#15803d] rounded-t-xl" />
+              <div className="w-[180px] h-[32px] bg-[#16a34a] rounded-t-xl" />
+              <div className="w-[150px] h-[26px] bg-[#22c55e] rounded-t-xl" />
             </div>
           </div>
 
-          {/* Pier Grass Slope */}
-          <div className="absolute left-0 w-[220px] h-[65px] bg-[#15803d] border-b-[6px] border-[#166534]" style={{ bottom: waterHeight - 10 }}>
-            <div className="absolute top-0 inset-x-0 h-[8px] bg-[#22c55e]" />
-            <div className="absolute top-[35px] inset-x-0 bottom-0 bg-[#78350f] border-t-[4px] border-[#92400e]" />
-            <div className="absolute top-[4px] left-[35px] w-[6px] h-[6px] bg-yellow-300" />
-            <div className="absolute top-[2px] left-[90px] w-[6px] h-[6px] bg-rose-400" />
-            <div className="absolute top-[5px] left-[150px] w-[6px] h-[6px] bg-amber-300" />
+          {/* Pier Grass Slope with Wildflowers & Moss */}
+          <div className="absolute left-0 w-[220px] h-[65px] bg-[#15803d] border-b-[6px] border-[#14532d]" style={{ bottom: waterHeight - 10 }}>
+            <div className="absolute top-0 inset-x-0 h-[10px] bg-[#22c55e] border-b border-[#16a34a]" />
+            <div className="absolute top-[35px] inset-x-0 bottom-0 bg-[#78350f] border-t-[4px] border-[#92400e]">
+              {/* Moss clumps on wood edge */}
+              <div className="absolute -top-[4px] left-[15px] w-[14px] h-[5px] bg-[#15803d] rounded-full" />
+              <div className="absolute -top-[4px] left-[75px] w-[20px] h-[5px] bg-[#22c55e] rounded-full" />
+              <div className="absolute -top-[4px] left-[140px] w-[16px] h-[5px] bg-[#16a34a] rounded-full" />
+            </div>
+            {/* Wildflowers */}
+            <div className="absolute top-[4px] left-[35px] w-[6px] h-[6px] bg-yellow-300 rounded-full shadow-[0_0_4px_#fde047]" />
+            <div className="absolute top-[2px] left-[90px] w-[6px] h-[6px] bg-pink-400 rounded-full shadow-[0_0_4px_#f472b6]" />
+            <div className="absolute top-[5px] left-[150px] w-[6px] h-[6px] bg-amber-300 rounded-full shadow-[0_0_4px_#fcd34d]" />
+            <div className="absolute top-[3px] left-[185px] w-[5px] h-[5px] bg-white rounded-full shadow-[0_0_4px_#ffffff]" />
           </div>
 
-          {/* Water & Underwater */}
-          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-[#0284c7] via-[#0369a1] to-[#0f172a] overflow-hidden" style={{ height: waterHeight }}>
-            {/* Animated Waves */}
-            <div className="absolute top-0 inset-x-0 h-[10px] bg-[#38bdf8]/90 flex overflow-hidden">
+          {/* Emerald Jade Water & Underwater Garden */}
+          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-[#059669] via-[#047857] to-[#022c22] overflow-hidden" style={{ height: waterHeight }}>
+            {/* Animated Emerald Surface Waves */}
+            <div className="absolute top-0 inset-x-0 h-[12px] bg-[#34d399]/90 flex overflow-hidden border-b border-[#059669]">
               <div className="w-[832px] h-full flex animate-water">
                 {Array.from({ length: 26 }).map((_, i) => (
                   <div key={i} className="w-[32px] h-full flex">
-                    <div className="w-[16px] h-full bg-[#7dd3fc]" />
-                    <div className="w-[16px] h-full bg-[#0284c7]" />
+                    <div className="w-[16px] h-full bg-[#6ee7b7]" />
+                    <div className="w-[16px] h-full bg-[#059669]" />
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Shimmer */}
-            <div className="absolute top-[20px] left-[220px] w-[70px] h-[4px] bg-sky-200/60" />
-            <div className="absolute top-[38px] left-[460px] w-[100px] h-[4px] bg-sky-200/50" />
-            <div className="absolute top-[22px] left-[690px] w-[60px] h-[4px] bg-sky-200/60" />
+            {/* Floating Water Lily Pads & Lotus Flowers */}
+            <div className="absolute top-[-6px] left-[360px] pointer-events-none z-10 animate-bobber-float">
+              <div className="w-[28px] h-[10px] bg-[#10b981] rounded-full border border-[#065f46] relative shadow-sm">
+                <div className="absolute -top-[5px] left-[8px] w-[10px] h-[8px] bg-pink-300 rounded-full border border-pink-500">
+                  <div className="w-[4px] h-[4px] bg-yellow-300 rounded-full mx-auto mt-0.5" />
+                </div>
+              </div>
+            </div>
 
-            {/* Light Shafts */}
-            <div className="absolute top-0 left-[300px] w-[80px] h-full bg-gradient-to-b from-sky-200/15 to-transparent -rotate-12 pointer-events-none" />
-            <div className="absolute top-0 left-[520px] w-[100px] h-full bg-gradient-to-b from-sky-200/15 to-transparent -rotate-12 pointer-events-none" />
+            <div className="absolute top-[-4px] left-[610px] pointer-events-none z-10 animate-bobber-float" style={{ animationDelay: '0.7s' }}>
+              <div className="w-[34px] h-[12px] bg-[#059669] rounded-full border border-[#064e3b] relative shadow-sm">
+                <div className="absolute -top-[6px] right-[6px] w-[11px] h-[9px] bg-white rounded-full border border-rose-300">
+                  <div className="w-[4px] h-[4px] bg-yellow-400 rounded-full mx-auto mt-0.5" />
+                </div>
+              </div>
+            </div>
 
-            {/* Pillars */}
+            <div className="absolute top-[-5px] left-[485px] pointer-events-none z-10 animate-bobber-float" style={{ animationDelay: '1.3s' }}>
+              <div className="w-[20px] h-[8px] bg-[#10b981] rounded-full border border-[#047857]" />
+            </div>
+
+            {/* Ambient Bioluminescent Fireflies / Forest Spores */}
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div
+                key={`firefly-${idx}`}
+                className="absolute w-2 h-2 rounded-full bg-lime-300 shadow-[0_0_8px_#a3e635] animate-firefly pointer-events-none"
+                style={{
+                  left: `${180 + idx * 95}px`,
+                  top: `${40 + (idx % 3) * 55}px`,
+                  animationDelay: `${idx * 0.6}s`,
+                }}
+              />
+            ))}
+
+            {/* Shimmer Streaks */}
+            <div className="absolute top-[22px] left-[220px] w-[70px] h-[3px] bg-emerald-200/50 rounded-full" />
+            <div className="absolute top-[40px] left-[460px] w-[110px] h-[3px] bg-emerald-200/40 rounded-full" />
+            <div className="absolute top-[24px] left-[680px] w-[75px] h-[3px] bg-emerald-200/50 rounded-full" />
+
+            {/* Luminous Sunbeams (God Rays) Through Canopy */}
+            <div className="absolute top-0 left-[290px] w-[90px] h-full bg-gradient-to-b from-lime-200/25 via-emerald-300/12 to-transparent -rotate-12 pointer-events-none animate-sunbeam" />
+            <div className="absolute top-0 left-[510px] w-[110px] h-full bg-gradient-to-b from-lime-200/25 via-emerald-300/12 to-transparent -rotate-12 pointer-events-none animate-sunbeam" style={{ animationDelay: '2s' }} />
+
+            {/* Wooden Pier Pillars with Overgrown Moss */}
             <div className="absolute top-0 left-[35px] w-[22px] h-[190px] bg-[#451a03] border-r-[3px] border-[#78350f]">
-              <div className="absolute bottom-[20px] inset-x-0 h-[30px] bg-emerald-900/80" />
+              <div className="absolute bottom-[20px] inset-x-0 h-[40px] bg-[#065f46]/90 border-t border-[#10b981]" />
+              <div className="absolute top-[30px] left-0 w-[4px] h-[25px] bg-[#10b981]" />
             </div>
             <div className="absolute top-0 left-[115px] w-[22px] h-[210px] bg-[#451a03] border-r-[3px] border-[#78350f]">
-              <div className="absolute bottom-[25px] inset-x-0 h-[35px] bg-emerald-900/80" />
+              <div className="absolute bottom-[25px] inset-x-0 h-[45px] bg-[#065f46]/90 border-t border-[#10b981]" />
+              <div className="absolute top-[45px] right-0 w-[4px] h-[30px] bg-[#10b981]" />
             </div>
             <div className="absolute top-0 left-[185px] w-[22px] h-[180px] bg-[#451a03] border-r-[3px] border-[#78350f]">
-              <div className="absolute bottom-[10px] inset-x-0 h-[25px] bg-emerald-900/80" />
+              <div className="absolute bottom-[10px] inset-x-0 h-[35px] bg-[#065f46]/90 border-t border-[#10b981]" />
             </div>
 
-            {/* Seabed */}
-            <div className="absolute bottom-0 inset-x-0 h-[30px] bg-[#d97706] border-t-[4px] border-[#b45309]">
-              <div className="absolute top-[6px] left-[260px] w-[16px] h-[8px] bg-[#78350f] rounded-t-xs" />
-              <div className="absolute top-[10px] left-[430px] w-[20px] h-[10px] bg-[#92400e] rounded-t-xs" />
-              <div className="absolute top-[8px] left-[620px] w-[14px] h-[6px] bg-[#fef08a]" />
-              <div className="absolute top-[12px] left-[500px] w-[10px] h-[10px] bg-rose-500 rotate-12" />
+            {/* Mossy Riverbed */}
+            <div className="absolute bottom-0 inset-x-0 h-[34px] bg-[#14532d] border-t-[4px] border-[#15803d]">
+              <div className="absolute top-[6px] left-[260px] w-[18px] h-[10px] bg-[#064e3b] rounded-t-xs" />
+              <div className="absolute top-[8px] left-[430px] w-[24px] h-[12px] bg-[#047857] rounded-t-xs" />
+              <div className="absolute top-[8px] left-[620px] w-[16px] h-[8px] bg-[#22c55e]" />
+              <div className="absolute top-[10px] left-[500px] w-[12px] h-[12px] bg-emerald-300 rotate-12 shadow-[0_0_6px_#6ee7b7]" />
             </div>
 
-            {/* Seaweed & Bubbles */}
-            <div className="absolute bottom-[26px] left-[270px] w-[10px] h-[65px] bg-emerald-600 animate-kelp rounded-t-full" />
-            <div className="absolute bottom-[26px] left-[282px] w-[8px] h-[90px] bg-emerald-500 animate-kelp rounded-t-full" style={{ animationDelay: '0.8s' }} />
-            <div className="absolute bottom-[26px] left-[560px] w-[12px] h-[75px] bg-emerald-600 animate-kelp rounded-t-full" style={{ animationDelay: '1.4s' }} />
+            {/* Multi-Layered Swaying Kelp & Aquatic Plants */}
+            <div className="absolute bottom-[30px] left-[270px] w-[12px] h-[75px] bg-emerald-500 animate-kelp rounded-t-full" />
+            <div className="absolute bottom-[30px] left-[284px] w-[10px] h-[105px] bg-emerald-400 animate-kelp rounded-t-full" style={{ animationDelay: '0.8s' }} />
+            <div className="absolute bottom-[30px] left-[550px] w-[14px] h-[85px] bg-emerald-500 animate-kelp rounded-t-full" style={{ animationDelay: '1.4s' }} />
+            <div className="absolute bottom-[30px] left-[566px] w-[10px] h-[65px] bg-teal-400 animate-kelp rounded-t-full" style={{ animationDelay: '0.4s' }} />
+            <div className="absolute bottom-[30px] left-[710px] w-[12px] h-[95px] bg-emerald-400 animate-kelp rounded-t-full" style={{ animationDelay: '1.9s' }} />
 
-            <div className="absolute bottom-[30px] left-[310px] w-[6px] h-[6px] rounded-full border border-white/60" style={{ animation: 'floatBubble 4s infinite linear' }} />
-            <div className="absolute bottom-[30px] left-[590px] w-[8px] h-[8px] rounded-full border border-white/60" style={{ animation: 'floatBubble 5s infinite linear', animationDelay: '2s' }} />
+            {/* Ambient Water Bubbles */}
+            <div className="absolute bottom-[34px] left-[310px] w-[6px] h-[6px] rounded-full border border-white/70" style={{ animation: 'floatBubble 4s infinite linear' }} />
+            <div className="absolute bottom-[34px] left-[590px] w-[8px] h-[8px] rounded-full border border-white/70" style={{ animation: 'floatBubble 5s infinite linear', animationDelay: '2s' }} />
+            <div className="absolute bottom-[34px] left-[670px] w-[5px] h-[5px] rounded-full border border-emerald-200/80" style={{ animation: 'floatBubble 3.5s infinite linear', animationDelay: '1.2s' }} />
 
+            {/* Ambient Swimming Fish */}
             <div
-              className="absolute top-[70px] opacity-70 flex items-center gap-1"
+              className="absolute top-[70px] opacity-80 flex items-center gap-1"
               style={{ animation: 'fishSwimLeft 14s linear infinite' }}
             >
-              <div className="w-[20px] h-[10px] bg-yellow-400 rounded-full border border-amber-600" />
+              <div className="w-[20px] h-[10px] bg-amber-400 rounded-full border border-amber-600 shadow-sm" />
               <div className="w-[6px] h-[8px] bg-amber-500 clip-triangle" />
             </div>
           </div>
@@ -2213,21 +2332,21 @@ export const FishingGameSection: React.FC = () => {
             <div className="absolute top-full left-[200px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
 
             <div className="absolute -top-[24px] left-[32px] w-[20px] h-[24px] bg-slate-700 border-[2px] border-black rounded-b-xs">
-              <div className="absolute top-[2px] inset-x-[2px] h-[6px] bg-sky-300" />
+              <div className="absolute top-[2px] inset-x-[2px] h-[6px] bg-emerald-300" />
             </div>
             <div className="absolute -top-[16px] left-[68px] w-[22px] h-[16px] bg-red-600 border-[2px] border-black">
               <div className="absolute top-[2px] left-[6px] w-[10px] h-[3px] bg-yellow-400" />
             </div>
 
-            {/* Lantern */}
+            {/* Lantern with Warm Luminous Aura */}
             <div className="absolute -top-[32px] left-[180px] z-20">
               <div className="w-[12px] h-[4px] bg-amber-900 border border-black mx-auto" />
-              <div className="w-[16px] h-[18px] bg-amber-300 border-[2px] border-black relative overflow-hidden shadow-[0_0_15px_rgba(251,191,36,0.9)] animate-pulse">
-                <div className="absolute inset-0 bg-yellow-100 opacity-80" />
+              <div className="w-[16px] h-[18px] bg-amber-300 border-[2px] border-black relative overflow-hidden shadow-[0_0_18px_rgba(251,191,36,0.95)] animate-pulse">
+                <div className="absolute inset-0 bg-yellow-100 opacity-85" />
                 <div className="absolute top-1 left-1.5 w-1 h-2 bg-white rounded-full" />
               </div>
               <div className="w-[20px] h-[4px] bg-amber-950 border border-black mx-auto" />
-              <div className="absolute top-full -left-6 w-16 h-12 bg-gradient-to-b from-amber-300/30 to-transparent pointer-events-none rounded-b-full" />
+              <div className="absolute top-full -left-6 w-16 h-12 bg-gradient-to-b from-amber-300/35 to-transparent pointer-events-none rounded-b-full" />
             </div>
           </div>
 
@@ -2251,13 +2370,14 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute bottom-0 right-[-6px] w-[14px] h-[4px] bg-amber-600" />
             </div>
 
+            {/* Fisherman Sweat / Exertion during Reeling */}
             {gameState === 'reeling' && (
               <div className="absolute -top-[95px] left-[30px] text-sky-400 font-bold text-xs animate-bounce">
                 💦
               </div>
             )}
 
-            {/* Arm & Rod */}
+            {/* Arm & Rod with Animated Spinning Mechanical Reel Spool */}
             <div
               className={`absolute bottom-[48px] left-[20px] origin-[4px_16px] ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
               style={{ transform: `rotate(${rodAngleDeg}deg)` }}
@@ -2265,8 +2385,20 @@ export const FishingGameSection: React.FC = () => {
               <div className="w-[20px] h-[8px] bg-amber-400 border-[2px] border-black" />
               <div className="absolute top-0 left-[18px] w-[8px] h-[8px] bg-amber-200 border-[2px] border-black" />
               <div className="absolute top-[-4px] left-[16px] w-[28px] h-[8px] bg-amber-900 border-[2px] border-black" />
-              <div className="absolute top-[-8px] left-[26px] w-[10px] h-[10px] bg-slate-300 border-[2px] border-black rounded-full" />
 
+              {/* High-Detail Mechanical Reel Housing & Spinning Spool */}
+              <div className="absolute top-[-11px] left-[24px] w-[15px] h-[15px] bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 border-[2px] border-black rounded-full shadow-[0_0_4px_rgba(0,0,0,0.8)] flex items-center justify-center">
+                {/* Spool Center */}
+                <div className={`w-[7px] h-[7px] rounded-full bg-slate-100 border border-slate-700 flex items-center justify-center ${(gameState === 'reeling' || gameState === 'casting') ? 'animate-reel-crank' : ''}`}>
+                  <div className="w-[2px] h-[7px] bg-amber-900" />
+                </div>
+                {/* Spinning Crank Handle */}
+                <div
+                  className={`absolute -top-1 -right-1 w-[5px] h-[5px] bg-red-600 rounded-full border border-black ${(gameState === 'reeling' || gameState === 'casting') ? 'animate-reel-crank origin-[-3px_9px]' : ''}`}
+                />
+              </div>
+
+              {/* Rod Carbon/Gold Shaft */}
               <div
                 className="absolute top-[-3px] left-[42px] w-[165px] h-[4px] border-t border-black shadow-[0_0_4px_rgba(0,0,0,0.5)]"
                 style={{ backgroundColor: currentEquippedRodItem.color || '#facc15' }}
@@ -2277,9 +2409,15 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Fishing Line */}
+          {/* Fishing Line with Dynamic High-Tension Shimmer */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
             <svg width="800" height={canvasHeight} className="absolute inset-0 pointer-events-none z-20">
+              <defs>
+                <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
               <path
                 d={
                   gameState === 'reeling'
@@ -2287,23 +2425,49 @@ export const FishingGameSection: React.FC = () => {
                     : `M ${rodTipPos.x} ${rodTipPos.y} Q ${(rodTipPos.x + bobberPos.x) / 2} ${Math.max(rodTipPos.y, bobberPos.y) + 25} ${bobberPos.x} ${bobberPos.y}`
                 }
                 fill="none"
-                stroke="#ffffff"
-                strokeWidth="2"
+                stroke={gameState === 'reeling' ? '#ecfdf5' : '#ffffff'}
+                strokeWidth={gameState === 'reeling' ? '2.5' : '2'}
                 strokeDasharray={gameState === 'reeling' ? '4 3' : 'none'}
+                filter={gameState === 'reeling' ? 'url(#lineGlow)' : 'none'}
                 className={gameState === 'biting' ? 'animate-pulse' : ''}
               />
             </svg>
           )}
 
-          {/* Bobber & Alert */}
+          {/* Bobber, Dynamic Foam Wake & Underwater Struggling Fish Silhouette */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
             <div
               className={`absolute z-20 flex flex-col items-center justify-center ${gameState === 'waiting' ? 'animate-bobber-float' : ''}`}
               style={{ left: bobberPos.x, top: bobberPos.y, transform: 'translate(-50%, -50%)' }}
             >
+              {/* Dynamic Water Foam Wake & Water Spray while Reeling */}
+              {gameState === 'reeling' && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
+                  <div className="w-[54px] h-[18px] border-2 border-emerald-200/90 rounded-full animate-foam" />
+                  <div className="absolute w-[36px] h-[12px] border border-white/80 rounded-full animate-ping" />
+                  {/* Water splash droplets spray */}
+                  <div className="absolute -top-3 -left-3 text-xs animate-bounce">💦</div>
+                  <div className="absolute -top-4 right-[-10px] text-xs animate-bounce" style={{ animationDelay: '0.1s' }}>💦</div>
+                </div>
+              )}
+
+              {/* Underwater Struggling Fish Silhouette while Reeling */}
+              {gameState === 'reeling' && (
+                <div className="absolute top-[28px] left-1/2 -translate-x-1/2 pointer-events-none opacity-90 animate-fish-fight">
+                  <div className="relative flex items-center">
+                    <div className="w-[30px] h-[15px] bg-[#022c22] rounded-full border border-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                    <div className="w-[10px] h-[12px] -ml-1 bg-emerald-600 clip-triangle" />
+                    {/* Air bubbles generated from struggling fish */}
+                    <div className="absolute -top-2 left-1 w-2 h-2 rounded-full border border-white/80 animate-ping" />
+                    <div className="absolute -bottom-2 right-2 w-1.5 h-1.5 rounded-full border border-white/80 animate-ping" style={{ animationDelay: '0.15s' }} />
+                  </div>
+                </div>
+              )}
+
+              {/* The Bobber Float */}
               <div className={`relative ${gameState === 'biting' ? 'animate-bounce' : gameState === 'reeling' ? 'animate-[shake_0.15s_infinite]' : ''}`}>
                 {(gameState === 'waiting' || gameState === 'biting') && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[10px] border-[2px] border-sky-200 rounded-full animate-ping opacity-75" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[10px] border-[2px] border-emerald-200 rounded-full animate-ping opacity-75" />
                 )}
 
                 <div className="w-[10px] h-[4px] bg-yellow-400 mx-auto" />
