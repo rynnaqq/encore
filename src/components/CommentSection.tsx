@@ -202,9 +202,6 @@ export const CommentSection: React.FC = () => {
         setIsSubmitting(false);
         return;
       }
-      
-      const rootId = replyingToId ? resolveRootId(replyingToId) : null;
-      const serializedText = serializeCommentText(text.trim(), false, replyingToId, replyingToUser);
 
       const newComment = {
         id: Date.now().toString(),
