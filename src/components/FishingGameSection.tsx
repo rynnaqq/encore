@@ -1479,14 +1479,24 @@ export const FishingGameSection: React.FC = () => {
     setFishStats(null);
     setEscapeReason(null);
 
+    let holdFrames = 0;
+
     const animatePower = () => {
-      powerRef.current += 2.2 * powerDirRef.current;
+      if (holdFrames > 0) {
+        holdFrames--;
+        reqRef.current = requestAnimationFrame(animatePower);
+        return;
+      }
+
+      powerRef.current += 1.85 * powerDirRef.current;
       if (powerRef.current >= 100) {
         powerRef.current = 100;
         powerDirRef.current = -1;
+        holdFrames = 7; // Brief ~115ms hold at 100% MAX power so it visibly fills to the brim
       } else if (powerRef.current <= 0) {
         powerRef.current = 0;
         powerDirRef.current = 1;
+        holdFrames = 3;
       }
       setPower(powerRef.current);
       reqRef.current = requestAnimationFrame(animatePower);
@@ -2175,9 +2185,9 @@ export const FishingGameSection: React.FC = () => {
                 </div>
 
                 {/* Track with Needle & Segmented Ticks */}
-                <div className="w-full h-[30px] bg-slate-950 border-[3px] border-black p-1 relative overflow-hidden rounded-sm">
+                <div className="w-full h-[32px] bg-slate-950 border-[3px] border-black p-0.5 relative overflow-hidden rounded-sm">
                   {/* Background Segment Ticks */}
-                  <div className="absolute inset-0 flex justify-between px-1 pointer-events-none opacity-25 z-0">
+                  <div className="absolute inset-0 flex justify-between px-1.5 pointer-events-none opacity-25 z-0">
                     {Array.from({ length: 10 }).map((_, i) => (
                       <div key={i} className="w-[1px] h-full bg-white" />
                     ))}
@@ -2190,11 +2200,15 @@ export const FishingGameSection: React.FC = () => {
 
                   {/* Progress Fill Bar */}
                   <div
-                    className="h-full bg-gradient-to-r from-sky-400 via-amber-400 to-rose-600 transition-all duration-75 relative"
-                    style={{ width: `${Math.max(0, Math.min(100, power))}%` }}
+                    className={`h-full transition-all duration-75 relative rounded-sm ${
+                      power >= 96
+                        ? 'bg-gradient-to-r from-sky-400 via-amber-400 to-red-600 shadow-[0_0_15px_rgba(239,68,68,1)]'
+                        : 'bg-gradient-to-r from-sky-400 via-amber-400 to-rose-600'
+                    }`}
+                    style={{ width: `${Math.max(1, Math.min(100, power))}%` }}
                   >
                     {/* Glowing Leading Edge Needle */}
-                    <div className="absolute top-0 bottom-0 right-0 w-[3px] bg-white shadow-[0_0_8px_#fff]" />
+                    <div className="absolute top-0 bottom-0 right-0 w-[4px] bg-white shadow-[0_0_10px_#fff]" />
                   </div>
                 </div>
 
