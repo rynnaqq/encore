@@ -89,7 +89,11 @@ export const CommentSection: React.FC = () => {
     try {
       const supabase = getSupabaseClient();
       if (!supabase) {
-        setComments([]);
+        const res = await fetch('/api/comments');
+        if (res.ok) {
+          const data = await res.json();
+          setComments(data);
+        }
         setIsLoading(false);
         return;
       }
@@ -174,8 +178,27 @@ export const CommentSection: React.FC = () => {
     setIsSubmitting(true);
     try {
       const supabase = getSupabaseClient();
+      const rootId = replyingToId ? resolveRootId(replyingToId) : null;
+      const serializedText = serializeCommentText(text.trim(), false, replyingToId, replyingToUser);
+
       if (!supabase) {
-        alert('Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
+        const res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: loggedInUser.trim(), text: serializedText, photoBase64 })
+        });
+        if (res.ok) {
+          const created = await res.json();
+          setComments([...comments, created]);
+          setText('');
+          setPhotoBase64(null);
+          setReplyingToId(null);
+          setReplyingToUser(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          if (rootId) setExpandedReplies(prev => ({ ...prev, [rootId]: true }));
+        } else {
+          alert('Failed to post comment to local API.');
+        }
         setIsSubmitting(false);
         return;
       }
@@ -231,12 +254,24 @@ export const CommentSection: React.FC = () => {
     
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) return;
       
       const comment = comments.find(c => c.id === id);
       if (!comment) return;
       const { isPinned, parentId, replyToUsername } = parseCommentText(comment.text);
       const finalString = serializeCommentText(editText.trim(), isPinned, parentId, replyToUsername);
+
+      if (!supabase) {
+        const res = await fetch(`/api/comments/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: finalString })
+        });
+        if (res.ok) {
+          setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
+          setEditingId(null);
+        }
+        return;
+      }
 
       const { error } = await supabase
         .from('comments')
@@ -258,7 +293,13 @@ export const CommentSection: React.FC = () => {
     
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) return;
+      if (!supabase) {
+        const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setComments(comments.filter(c => c.id !== id));
+        }
+        return;
+      }
       
       const { error } = await supabase
         .from('comments')
@@ -277,13 +318,24 @@ export const CommentSection: React.FC = () => {
   const handlePin = async (id: string) => {
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) return;
       
       const comment = comments.find(c => c.id === id);
       if (!comment) return;
       
       const { isPinned, parentId, replyToUsername, text } = parseCommentText(comment.text);
       const finalString = serializeCommentText(text, !isPinned, parentId, replyToUsername);
+
+      if (!supabase) {
+        const res = await fetch(`/api/comments/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: finalString })
+        });
+        if (res.ok) {
+          setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
+        }
+        return;
+      }
 
       const { error } = await supabase
         .from('comments')
