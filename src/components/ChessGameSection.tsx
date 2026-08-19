@@ -1290,11 +1290,13 @@ export const ChessGameSection: React.FC = () => {
 
             {/* Chess Board Frame */}
             <div className="relative w-full max-w-[min(100%,560px)] aspect-square rounded-2xl overflow-hidden shadow-2xl border-2 sm:border-4 border-[#FFCCE1] dark:border-slate-800 bg-white dark:bg-slate-900 gpu-smooth">
-              <div className="grid grid-cols-8 grid-rows-8 w-full h-full">
-                {Array.from({ length: 8 }).map((_, r) =>
-                  Array.from({ length: 8 }).map((_, c) => renderSquare(r, c))
-                )}
-              </div>
+              {React.useMemo(() => (
+                <div className="grid grid-cols-8 grid-rows-8 w-full h-full">
+                  {Array.from({ length: 8 }).map((_, r) =>
+                    Array.from({ length: 8 }).map((_, c) => renderSquare(r, c))
+                  )}
+                </div>
+              ), [game, selectedSquare, possibleMoves, lastMove, hintSquare, isFlipped])}
             </div>
 
             {/* Bottom Player Card (White or You) */}

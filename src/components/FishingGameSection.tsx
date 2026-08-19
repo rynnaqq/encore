@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins, ShoppingBag, BarChart3, CloudRain, Zap, Check, Shield, Crown, Settings2, Sliders, Cloud, RefreshCw, Compass } from 'lucide-react';
+import {
+  AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX,
+  Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins,
+  ShoppingBag, BarChart3, CloudRain, Zap, Check, Shield, Crown,
+  Sliders, Cloud, RefreshCw, Compass, HelpCircle, ChevronLeft, ChevronRight,
+  Fish, Award, Info
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isAdminName, AdminBadge } from './AdminBadge';
@@ -83,7 +89,7 @@ export const BAITS_DATABASE: BaitItem[] = [
 ];
 
 export const FISH_DATABASE: FishType[] = [
-  // Biasa (Common) - Harga rendah sengit
+  // Biasa (Common)
   { id: 'shoe', name: 'Sepatu Boots Tua', rarity: 'Biasa', color: '#a8a29e', secondaryColor: '#57534e', badgeBg: '#e7e5e4', difficulty: 0.45, minWeight: 0.3, maxWeight: 0.9, points: 10, coins: 3, description: 'Boot tua basah yang tersangkut di dasar sungai.' },
   { id: 'kaleng', name: 'Kaleng Bekas', rarity: 'Biasa', color: '#94a3b8', secondaryColor: '#475569', badgeBg: '#f8fafc', difficulty: 0.35, minWeight: 0.1, maxWeight: 0.5, points: 8, coins: 2, description: 'Sampah yang terbuang. Jagalah kebersihan lingkungan!' },
   { id: 'ranting', name: 'Ranting Pohon', rarity: 'Biasa', color: '#78350f', secondaryColor: '#451a03', badgeBg: '#fffbeb', difficulty: 0.3, minWeight: 0.5, maxWeight: 2.0, points: 5, coins: 2, description: 'Hanya sepotong kayu yang tersangkut.' },
@@ -97,7 +103,7 @@ export const FISH_DATABASE: FishType[] = [
   { id: 'kepiting', name: 'Kepiting Kecil', rarity: 'Biasa', color: '#f87171', secondaryColor: '#b91c1c', badgeBg: '#fef2f2', difficulty: 0.9, minWeight: 0.2, maxWeight: 0.8, points: 48, coins: 16, description: 'Suka mencapit umpanmu dengan capitnya yang kecil.' },
   { id: 'guppy', name: 'Ikan Guppy Pelangi', rarity: 'Biasa', color: '#f472b6', secondaryColor: '#ec4899', badgeBg: '#fdf2f8', difficulty: 0.7, minWeight: 0.05, maxWeight: 0.2, points: 50, coins: 18, description: 'Ekornya mekar indah seperti kipas beraneka warna.' },
   
-  // Langka (Rare) - Nilai menengah & perlawanan sengit
+  // Langka (Rare)
   { id: 'patin', name: 'Ikan Patin Sungai', rarity: 'Langka', color: '#cbd5e1', secondaryColor: '#64748b', badgeBg: '#f8fafc', difficulty: 1.7, minWeight: 2.0, maxWeight: 10.0, points: 150, coins: 75, description: 'Dagingnya tebal dan tarikannya cukup kuat.' },
   { id: 'gurame', name: 'Gurame Padang', rarity: 'Langka', color: '#fb923c', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.6, minWeight: 2.5, maxWeight: 5.0, points: 170, coins: 85, description: 'Pipih, lezat, dan memiliki warna cerah memikat.' },
   { id: 'bawal', name: 'Ikan Bawal Bintang', rarity: 'Langka', color: '#94a3b8', secondaryColor: '#334155', badgeBg: '#f8fafc', difficulty: 1.8, minWeight: 1.2, maxWeight: 3.8, points: 190, coins: 95, description: 'Ikan berbadan lebar dan bertenaga besar saat melawan kail.' },
@@ -109,7 +115,7 @@ export const FISH_DATABASE: FishType[] = [
   { id: 'channa', name: 'Ikan Channa Maru', rarity: 'Langka', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fef3c7', difficulty: 2.6, minWeight: 1.8, maxWeight: 5.5, points: 350, coins: 195, description: 'Channa berkepala ular dengan motif bunga kuning keemasan.' },
   { id: 'lobster', name: 'Lobster Biru Samudra', rarity: 'Langka', color: '#0284c7', secondaryColor: '#0369a1', badgeBg: '#e0f2fe', difficulty: 2.7, minWeight: 0.8, maxWeight: 2.2, points: 380, coins: 220, description: 'Warna birunya sangat mencolok dan langka di alam liar.' },
   
-  // Sangat Langka (Epic) - Harga tinggi, tarikan berat
+  // Sangat Langka (Epic)
   { id: 'koi', name: 'Ikan Mas Koi Royal', rarity: 'Sangat Langka', color: '#f87171', secondaryColor: '#fef2f2', badgeBg: '#fee2e2', difficulty: 2.9, minWeight: 2.5, maxWeight: 6.0, points: 550, coins: 380, description: 'Simbol keberuntungan bertotol merah putih indah.' },
   { id: 'belida', name: 'Ikan Belida Lopis', rarity: 'Sangat Langka', color: '#9ca3af', secondaryColor: '#374151', badgeBg: '#f3f4f6', difficulty: 3.1, minWeight: 3.0, maxWeight: 7.0, points: 620, coins: 440, description: 'Bentuknya unik seperti pisau, sangat langka di alam liar.' },
   { id: 'pari', name: 'Pari Air Tawar', rarity: 'Sangat Langka', color: '#d6d3d1', secondaryColor: '#78716c', badgeBg: '#fafaf9', difficulty: 3.3, minWeight: 5.0, maxWeight: 15.0, points: 700, coins: 510, description: 'Bentuknya pipih melebar, sangat jarang terlihat.' },
@@ -120,7 +126,7 @@ export const FISH_DATABASE: FishType[] = [
   { id: 'aligator', name: 'Ikan Aligator Gar', rarity: 'Sangat Langka', color: '#334155', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 4.2, minWeight: 8.0, maxWeight: 25.0, points: 1150, coins: 980, description: 'Moncongnya panjang mirip buaya dengan deretan taring tajam.' },
   { id: 'arapaima', name: 'Ikan Arapaima Gigas', rarity: 'Sangat Langka', color: '#b91c1c', secondaryColor: '#1e293b', badgeBg: '#fee2e2', difficulty: 4.5, minWeight: 20.0, maxWeight: 75.0, points: 1350, coins: 1250, description: 'Raksasa sungai Amazon berlidah tulang dan bersisik merah.' },
   
-  // Legendaris (Legendary) - Berharga fantastis, perlawanan dahsyat
+  // Legendaris (Legendary)
   { id: 'kraken', name: 'Bayi Kraken', rarity: 'Legendaris', color: '#a855f7', secondaryColor: '#581c87', badgeBg: '#faf5ff', difficulty: 4.8, minWeight: 15.0, maxWeight: 45.0, points: 2500, coins: 2500, description: 'Makhluk mitologi berwujud gurita raksasa berukuran kecil.' },
   { id: 'cumi', name: 'Cumi-cumi Raksasa', rarity: 'Legendaris', color: '#f43f5e', secondaryColor: '#9f1239', badgeBg: '#fff1f2', difficulty: 5.0, minWeight: 30.0, maxWeight: 70.0, points: 2900, coins: 3000, description: 'Tentakelnya sangat kuat, bisa menyemburkan tinta hitam.' },
   { id: 'megalodon', name: 'Hiu Megalodon Purba', rarity: 'Legendaris', color: '#38bdf8', secondaryColor: '#f1f5f9', badgeBg: '#bae6fd', difficulty: 5.3, minWeight: 30.0, maxWeight: 80.0, points: 3400, coins: 3600, description: 'Predator samudra purba yang legendaris! Sangat langka.' },
@@ -130,7 +136,7 @@ export const FISH_DATABASE: FishType[] = [
   { id: 'leviathan', name: 'Leviathan Air Tawar', rarity: 'Legendaris', color: '#1e3a8a', secondaryColor: '#172554', badgeBg: '#eff6ff', difficulty: 6.3, minWeight: 50.0, maxWeight: 150.0, points: 6000, coins: 6500, description: 'Raksasa mitologi yang menguasai perairan dalam.' },
   { id: 'duyung', name: 'Putri Duyung Emas', rarity: 'Legendaris', color: '#fcd34d', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 6.6, minWeight: 40.0, maxWeight: 65.0, points: 7500, coins: 8000, description: 'Sosok mitos cantik yang membawa keberuntungan tiada tara.' },
 
-  // Mitos / Dewa (Mythic - Sangat Sulit & Mewah)
+  // Mitos / Dewa (Mythic)
   { id: 'phoenix', name: 'Phoenix Abadi Samudra', rarity: 'Mitos', color: '#06b6d4', secondaryColor: '#0891b2', badgeBg: '#cffafe', difficulty: 7.0, minWeight: 80.0, maxWeight: 280.0, points: 12000, coins: 15000, description: 'Burung mitos bersayap air es abadi yang terlahir dari tetesan embun samudra.' },
   { id: 'atlantis', name: 'Dewa Penjaga Atlantis', rarity: 'Mitos', color: '#14b8a6', secondaryColor: '#0f766e', badgeBg: '#ccfbf1', difficulty: 7.4, minWeight: 120.0, maxWeight: 450.0, points: 16000, coins: 20000, description: 'Penguasa samudra kuno berzirah emas dan bertrisula keramat.' },
   { id: 'shenlong', name: 'Naga Emas Shenlong', rarity: 'Mitos', color: '#facc15', secondaryColor: '#854d0e', badgeBg: '#fef08a', difficulty: 7.8, minWeight: 100.0, maxWeight: 350.0, points: 20000, coins: 25000, description: 'Naga langit suci pembawa berkah kekayaan tiada tara, bermahkota mustika naga.' },
@@ -143,7 +149,6 @@ export const calculateRarityRates = (
   weather?: WeatherType,
   adminOdds?: AdminOddsConfig
 ) => {
-  // If admin override is active, use admin rates directly
   if (adminOdds && adminOdds.enabled) {
     const mythic = Math.max(0, adminOdds.mythic);
     const legendary = Math.max(0, adminOdds.legendary);
@@ -156,7 +161,6 @@ export const calculateRarityRates = (
   const rod = RODS_DATABASE.find((r) => r.id === rodId) || RODS_DATABASE[0];
   const bait = BAITS_DATABASE.find((b) => b.id === baitId) || BAITS_DATABASE[0];
 
-  // Weather bonuses
   let weatherMythicBonus = 0;
   let weatherRareBonus = 0;
   if (weather === 'badai') {
@@ -169,7 +173,6 @@ export const calculateRarityRates = (
     weatherRareBonus = 0.025;
   }
 
-  // Hardcore base odds: 0.5% Mythic, 3.5% Legendary, 11% Epic, 25% Rare, 60% Common
   let mythicChance = 0.005 + rod.luckBonus * 0.006 + bait.mythicBonus * 0.012 + weatherMythicBonus;
   let legendaryChance = 0.035 + rod.luckBonus * 0.025 + bait.rareBonus * 0.03 + weatherRareBonus;
   let epicChance = 0.11 + rod.luckBonus * 0.04 + bait.rareBonus * 0.05 + (weather === 'hujan' ? 0.03 : 0);
@@ -214,7 +217,9 @@ const getRandomFish = (
   }
 };
 
-
+/* =========================================================================
+   COMPONENTS: FISHING JOURNAL (SPECIES LOG & STATS)
+   ========================================================================= */
 const FishingJournal: React.FC<{
   score: number;
   caughtCount: number;
@@ -222,296 +227,206 @@ const FishingJournal: React.FC<{
   soundEnabled?: boolean;
   onClose: () => void;
 }> = ({ score, caughtCount, discoveredSpecies, soundEnabled = true, onClose }) => {
-  const [spread, setSpread] = useState(0);
-  const [flippingState, setFlippingState] = useState<{isFlipping: boolean, dir: number, prevSpread: number, nextSpread: number} | null>(null);
+  const [filterRarity, setFilterRarity] = useState<string>('all');
+  const [selectedFish, setSelectedFish] = useState<FishType | null>(null);
 
-  const speciesPagesCount = Math.ceil(FISH_DATABASE.length / 6);
-  const totalPages = 1 + speciesPagesCount;
-  const totalSpreads = Math.ceil(totalPages / 2);
+  const filteredFish = FISH_DATABASE.filter(f => {
+    if (filterRarity === 'all') return true;
+    return f.rarity === filterRarity;
+  });
 
-  const getPageContent = (pageIndex: number) => {
-    if (pageIndex === 0) {
-      return (
-        <div key={`page-${pageIndex}`} className="flex-1 flex flex-col h-full relative" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, rgba(0,0,0,0.06) 24px)" }}>
-          {/* Subtle watermarks/stamps */}
-          <div className="absolute top-10 right-4 w-16 h-16 border-[3px] border-red-800/30 rounded-full flex items-center justify-center transform rotate-12 pointer-events-none">
-            <div className="text-red-800/30 font-black text-[10px] tracking-widest text-center leading-tight mt-1">OFFICIAL<br/>RECORD</div>
-          </div>
-
-          <div className="flex items-center gap-2 text-slate-800 mb-6 border-b-[3px] border-slate-800/20 pb-3 pt-2 relative z-10">
-            <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-amber-900" /> 
-            <h2 className="text-[18px] sm:text-[22px] font-black font-serif tracking-widest text-amber-950">MY JOURNAL</h2>
-          </div>
-          
-          <div className="flex flex-col gap-4 sm:gap-6 mb-2 mt-4 px-2 relative z-10">
-            <div className="bg-[#fefce8] border-[2px] border-slate-300 p-3 sm:p-4 text-center shadow-md transform -rotate-2 relative">
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-white/50 border border-slate-200/50 shadow-sm" />
-              <div className="text-xs sm:text-sm font-bold text-slate-500 mb-1 tracking-widest">TOTAL CATCHES</div>
-              <div className="text-3xl sm:text-4xl font-black text-slate-800 font-serif">{caughtCount}</div>
-            </div>
-            
-            <div className="bg-[#fefce8] border-[2px] border-slate-300 p-3 sm:p-4 text-center shadow-md transform rotate-1 relative">
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-white/50 border border-slate-200/50 shadow-sm" />
-              <div className="text-xs sm:text-sm font-bold text-slate-500 mb-1 tracking-widest">LIFETIME SCORE</div>
-              <div className="text-3xl sm:text-4xl font-black text-slate-800 font-serif">{score}</div>
-            </div>
-          </div>
-          
-          <div className="mt-auto pt-2">
-            <div className="text-xs font-bold text-slate-500/70 text-center font-serif">PAGE {pageIndex + 1}</div>
-          </div>
-        </div>
-      );
-    }
-
-    const speciesStartIndex = (pageIndex - 1) * 6;
-    if (speciesStartIndex >= FISH_DATABASE.length) {
-      return (
-        <div key={`page-${pageIndex}`} className="flex-1 flex flex-col h-full relative" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, rgba(0,0,0,0.06) 24px)" }}> 
-           <div className="mt-auto pt-2 relative z-10">
-            <div className="text-xs font-bold text-slate-500/70 text-center font-serif">PAGE {pageIndex + 1}</div>
-          </div>
-        </div>
-      );
-    }
-
-    const pageSpecies = FISH_DATABASE.slice(speciesStartIndex, speciesStartIndex + 6);
-
-    return (
-      <div key={`page-${pageIndex}`} className="flex-1 flex flex-col h-full relative" style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 23px, rgba(0,0,0,0.06) 24px)" }}>
-        {pageIndex === 1 && (
-          <div className="text-xs sm:text-sm font-bold font-serif mb-3 flex justify-between items-center text-slate-800 border-b-[3px] border-slate-800/20 pb-2 pt-2 shrink-0 relative z-10 tracking-widest">
-            <span>SPECIES LOG</span>
-            <span className="bg-amber-800 text-[#f4ebd0] px-2 py-0.5 border border-amber-900 shadow-sm">{discoveredSpecies.length} / {FISH_DATABASE.length}</span>
-          </div>
-        )}
-        
-        <div className="flex-1 flex flex-col gap-3 relative z-10 pt-2">
-          {pageSpecies.map((fish, index) => {
-            const isDiscovered = discoveredSpecies.includes(fish.id);
-            const isMythic = fish.rarity === 'Mitos';
-            const isLegendary = fish.rarity === 'Legendaris';
-            const rotation = index % 2 === 0 ? 'rotate-1' : '-rotate-1';
-            return (
-              <div key={fish.id} className={`relative bg-white border-[2px] ${isMythic && isDiscovered ? 'border-purple-600 ring-2 ring-amber-400' : isLegendary && isDiscovered ? 'border-amber-500' : 'border-slate-300'} p-1.5 sm:p-2 flex items-center gap-2 sm:gap-3 shadow-sm transform ${rotation} ${isDiscovered ? '' : 'grayscale opacity-60'}`}>
-                {/* Tape */}
-                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 bg-white/40 backdrop-blur-sm border border-slate-200/50 shadow-[0_1px_2px_rgba(0,0,0,0.1)] transform -rotate-2" />
-                
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 ${isMythic && isDiscovered ? 'bg-gradient-to-tr from-purple-100 to-amber-100' : 'bg-sky-50'} border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner`}>
-                  {isDiscovered ? (
-                    <FishGraphic id={fish.id} size={32} />
-                  ) : (
-                    <div className="text-slate-400 font-serif font-black text-lg">?</div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-black truncate text-slate-800 mb-0.5 font-serif flex items-center gap-1">
-                    {isDiscovered ? fish.name : 'Unknown'}
-                    {isDiscovered && isMythic && <span className="text-amber-500 text-[10px]">⭐</span>}
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 inline-block border border-slate-800 text-slate-900 shadow-[1px_1px_0_0_rgba(0,0,0,0.5)] tracking-wider" style={{ backgroundColor: isDiscovered ? fish.badgeBg : '#e2e8f0' }}>
-                    {isDiscovered ? fish.rarity : '???'}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        
-        <div className="mt-auto pt-2 relative z-10">
-          <div className="text-xs font-bold text-slate-500/70 text-center font-serif">PAGE {pageIndex + 1}</div>
-        </div>
-      </div>
-    );
-  };
-
-  const pages = Array.from({ length: totalSpreads * 2 }).map((_, i) => getPageContent(i));
-
-  const handleNext = () => {
-    if (flippingState || spread >= totalSpreads - 1) return;
-    playFishingSound('page', soundEnabled);
-    setFlippingState({ isFlipping: true, dir: 1, prevSpread: spread, nextSpread: spread + 1 });
-  };
-
-  const handlePrev = () => {
-    if (flippingState || spread <= 0) return;
-    playFishingSound('page', soundEnabled);
-    setFlippingState({ isFlipping: true, dir: -1, prevSpread: spread, nextSpread: spread - 1 });
-  };
-
-  const handleAnimationComplete = () => {
-    if (flippingState) {
-      setSpread(flippingState.nextSpread);
-      setFlippingState(null);
-    }
-  };
-
-  const currentLeft = pages[spread * 2];
-  const currentRight = pages[spread * 2 + 1];
-
-  let staticLeft = currentLeft;
-  let staticRight = currentRight;
-
-  if (flippingState) {
-    if (flippingState.dir === 1) {
-      staticLeft = pages[flippingState.prevSpread * 2];
-      staticRight = pages[flippingState.nextSpread * 2 + 1];
-    } else {
-      staticLeft = pages[flippingState.nextSpread * 2];
-      staticRight = pages[flippingState.prevSpread * 2 + 1];
-    }
-  }
+  const completionPct = Math.round((discoveredSpecies.length / FISH_DATABASE.length) * 100);
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-[300] p-2 sm:p-4 font-mono"
-      style={{ perspective: '2000px' }}
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-[300] p-2 sm:p-4 font-mono select-none"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-[#4a2e1b] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#5c3a21] to-[#3a2010] border-[6px] border-black p-2 sm:p-4 w-full max-w-[800px] shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative h-[88vh] max-h-[650px] flex flex-col rounded-sm rounded-r-2xl">
-        {/* Golden borders for leather cover */}
-        <div className="absolute inset-1.5 sm:inset-2.5 border-[2px] border-[#d4af37] opacity-50 pointer-events-none rounded-r-xl border-dashed" />
-        <div className="absolute inset-2.5 sm:inset-4 border-[1px] border-[#d4af37] opacity-30 pointer-events-none rounded-r-lg" />
-
-        {/* Paper edges for depth on the right */}
-        <div className="absolute top-8 bottom-8 -right-[12px] w-[12px] bg-[#d1c395] border-y-[4px] border-r-[4px] border-black rounded-r-md z-[-1]" />
-        <div className="absolute top-6 bottom-6 -right-[6px] w-[6px] bg-[#e5d9b1] border-y-[4px] border-r-[4px] border-black rounded-r-md z-[0]" />
-
-        {/* Bookmark Ribbon */}
-        <div className="absolute -top-1 right-[20%] w-6 sm:w-8 h-24 sm:h-32 bg-red-700 border-x-2 border-b-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] z-10 origin-top" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%)' }} />
-
-        <button
-          onClick={() => {
-            playFishingSound('click', soundEnabled);
-            onClose();
-          }}
-          className="absolute -top-3 -right-3 sm:-top-5 sm:-right-5 bg-red-600 text-white border-[4px] border-black p-1.5 hover:bg-red-500 shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-[350] transition-transform active:scale-95 cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex-1 bg-black p-[4px] relative flex shadow-inner z-20 mt-4 sm:mt-2">
-          <div className="flex-1 flex bg-[#fef3c7] relative" style={{ transformStyle: 'preserve-3d' }}>
-            {/* Static Left Page */}
-            <div className="w-1/2 h-full absolute left-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-r-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col">
-              {staticLeft}
+      <div className="bg-[#fefce8] border-[5px] border-black p-4 sm:p-6 w-full max-w-[760px] shadow-[10px_10px_0_0_#000] relative max-h-[90vh] flex flex-col rounded-sm overflow-hidden">
+        {/* Top Header */}
+        <div className="flex items-center justify-between border-b-[3px] border-black pb-3 mb-3 pr-8">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-amber-400 border-[2px] border-black flex items-center justify-center shadow-xs">
+              <BookOpen className="w-4 h-4 text-slate-950" />
             </div>
-
-            {/* Static Right Page */}
-            <div className="w-1/2 h-full absolute right-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-l-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col">
-              {staticRight}
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-slate-950 tracking-wider">JURNAL IKAN SAMUDRA</h2>
+              <p className="text-[9px] text-slate-600 font-bold">Koleksi & Ensiklopedia Spesies Air</p>
             </div>
+          </div>
+          <button
+            onClick={() => {
+              playFishingSound('click', soundEnabled);
+              onClose();
+            }}
+            className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_#000] active:translate-y-0.5 cursor-pointer z-10"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-            {/* Flipping Page */}
-            {flippingState && (
-              <motion.div
-                initial={{ rotateY: flippingState.dir === 1 ? 0 : -180 }}
-                animate={{ rotateY: flippingState.dir === 1 ? -180 : 0 }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-                onAnimationComplete={handleAnimationComplete}
-                className="absolute top-0 w-1/2 h-full right-0 z-20 origin-left shadow-[0_0_20px_rgba(0,0,0,0.4)]"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                {/* Front Side */}
-                <div 
-                  className="absolute inset-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-l-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col"
-                  style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-                >
-                  {flippingState.dir === 1 ? pages[flippingState.prevSpread * 2 + 1] : pages[flippingState.nextSpread * 2 + 1]}
-                </div>
-                {/* Back Side */}
-                <div 
-                  className="absolute inset-0 bg-[#f4ebd0] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent to-amber-900/10 shadow-[inset_0_0_40px_rgba(139,115,85,0.15)] border-r-[2px] border-black/20 p-2 sm:p-5 overflow-hidden flex flex-col" 
-                  style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-                >
-                  {flippingState.dir === 1 ? pages[flippingState.nextSpread * 2] : pages[flippingState.prevSpread * 2]}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Center Spine Shadow */}
-            <div className="absolute top-0 bottom-0 left-1/2 w-[24px] bg-gradient-to-r from-transparent via-black/30 to-transparent -translate-x-1/2 z-30 pointer-events-none" />
+        {/* Overview Stats Bar */}
+        <div className="grid grid-cols-3 gap-2 bg-amber-100/90 border-[3px] border-black p-2.5 mb-3 text-center shadow-xs">
+          <div className="border-r-[2px] border-black/20 pr-1">
+            <span className="text-[8px] text-slate-500 uppercase font-black block">Tangkapan</span>
+            <span className="text-sm sm:text-base font-black text-slate-900">{caughtCount}</span>
+          </div>
+          <div className="border-r-[2px] border-black/20 pr-1">
+            <span className="text-[8px] text-slate-500 uppercase font-black block">Skor Total</span>
+            <span className="text-sm sm:text-base font-black text-blue-700">{score}</span>
+          </div>
+          <div>
+            <span className="text-[8px] text-slate-500 uppercase font-black block">Koleksi ({completionPct}%)</span>
+            <span className="text-sm sm:text-base font-black text-emerald-700">
+              {discoveredSpecies.length}/{FISH_DATABASE.length}
+            </span>
           </div>
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="absolute bottom-4 inset-x-0 flex justify-between px-6 sm:px-10 z-[320] pointer-events-none">
-          {spread > 0 ? (
-            <button 
-              onClick={handlePrev} 
-              disabled={!!flippingState}
-              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100 cursor-pointer"
-            >
-              &lt; PREV
-            </button>
-          ) : <div />}
-          {spread < totalSpreads - 1 ? (
-            <button 
-              onClick={handleNext} 
-              disabled={!!flippingState}
-              className="pointer-events-auto bg-amber-400 text-slate-900 border-[3px] border-black px-3 py-1.5 text-[10px] sm:text-xs font-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-amber-300 transition-transform active:scale-95 disabled:opacity-50 disabled:scale-100 cursor-pointer"
-            >
-              NEXT &gt;
-            </button>
-          ) : <div />}
+        {/* Progress Bar */}
+        <div className="w-full bg-slate-950 border-[2px] border-black h-3 mb-3 p-0.5 rounded-xs overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-yellow-300 transition-all duration-300 rounded-xs"
+            style={{ width: `${completionPct}%` }}
+          />
         </div>
+
+        {/* Rarity Filter Tabs */}
+        <div className="flex gap-1 overflow-x-auto pb-1 mb-2.5 custom-scrollbar text-[8.5px] font-black">
+          {[
+            { id: 'all', label: 'SEMUA' },
+            { id: 'Biasa', label: 'BIASA' },
+            { id: 'Langka', label: 'LANGKA' },
+            { id: 'Sangat Langka', label: 'EPIC' },
+            { id: 'Legendaris', label: 'LEGENDARIS' },
+            { id: 'Mitos', label: 'MITOS' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                playFishingSound('click', soundEnabled);
+                setFilterRarity(tab.id);
+              }}
+              className={`px-2.5 py-1 border-[2px] border-black shrink-0 transition-all cursor-pointer ${
+                filterRarity === tab.id
+                  ? 'bg-slate-950 text-yellow-300 shadow-[2px_2px_0_0_#000]'
+                  : 'bg-white text-slate-700 hover:bg-amber-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Fish Cards Grid */}
+        <div className="flex-1 overflow-y-auto min-h-0 pr-1 grid grid-cols-2 sm:grid-cols-3 gap-2 custom-scrollbar pb-2">
+          {filteredFish.map((fishItem) => {
+            const isFound = discoveredSpecies.includes(fishItem.id);
+            const isSelected = selectedFish?.id === fishItem.id;
+            return (
+              <button
+                key={fishItem.id}
+                onClick={() => {
+                  if (isFound) {
+                    playFishingSound('click', soundEnabled);
+                    setSelectedFish(isSelected ? null : fishItem);
+                  }
+                }}
+                className={`text-left p-2 border-[2px] ${
+                  isFound
+                    ? isSelected
+                      ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500 shadow-md'
+                      : fishItem.rarity === 'Mitos'
+                      ? 'border-purple-600 bg-gradient-to-br from-purple-50 via-amber-50 to-white shadow-xs'
+                      : fishItem.rarity === 'Legendaris'
+                      ? 'border-amber-500 bg-amber-50/70 shadow-xs'
+                      : 'border-black bg-white shadow-xs'
+                    : 'border-slate-300 bg-slate-100 opacity-60 cursor-not-allowed'
+                } flex flex-col justify-between transition-transform active:scale-[0.98]`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span
+                    className="text-[7.5px] font-black px-1.5 py-0.5 border border-black uppercase"
+                    style={{ backgroundColor: isFound ? fishItem.badgeBg : '#cbd5e1' }}
+                  >
+                    {isFound ? fishItem.rarity : '???'}
+                  </span>
+                  {isFound && fishItem.rarity === 'Mitos' && (
+                    <span className="text-[10px] animate-pulse">👑</span>
+                  )}
+                </div>
+
+                <div className="h-16 flex items-center justify-center my-1 bg-amber-50/50 border border-black/10">
+                  {isFound ? (
+                    <FishGraphic id={fishItem.id} size={42} />
+                  ) : (
+                    <span className="text-xl text-slate-400 font-black">?</span>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="text-[10px] sm:text-[11px] font-black text-slate-900 truncate">
+                    {isFound ? fishItem.name : 'Belum Ditemukan'}
+                  </h4>
+                  <div className="flex justify-between items-center text-[8px] text-slate-600 mt-0.5 font-bold">
+                    <span>{isFound ? `+${fishItem.points} PTS` : '---'}</span>
+                    <span>{isFound ? `🪙 ${fishItem.coins}` : '---'}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected Fish Inspector Drawer */}
+        <AnimatePresence>
+          {selectedFish && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-amber-100 border-[3px] border-black p-2.5 mt-2 flex items-center gap-3 overflow-hidden shrink-0"
+            >
+              <div className="w-12 h-12 bg-white border-[2px] border-black flex items-center justify-center shrink-0">
+                <FishGraphic id={selectedFish.id} size={36} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h5 className="text-[11px] font-black text-slate-950 truncate">{selectedFish.name}</h5>
+                  <span
+                    className="text-[7.5px] font-black px-1.5 py-0.2 border border-black"
+                    style={{ backgroundColor: selectedFish.badgeBg }}
+                  >
+                    {selectedFish.rarity}
+                  </span>
+                </div>
+                <p className="text-[8.5px] text-slate-700 leading-tight mt-0.5 line-clamp-2">{selectedFish.description}</p>
+                <div className="flex gap-2 text-[8px] text-slate-600 font-bold mt-1">
+                  <span>Bobot Alami: {selectedFish.minWeight}-{selectedFish.maxWeight} kg</span>
+                  <span>|</span>
+                  <span>Kesulitan: {selectedFish.difficulty}x</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedFish(null)}
+                className="bg-slate-300 hover:bg-slate-400 p-1 border border-black text-slate-800 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
 };
 
-const getJakartaTimeInfo = () => {
-  try {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Asia/Jakarta',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(now);
-    const hour = parseInt(parts.find((p) => p.type === 'hour')?.value || '12', 10);
-    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
-    const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
-    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
-
-    let naturalTimeOfDay: TimeOfDay = 'pagi';
-    if (hour >= 5 && hour < 11) {
-      naturalTimeOfDay = 'pagi';
-    } else if (hour >= 11 && hour < 15) {
-      naturalTimeOfDay = 'siang';
-    } else if (hour >= 15 && (hour < 18 || (hour === 18 && minute < 30))) {
-      naturalTimeOfDay = 'senja';
-    } else {
-      naturalTimeOfDay = 'malam';
-    }
-
-    return { hour, minute, second, timeString, naturalTimeOfDay };
-  } catch (e) {
-    const now = new Date();
-    const jktHour = (now.getUTCHours() + 7) % 24;
-    const naturalTimeOfDay: TimeOfDay =
-      jktHour >= 5 && jktHour < 11
-        ? 'pagi'
-        : jktHour >= 11 && jktHour < 15
-        ? 'siang'
-        : jktHour >= 15 && jktHour < 18
-        ? 'senja'
-        : 'malam';
-    return {
-      hour: jktHour,
-      minute: now.getUTCMinutes(),
-      second: now.getUTCSeconds(),
-      timeString: `${String(jktHour).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`,
-      naturalTimeOfDay,
-    };
-  }
-};
-
+/* =========================================================================
+   COMPONENTS: FISHING ODDS & PROBABILITY MODAL + ADMIN GOD MODE
+   ========================================================================= */
 const FishingOddsModal: React.FC<{
   equippedRod: string;
   equippedBait: string;
@@ -542,50 +457,15 @@ const FishingOddsModal: React.FC<{
   const applyPreset = (preset: 'normal' | 'mythic50' | 'god100' | 'allLegend' | 'hardcore') => {
     playFishingSound('upgrade', soundEnabled);
     if (preset === 'normal') {
-      setAdminOdds({
-        enabled: true,
-        mythic: 0.005,
-        legendary: 0.035,
-        epic: 0.11,
-        rare: 0.25,
-        common: 0.60,
-      });
+      setAdminOdds({ enabled: true, mythic: 0.005, legendary: 0.035, epic: 0.11, rare: 0.25, common: 0.60 });
     } else if (preset === 'mythic50') {
-      setAdminOdds({
-        enabled: true,
-        mythic: 0.50,
-        legendary: 0.25,
-        epic: 0.15,
-        rare: 0.10,
-        common: 0.00,
-      });
+      setAdminOdds({ enabled: true, mythic: 0.50, legendary: 0.25, epic: 0.15, rare: 0.10, common: 0.00 });
     } else if (preset === 'god100') {
-      setAdminOdds({
-        enabled: true,
-        mythic: 1.00,
-        legendary: 0.00,
-        epic: 0.00,
-        rare: 0.00,
-        common: 0.00,
-      });
+      setAdminOdds({ enabled: true, mythic: 1.00, legendary: 0.00, epic: 0.00, rare: 0.00, common: 0.00 });
     } else if (preset === 'allLegend') {
-      setAdminOdds({
-        enabled: true,
-        mythic: 0.20,
-        legendary: 0.70,
-        epic: 0.10,
-        rare: 0.00,
-        common: 0.00,
-      });
+      setAdminOdds({ enabled: true, mythic: 0.20, legendary: 0.70, epic: 0.10, rare: 0.00, common: 0.00 });
     } else if (preset === 'hardcore') {
-      setAdminOdds({
-        enabled: true,
-        mythic: 0.001,
-        legendary: 0.009,
-        epic: 0.05,
-        rare: 0.14,
-        common: 0.80,
-      });
+      setAdminOdds({ enabled: true, mythic: 0.001, legendary: 0.009, epic: 0.05, rare: 0.14, common: 0.80 });
     }
   };
 
@@ -594,34 +474,36 @@ const FishingOddsModal: React.FC<{
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono"
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono select-none"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-amber-100 border-[6px] border-black p-4 sm:p-6 w-full max-w-[520px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative flex flex-col max-h-[88vh] overflow-y-auto custom-scrollbar">
+      <div className="bg-amber-100 border-[5px] border-black p-4 sm:p-6 w-full max-w-[520px] shadow-[10px_10px_0_0_#000] relative flex flex-col max-h-[88vh] overflow-y-auto custom-scrollbar">
         <button
           onClick={() => {
             playFishingSound('click', soundEnabled);
             onClose();
           }}
-          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer z-10"
+          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer z-10"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b-[3px] border-black pb-2 mb-3 pr-8">
+        <div className="flex items-center justify-between border-b-[3px] border-black pb-2.5 mb-3 pr-8">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
-            <h2 className="text-sm sm:text-base font-black text-slate-900">PELUANG IKAN & PROBABILITAS</h2>
+            <div className="w-7 h-7 bg-blue-600 text-white border-[2px] border-black flex items-center justify-center shadow-xs">
+              <BarChart3 className="w-4 h-4" />
+            </div>
+            <h2 className="text-sm sm:text-base font-black text-slate-900">PROBABILITAS & ODDS</h2>
           </div>
           {adminOdds.enabled && (
-            <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-[9px] font-black px-2 py-0.5 border border-black rounded-full shadow-xs animate-pulse">
-              👑 ADMIN OVERRIDE ON
+            <span className="bg-amber-400 text-slate-950 text-[8.5px] font-black px-2 py-0.5 border border-black shadow-xs animate-pulse">
+              👑 GOD MODE ON
             </span>
           )}
         </div>
 
-        {/* Admin Tab Switcher if User is Admin */}
+        {/* Tab Switcher */}
         {isAdmin && (
           <div className="flex gap-2 mb-3">
             <button
@@ -630,10 +512,10 @@ const FishingOddsModal: React.FC<{
                 setActiveTab('odds');
               }}
               className={`flex-1 py-1.5 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
-                activeTab === 'odds' ? 'bg-blue-600 text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-slate-700 hover:bg-amber-50'
+                activeTab === 'odds' ? 'bg-blue-600 text-white shadow-[2px_2px_0_0_#000]' : 'bg-white text-slate-700 hover:bg-amber-50'
               }`}
             >
-              📊 STATUS ODDS SAAT INI
+              📊 STATUS SAAT INI
             </button>
             <button
               onClick={() => {
@@ -641,7 +523,7 @@ const FishingOddsModal: React.FC<{
                 setActiveTab('admin');
               }}
               className={`flex-1 py-1.5 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                activeTab === 'admin' ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-amber-200 text-amber-950 hover:bg-amber-300'
+                activeTab === 'admin' ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-[2px_2px_0_0_#000]' : 'bg-amber-200 text-amber-950 hover:bg-amber-300'
               }`}
             >
               <Crown className="w-3.5 h-3.5 fill-slate-950" />
@@ -652,87 +534,50 @@ const FishingOddsModal: React.FC<{
 
         {activeTab === 'odds' ? (
           <>
-            {/* Current Equip & Weather Buffs */}
-            <div className="bg-white border-[3px] border-black p-2.5 sm:p-3 mb-3 space-y-1.5 text-[10px]">
-              <div className="font-black text-slate-700 text-[11px] mb-1 flex items-center justify-between">
-                <span>FAKTOR AKTIF:</span>
-                <span className="text-slate-500 font-bold uppercase">Cuaca: {weather.toUpperCase()}</span>
+            {/* Active Buffs */}
+            <div className="bg-white border-[3px] border-black p-2.5 mb-3 space-y-1.5 text-[9.5px]">
+              <div className="font-black text-slate-700 text-[10.5px] mb-1 flex items-center justify-between border-b border-black/10 pb-1">
+                <span>BUFF & FAKTOR AKTIF:</span>
+                <span className="text-slate-500 uppercase font-bold">Cuaca: {weather.toUpperCase()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-600">Joran: {currentRod.icon} {currentRod.name}</span>
-                <span className="text-emerald-600 font-black">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
+                <span className="text-emerald-700 font-black">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-600">Umpan: {currentBait.icon} {currentBait.name}</span>
-                <span className="text-purple-600 font-black">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
+                <span className="text-purple-700 font-black">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
               </div>
-              {weather === 'badai' && (
-                <div className="flex items-center justify-between text-sky-700 font-black">
-                  <span>⛈️ Efek Badai Petir</span>
-                  <span>+25% Langka & Mitos</span>
-                </div>
-              )}
-              {weather === 'kabut_mistis' && (
-                <div className="flex items-center justify-between text-purple-700 font-black">
-                  <span>🌫️ Efek Kabut Mistis</span>
-                  <span>+50% Mitos Purba</span>
-                </div>
-              )}
             </div>
 
-            {/* Rates Breakdown */}
+            {/* Rates Visual Bars */}
             <div className="space-y-2 mb-3">
-              <div className="bg-white border-[2px] border-black p-2 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-slate-400 border border-black" />
-                  <span className="text-xs font-black text-slate-800">BIASA (Common)</span>
+              {[
+                { label: 'BIASA (Common)', rate: rates.common, color: 'bg-slate-400', border: 'border-black', text: 'text-slate-800' },
+                { label: 'LANGKA (Rare)', rate: rates.rare, color: 'bg-blue-500', border: 'border-blue-700', text: 'text-blue-900' },
+                { label: 'EPIC (Sangat Langka)', rate: rates.epic, color: 'bg-purple-500', border: 'border-purple-700', text: 'text-purple-900' },
+                { label: '👑 LEGENDARIS', rate: rates.legendary, color: 'bg-amber-400', border: 'border-amber-600', text: 'text-amber-950' },
+                { label: '⭐ MITOS / DEWA', rate: rates.mythic, color: 'bg-rose-500', border: 'border-rose-700', text: 'text-rose-950' },
+              ].map((tier, idx) => (
+                <div key={idx} className={`bg-white border-[2px] ${tier.border} p-2 flex flex-col gap-1 shadow-xs`}>
+                  <div className="flex justify-between items-center text-[10px] font-black">
+                    <span className={tier.text}>{tier.label}</span>
+                    <span className="font-mono">{(tier.rate * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-xs border border-black/20 overflow-hidden">
+                    <div className={`h-full ${tier.color}`} style={{ width: `${Math.min(100, tier.rate * 100)}%` }} />
+                  </div>
                 </div>
-                <span className="text-xs font-black text-slate-700 font-mono">{(rates.common * 100).toFixed(1)}%</span>
-              </div>
-
-              <div className="bg-sky-50 border-[2px] border-blue-600 p-2 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-blue-500 border border-black" />
-                  <span className="text-xs font-black text-blue-800">LANGKA (Rare)</span>
-                </div>
-                <span className="text-xs font-black text-blue-800 font-mono">{(rates.rare * 100).toFixed(1)}%</span>
-              </div>
-
-              <div className="bg-purple-50 border-[2px] border-purple-600 p-2 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-purple-500 border border-black" />
-                  <span className="text-xs font-black text-purple-800">SANGAT LANGKA (Epic)</span>
-                </div>
-                <span className="text-xs font-black text-purple-800 font-mono">{(rates.epic * 100).toFixed(1)}%</span>
-              </div>
-
-              <div className="bg-amber-50 border-[2px] border-amber-600 p-2 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-amber-400 border border-black animate-pulse" />
-                  <span className="text-xs font-black text-amber-900">👑 LEGENDARIS</span>
-                </div>
-                <span className="text-xs font-black text-amber-900 font-mono">{(rates.legendary * 100).toFixed(1)}%</span>
-              </div>
-
-              <div className="bg-gradient-to-r from-rose-100 via-amber-100 to-purple-100 border-[3px] border-purple-800 p-2 flex items-center justify-between shadow-md">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-rose-500 border border-black animate-ping" />
-                  <span className="text-xs font-black text-purple-950 flex items-center gap-1">
-                    ⭐ MITOS / DEWA
-                  </span>
-                </div>
-                <span className="text-xs font-black text-rose-700 font-mono">{(rates.mythic * 100).toFixed(1)}%</span>
-              </div>
+              ))}
             </div>
 
-            <p className="text-[9.5px] text-slate-600 italic text-center">
-              *Tingkatkan joran dan umpan di Toko Pancing untuk memperbesar peluang tangkapan dewa.
+            <p className="text-[9px] text-slate-600 italic text-center">
+              *Tingkatkan joran dan umpan di Toko untuk memperbesar peluang tangkapan dewa.
             </p>
           </>
         ) : (
-          /* ================= ADMIN GOD MODE ODDS CONTROL PANEL ================= */
+          /* Admin God Mode */
           <div className="space-y-3">
-            {/* Master Toggle */}
             <div className="bg-slate-900 text-white border-[3px] border-amber-400 p-3 flex items-center justify-between shadow-md">
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-black text-yellow-300">
@@ -740,9 +585,7 @@ const FishingOddsModal: React.FC<{
                   <span>KONTROL ODDS KHUSUS ADMIN</span>
                 </div>
                 <p className="text-[9px] text-slate-300 mt-0.5">
-                  {adminOdds.enabled
-                    ? 'Status: Kustom Odds AKTIF menimpa probabilitas normal!'
-                    : 'Status: Standar (Probabilitas normal berlaku).'}
+                  {adminOdds.enabled ? 'Status: Kustom Odds AKTIF' : 'Status: Probabilitas Standar'}
                 </p>
               </div>
               <button
@@ -751,51 +594,49 @@ const FishingOddsModal: React.FC<{
                   setAdminOdds((prev) => ({ ...prev, enabled: !prev.enabled }));
                 }}
                 className={`px-3 py-1.5 text-xs font-black border-[2px] border-black transition-all cursor-pointer ${
-                  adminOdds.enabled
-                    ? 'bg-emerald-500 text-slate-950 shadow-[2px_2px_0_0_#fff]'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  adminOdds.enabled ? 'bg-emerald-500 text-slate-950 shadow-[2px_2px_0_0_#fff]' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
               >
                 {adminOdds.enabled ? '✓ AKTIF' : 'NONAKTIF'}
               </button>
             </div>
 
-            {/* Quick Presets */}
-            <div className="bg-white border-[3px] border-black p-3 space-y-2">
-              <div className="text-[11px] font-black text-slate-900 flex items-center gap-1">
+            {/* Presets */}
+            <div className="bg-white border-[3px] border-black p-2.5 space-y-2">
+              <div className="text-[10px] font-black text-slate-900 flex items-center gap-1">
                 <Zap className="w-3.5 h-3.5 text-amber-600" />
-                <span>PRESET CEPAT ADMIN:</span>
+                <span>PRESET CEPAT:</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px]">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9px]">
                 <button
                   onClick={() => applyPreset('god100')}
-                  className="bg-purple-600 hover:bg-purple-500 text-white font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
                 >
                   🌌 100% MITOS
                 </button>
                 <button
                   onClick={() => applyPreset('mythic50')}
-                  className="bg-gradient-to-r from-rose-500 to-amber-500 hover:opacity-90 text-white font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                  className="bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
                 >
-                  ⚡ HUJAN MITOS (50%)
+                  ⚡ 50% MITOS
                 </button>
                 <button
                   onClick={() => applyPreset('allLegend')}
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
                 >
-                  👑 ALL-LEGENDARY
+                  👑 ALL-LEGEND
                 </button>
                 <button
                   onClick={() => applyPreset('normal')}
-                  className="bg-sky-500 hover:bg-sky-400 text-white font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                  className="bg-sky-500 hover:bg-sky-400 text-white font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
                 >
-                  🎲 NORMAL HARMONIS
+                  🎲 NORMAL
                 </button>
                 <button
                   onClick={() => applyPreset('hardcore')}
-                  className="bg-rose-900 hover:bg-rose-800 text-rose-100 font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                  className="bg-rose-900 hover:bg-rose-800 text-rose-100 font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
                 >
-                  💀 HARDCORE HELL
+                  💀 HARDCORE
                 </button>
                 {setCoins && (
                   <button
@@ -803,114 +644,11 @@ const FishingOddsModal: React.FC<{
                       playFishingSound('upgrade', soundEnabled);
                       setCoins((c) => c + 10000);
                     }}
-                    className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                    className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
                   >
-                    🪙 +10K KOIN TEST
+                    🪙 +10K KOIN
                   </button>
                 )}
-              </div>
-            </div>
-
-            {/* Custom Sliders */}
-            <div className="bg-white border-[3px] border-black p-3 space-y-2.5">
-              <div className="text-[11px] font-black text-slate-900 flex items-center justify-between">
-                <span>CUSTOM PERSENTASE ODDS:</span>
-                <span className="text-[9px] text-slate-500">Geser slider untuk mengatur</span>
-              </div>
-
-              {/* Mythic Slider */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-black text-purple-900">
-                  <span>⭐ MITOS:</span>
-                  <span className="font-mono">{(adminOdds.mythic * 100).toFixed(0)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(adminOdds.mythic * 100)}
-                  onChange={(e) => {
-                    const val = Number(e.target.value) / 100;
-                    setAdminOdds((prev) => ({ ...prev, enabled: true, mythic: val }));
-                  }}
-                  className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                />
-              </div>
-
-              {/* Legendary Slider */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-black text-amber-900">
-                  <span>👑 LEGENDARIS:</span>
-                  <span className="font-mono">{(adminOdds.legendary * 100).toFixed(0)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(adminOdds.legendary * 100)}
-                  onChange={(e) => {
-                    const val = Number(e.target.value) / 100;
-                    setAdminOdds((prev) => ({ ...prev, enabled: true, legendary: val }));
-                  }}
-                  className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
-                />
-              </div>
-
-              {/* Epic Slider */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-black text-indigo-900">
-                  <span>💎 SANGAT LANGKA (Epic):</span>
-                  <span className="font-mono">{(adminOdds.epic * 100).toFixed(0)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(adminOdds.epic * 100)}
-                  onChange={(e) => {
-                    const val = Number(e.target.value) / 100;
-                    setAdminOdds((prev) => ({ ...prev, enabled: true, epic: val }));
-                  }}
-                  className="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                />
-              </div>
-
-              {/* Rare Slider */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-black text-blue-900">
-                  <span>🐟 LANGKA (Rare):</span>
-                  <span className="font-mono">{(adminOdds.rare * 100).toFixed(0)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(adminOdds.rare * 100)}
-                  onChange={(e) => {
-                    const val = Number(e.target.value) / 100;
-                    setAdminOdds((prev) => ({ ...prev, enabled: true, rare: val }));
-                  }}
-                  className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-              </div>
-
-              {/* Common Slider */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-black text-slate-700">
-                  <span>👞 BIASA (Common):</span>
-                  <span className="font-mono">{(adminOdds.common * 100).toFixed(0)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(adminOdds.common * 100)}
-                  onChange={(e) => {
-                    const val = Number(e.target.value) / 100;
-                    setAdminOdds((prev) => ({ ...prev, enabled: true, common: val }));
-                  }}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
-                />
               </div>
             </div>
           </div>
@@ -920,6 +658,9 @@ const FishingOddsModal: React.FC<{
   );
 };
 
+/* =========================================================================
+   COMPONENTS: FISHING SHOP MODAL (RODS & BAITS)
+   ========================================================================= */
 const FishingShopModal: React.FC<{
   coins: number;
   setCoins: React.Dispatch<React.SetStateAction<number>>;
@@ -957,11 +698,6 @@ const FishingShopModal: React.FC<{
     setEquippedRod(rod.id);
   };
 
-  const handleEquipRod = (rodId: string) => {
-    playFishingSound('click', soundEnabled);
-    setEquippedRod(rodId);
-  };
-
   const handleBuyBait = (bait: BaitItem) => {
     if (coins < bait.price) return;
     playFishingSound('upgrade', soundEnabled);
@@ -973,37 +709,34 @@ const FishingShopModal: React.FC<{
     setEquippedBait(bait.id);
   };
 
-  const handleEquipBait = (baitId: string) => {
-    playFishingSound('click', soundEnabled);
-    setEquippedBait(baitId);
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono"
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono select-none"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-amber-100 border-[6px] border-black p-4 sm:p-6 w-full max-w-[560px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative flex flex-col max-h-[88vh]">
+      <div className="bg-amber-100 border-[5px] border-black p-4 sm:p-6 w-full max-w-[580px] shadow-[10px_10px_0_0_#000] relative flex flex-col max-h-[88vh]">
         <button
           onClick={() => {
             playFishingSound('click', soundEnabled);
             onClose();
           }}
-          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 z-10 cursor-pointer"
+          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_#000] active:scale-95 z-10 cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b-[3px] border-black pb-2 mb-3 pr-8">
+        <div className="flex items-center justify-between border-b-[3px] border-black pb-2.5 mb-3 pr-8">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-amber-800" />
+            <div className="w-7 h-7 bg-amber-400 border-[2px] border-black flex items-center justify-center shadow-xs">
+              <ShoppingBag className="w-4 h-4 text-slate-950" />
+            </div>
             <h2 className="text-sm sm:text-base font-black text-slate-900">TOKO ALAT PANCING</h2>
           </div>
-          <div className="bg-amber-200 border-[2px] border-black px-2.5 py-1 flex items-center gap-1 font-black text-xs text-amber-950 shadow-sm">
+          <div className="bg-amber-300 border-[2px] border-black px-2.5 py-1 flex items-center gap-1 font-black text-xs text-amber-950 shadow-xs">
             <span>🪙 {coins}</span>
           </div>
         </div>
@@ -1015,27 +748,27 @@ const FishingShopModal: React.FC<{
               playFishingSound('click', soundEnabled);
               setTab('rods');
             }}
-            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
-              tab === 'rods' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_rgba(0,0,0,1)]' : 'bg-white text-slate-600 hover:bg-amber-50'
+            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              tab === 'rods' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_#000]' : 'bg-white text-slate-600 hover:bg-amber-50'
             }`}
           >
-            🎣 JORAN PANCING
+            <span>🎣</span> <span>JORAN PANCING</span>
           </button>
           <button
             onClick={() => {
               playFishingSound('click', soundEnabled);
               setTab('baits');
             }}
-            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
-              tab === 'baits' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_rgba(0,0,0,1)]' : 'bg-white text-slate-600 hover:bg-amber-50'
+            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              tab === 'baits' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_#000]' : 'bg-white text-slate-600 hover:bg-amber-50'
             }`}
           >
-            🪱 UMPAN IKAN
+            <span>🪱</span> <span>UMPAN IKAN</span>
           </button>
         </div>
 
         {/* Items List */}
-        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-0 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0 custom-scrollbar">
           {tab === 'rods' ? (
             RODS_DATABASE.map(rod => {
               const isOwned = ownedRods.includes(rod.id);
@@ -1045,12 +778,15 @@ const FishingShopModal: React.FC<{
               return (
                 <div
                   key={rod.id}
-                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
-                    isEquipped ? 'ring-2 ring-blue-600 bg-blue-50/50' : ''
+                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
+                    isEquipped ? 'ring-2 ring-blue-600 bg-blue-50/60' : ''
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-50 border-[2px] border-black flex items-center justify-center text-2xl shrink-0">
+                    <div
+                      className="w-12 h-12 border-[2px] border-black flex items-center justify-center text-2xl shrink-0 shadow-xs"
+                      style={{ backgroundColor: rod.color + '25' }}
+                    >
                       {rod.icon}
                     </div>
                     <div>
@@ -1068,7 +804,7 @@ const FishingShopModal: React.FC<{
 
                   <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
                     {!isOwned && (
-                      <span className="text-xs font-black text-amber-700">🪙 {rod.price}</span>
+                      <span className="text-xs font-black text-amber-800">🪙 {rod.price}</span>
                     )}
 
                     {isEquipped ? (
@@ -1080,8 +816,11 @@ const FishingShopModal: React.FC<{
                       </button>
                     ) : isOwned ? (
                       <button
-                        onClick={() => handleEquipRod(rod.id)}
-                        className="bg-sky-400 hover:bg-sky-300 text-slate-900 text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer"
+                        onClick={() => {
+                          playFishingSound('click', soundEnabled);
+                          setEquippedRod(rod.id);
+                        }}
+                        className="bg-sky-400 hover:bg-sky-300 text-slate-900 text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer"
                       >
                         GUNAKAN
                       </button>
@@ -1089,7 +828,7 @@ const FishingShopModal: React.FC<{
                       <button
                         onClick={() => handleBuyRod(rod)}
                         disabled={!canAfford}
-                        className={`text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer ${
+                        className={`text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer ${
                           canAfford
                             ? 'bg-amber-400 hover:bg-amber-300 text-slate-900'
                             : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
@@ -1111,12 +850,12 @@ const FishingShopModal: React.FC<{
               return (
                 <div
                   key={bait.id}
-                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
-                    isEquipped ? 'ring-2 ring-purple-600 bg-purple-50/50' : ''
+                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
+                    isEquipped ? 'ring-2 ring-purple-600 bg-purple-50/60' : ''
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-50 border-[2px] border-black flex items-center justify-center text-2xl shrink-0">
+                    <div className="w-12 h-12 bg-amber-50 border-[2px] border-black flex items-center justify-center text-2xl shrink-0 shadow-xs">
                       {bait.icon}
                     </div>
                     <div>
@@ -1137,7 +876,7 @@ const FishingShopModal: React.FC<{
 
                   <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
                     {bait.price > 0 && (
-                      <span className="text-xs font-black text-amber-700">🪙 {bait.price} / 5x</span>
+                      <span className="text-xs font-black text-amber-800">🪙 {bait.price} / 5x</span>
                     )}
 
                     <div className="flex gap-1.5">
@@ -1145,7 +884,7 @@ const FishingShopModal: React.FC<{
                         <button
                           onClick={() => handleBuyBait(bait)}
                           disabled={!canAfford}
-                          className={`text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer ${
+                          className={`text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer ${
                             canAfford
                               ? 'bg-amber-400 hover:bg-amber-300 text-slate-900'
                               : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
@@ -1157,9 +896,12 @@ const FishingShopModal: React.FC<{
 
                       {!isEquipped ? (
                         <button
-                          onClick={() => handleEquipBait(bait.id)}
+                          onClick={() => {
+                            playFishingSound('click', soundEnabled);
+                            setEquippedBait(bait.id);
+                          }}
                           disabled={bait.id !== 'worm' && (baitCounts[bait.id] || 0) <= 0}
-                          className="bg-sky-400 hover:bg-sky-300 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-slate-900 text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer"
+                          className="bg-sky-400 hover:bg-sky-300 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-slate-900 text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer"
                         >
                           PAKAI
                         </button>
@@ -1183,11 +925,64 @@ const FishingShopModal: React.FC<{
   );
 };
 
+/* =========================================================================
+   JAKARTA TIME FORMATTER HELPER
+   ========================================================================= */
+const getJakartaTimeInfo = () => {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Jakarta',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(now);
+    const hour = parseInt(parts.find((p) => p.type === 'hour')?.value || '12', 10);
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+
+    const naturalTimeOfDay: TimeOfDay =
+      hour >= 5 && hour < 11
+        ? 'pagi'
+        : hour >= 11 && hour < 15
+        ? 'siang'
+        : hour >= 15 && hour < 18
+        ? 'senja'
+        : 'malam';
+
+    return { hour, minute, second, timeString, naturalTimeOfDay };
+  } catch (e) {
+    const now = new Date();
+    const jktHour = (now.getUTCHours() + 7) % 24;
+    const naturalTimeOfDay: TimeOfDay =
+      jktHour >= 5 && jktHour < 11
+        ? 'pagi'
+        : jktHour >= 11 && jktHour < 15
+        ? 'siang'
+        : jktHour >= 15 && jktHour < 18
+        ? 'senja'
+        : 'malam';
+    return {
+      hour: jktHour,
+      minute: now.getUTCMinutes(),
+      second: now.getUTCSeconds(),
+      timeString: `${String(jktHour).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`,
+      naturalTimeOfDay,
+    };
+  }
+};
+
+/* =========================================================================
+   MAIN COMPONENT: FISHING GAME SECTION
+   ========================================================================= */
 export const FishingGameSection: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const isAdmin = currentUser ? (currentUser.role === 'admin' || isAdminName(currentUser.username)) : false;
-  
+
   const [gameState, setGameState] = useState<GameState>('idle');
   const [power, setPower] = useState(0);
   const [reelProgress, setReelProgress] = useState(0);
@@ -1200,7 +995,7 @@ export const FishingGameSection: React.FC = () => {
   const [scale, setScale] = useState({ x: 1, y: 1 });
   const [canvasHeight, setCanvasHeight] = useState(600);
   const [score, setScore] = useState(0);
-  const [coins, setCoins] = useState(50); // Hardcore starting coins
+  const [coins, setCoins] = useState(50);
   const [caughtCount, setCaughtCount] = useState(0);
   const [combo, setCombo] = useState(0);
   const [isPerfectCast, setIsPerfectCast] = useState(false);
@@ -1225,7 +1020,7 @@ export const FishingGameSection: React.FC = () => {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(() => getJakartaTimeInfo().naturalTimeOfDay);
   const [weather, setWeather] = useState<WeatherType>('cerah');
   const [isAutoWeather, setIsAutoWeather] = useState<boolean>(true);
-  
+
   // Admin Custom Odds configuration
   const [adminOdds, setAdminOdds] = useState<AdminOddsConfig>(() => {
     try {
@@ -1254,7 +1049,7 @@ export const FishingGameSection: React.FC = () => {
     return () => clearInterval(timer);
   }, [isRealtimeJakarta]);
 
-  // Dynamic Weather Engine cycle (changes every 60-90s if auto is on)
+  // Dynamic Weather Engine cycle
   useEffect(() => {
     if (!isAutoWeather) return;
 
@@ -1272,10 +1067,10 @@ export const FishingGameSection: React.FC = () => {
       setWeather(nextW);
       if (nextW === 'badai') {
         playFishingSound('bite', soundEnabled);
-        triggerFloatingText('⚡ BADAI PETIR TIBA! (+25% LANGKA/MITOS)', 400, 260, '#38bdf8');
+        triggerFloatingText('⚡ BADAI PETIR! (+25% LANGKA/MITOS)', 400, 260, '#38bdf8');
       } else if (nextW === 'kabut_mistis') {
         playFishingSound('perfect', soundEnabled);
-        triggerFloatingText('🌫️ KABUT MISTIS TIBA! (+50% MITOS DEWA)', 400, 260, '#c084fc');
+        triggerFloatingText('🌫️ KABUT MISTIS! (+50% MITOS DEWA)', 400, 260, '#c084fc');
       } else if (nextW === 'hujan') {
         triggerFloatingText('🌧️ HUJAN TIBA! (+10% EPIC)', 400, 260, '#60a5fa');
       }
@@ -1289,7 +1084,6 @@ export const FishingGameSection: React.FC = () => {
   const [ownedRods, setOwnedRods] = useState<string[]>(['bamboo']);
   const [equippedBait, setEquippedBait] = useState('worm');
   const [baitCounts, setBaitCounts] = useState<Record<string, number>>({ pellet: 5, shrimp: 2, star: 0, nectar: 0 });
-
   const [activeUser, setActiveUser] = useState<string | null>(null);
 
   // Load user data
@@ -1351,7 +1145,6 @@ export const FishingGameSection: React.FC = () => {
     }
   }, [score, coins, caughtCount, discoveredSpecies, equippedRod, ownedRods, equippedBait, baitCounts, currentUser, activeUser]);
 
-
   const waterHeight = Math.max(260, Math.floor(canvasHeight * 0.45));
   const waterSurfaceY = canvasHeight - waterHeight + 10;
 
@@ -1364,14 +1157,16 @@ export const FishingGameSection: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleResize = () => {
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    
+    const calculateScale = () => {
       const padding = isFullscreen ? 0 : 12;
       const availableWidth = Math.max(280, window.innerWidth - padding);
       const availableHeight = Math.max(200, window.innerHeight - padding);
       const sw = availableWidth / 800;
       const sh = availableHeight / 600;
       const s = Math.min(sw, sh);
-      
+
       setScale({ x: s, y: s });
 
       if (sw < sh) {
@@ -1380,9 +1175,20 @@ export const FishingGameSection: React.FC = () => {
         setCanvasHeight(600);
       }
     };
+
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      // Debounce window resize to prevent cascading re-renders
+      resizeTimer = setTimeout(calculateScale, 60);
+    };
+
     window.addEventListener('resize', handleResize);
-    handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+    calculateScale(); // Initial call
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+    };
   }, [isFullscreen]);
 
   const toggleFullscreen = async () => {
@@ -1407,7 +1213,6 @@ export const FishingGameSection: React.FC = () => {
     }, 1200);
   };
 
-  // Refs for animations & intervals
   const containerRef = useRef<HTMLElement>(null);
   const gameCanvasRef = useRef<HTMLDivElement>(null);
   const rodTipRef = useRef<HTMLDivElement>(null);
@@ -1422,35 +1227,54 @@ export const FishingGameSection: React.FC = () => {
   const biteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const escapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync real-time 2D position of the rod tip with the 800x600 canvas coordinate space
+  // Optimize: Sync real-time position of rod tip ONLY when actively moving to prevent idle layout thrashing/battery drain.
   useEffect(() => {
     let animId: number;
+    let lastX = -1;
+    let lastY = -1;
+    let isActive = true;
+
     const updateRodTipPos = () => {
+      if (!isActive) return;
+
       if (rodTipRef.current && gameCanvasRef.current) {
-        const tipRect = rodTipRef.current.getBoundingClientRect();
-        const canvasRect = gameCanvasRef.current.getBoundingClientRect();
-        if (canvasRect.width > 0) {
-          const scaleX = canvasRect.width / 800;
-          const scaleY = canvasRect.height / canvasHeight;
-          const tipCenterX = (tipRect.left + tipRect.right) / 2;
-          const tipCenterY = (tipRect.top + tipRect.bottom) / 2;
-          const x = (tipCenterX - canvasRect.left) / scaleX;
-          const y = (tipCenterY - canvasRect.top) / scaleY;
-          setRodTipPos({ x, y });
+        // Only compute if game state is actively changing the rod's physical position
+        if (['preparing', 'casting', 'reeling', 'biting'].includes(gameState) || lastX === -1) {
+          const tipRect = rodTipRef.current.getBoundingClientRect();
+          const canvasRect = gameCanvasRef.current.getBoundingClientRect();
+          
+          if (canvasRect.width > 0) {
+            const scaleX = canvasRect.width / 800;
+            const scaleY = canvasRect.height / canvasHeight;
+            const tipCenterX = (tipRect.left + tipRect.right) / 2;
+            const tipCenterY = (tipRect.top + tipRect.bottom) / 2;
+            
+            const x = (tipCenterX - canvasRect.left) / scaleX;
+            const y = (tipCenterY - canvasRect.top) / scaleY;
+            
+            // Only trigger React state update if position changed significantly (reduce re-renders)
+            if (Math.abs(x - lastX) > 0.5 || Math.abs(y - lastY) > 0.5) {
+              setRodTipPos({ x, y });
+              lastX = x;
+              lastY = y;
+            }
+          }
         }
       }
       animId = requestAnimationFrame(updateRodTipPos);
     };
+    
     animId = requestAnimationFrame(updateRodTipPos);
-    return () => cancelAnimationFrame(animId);
-  }, [canvasHeight]);
+    return () => {
+      isActive = false;
+      cancelAnimationFrame(animId);
+    };
+  }, [canvasHeight, gameState]);
 
-  // Audio synthesis for retro sound effects
   const playSound = (type: FishingSoundType) => {
     playFishingSound(type, soundEnabled);
   };
 
-  // Cleanups
   useEffect(() => {
     return () => {
       if (biteTimeoutRef.current) clearTimeout(biteTimeoutRef.current);
@@ -1492,7 +1316,7 @@ export const FishingGameSection: React.FC = () => {
       if (powerRef.current >= 100) {
         powerRef.current = 100;
         powerDirRef.current = -1;
-        holdFrames = 7; // Brief ~115ms hold at 100% MAX power so it visibly fills to the brim
+        holdFrames = 7;
       } else if (powerRef.current <= 0) {
         powerRef.current = 0;
         powerDirRef.current = 1;
@@ -1506,14 +1330,11 @@ export const FishingGameSection: React.FC = () => {
 
   const castLine = () => {
     if (reqRef.current) cancelAnimationFrame(reqRef.current);
-
     playSound('cast');
 
-    // Perfect cast sweet spot (80% - 95%)
     const perfect = power >= 80 && power <= 95;
     setIsPerfectCast(perfect);
 
-    // Target position calculation: X = 350 to 730
     const targetX = 350 + (power / 100) * 380;
     targetBobberXRef.current = targetX;
 
@@ -1547,13 +1368,11 @@ export const FishingGameSection: React.FC = () => {
 
         setGameState('waiting');
 
-        // Dynamic Randomized Fishing Wait Duration
         const activeBait = BAITS_DATABASE.find(b => b.id === equippedBait) || BAITS_DATABASE[0];
         const baitWaitFactor = Math.max(0.35, 1 - activeBait.biteSpeedBonus * 0.55);
         const weatherWaitFactor = (weather === 'badai' || weather === 'kabut_mistis') ? 0.82 : weather === 'hujan' ? 0.90 : 1.0;
         const perfectCastFactor = perfect ? 0.78 : 1.0;
-        
-        // Random wait duration between 1.1s and 5.8s depending on luck, bait, and weather
+
         const randomBaseWait = Math.random() * 4200 + 1200;
         const waitTime = randomBaseWait * baitWaitFactor * weatherWaitFactor * perfectCastFactor;
 
@@ -1563,7 +1382,6 @@ export const FishingGameSection: React.FC = () => {
               playSound('bite');
               triggerSplash(targetX, waterSurfaceY);
 
-              // Randomized reaction escape window (950ms - 1500ms)
               const reactionWindow = Math.floor(Math.random() * 550 + 950);
 
               escapeTimeoutRef.current = setTimeout(() => {
@@ -1606,7 +1424,6 @@ export const FishingGameSection: React.FC = () => {
       const randomFish = getRandomFish(equippedRod, equippedBait, weather, adminOdds);
       currentFishRef.current = randomFish;
 
-      // Consume 1 special bait
       if (equippedBait !== 'worm') {
         setBaitCounts(prev => {
           const nextCount = Math.max(0, (prev[equippedBait] || 0) - 1);
@@ -1617,7 +1434,6 @@ export const FishingGameSection: React.FC = () => {
         });
       }
 
-      // Screen shake on rare/mythic hook
       if (randomFish.rarity === 'Mitos' || randomFish.rarity === 'Legendaris') {
         setIsScreenShaking(true);
         setTimeout(() => setIsScreenShaking(false), 500);
@@ -1636,7 +1452,6 @@ export const FishingGameSection: React.FC = () => {
       triggerSplash(bobberPos.x, bobberPos.y);
 
       const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
-      // Dynamic random tap pull momentum (-15% to +25% natural variance per tap)
       const tapVariance = 1 + (Math.random() * 0.40 - 0.15);
       const pullIncrement = 15 * (1 + currentRod.reelSpeedBonus) * tapVariance;
       reelProgressRef.current += pullIncrement;
@@ -1651,14 +1466,13 @@ export const FishingGameSection: React.FC = () => {
         setCaughtActionUnlocked(false);
         setSellConfirmation(false);
 
-        // Generate dynamic festive particles for celebration
         const particleCount = caughtFish?.rarity === 'Mitos' ? 45 : caughtFish?.rarity === 'Legendaris' ? 30 : 18;
-        const emojis = caughtFish?.rarity === 'Mitos' 
-          ? ['✨', '⭐', '💫', '💎', '👑', '🌟', '🔥', '⚡', '🎆'] 
+        const emojis = caughtFish?.rarity === 'Mitos'
+          ? ['✨', '⭐', '💫', '💎', '👑', '🌟', '🔥', '⚡', '🎆']
           : caughtFish?.rarity === 'Legendaris'
           ? ['👑', '⭐', '✨', '🏆', '💎', '🌟']
           : ['✨', '⭐', '🎉', '🐟'];
-        
+
         const newParticles = Array.from({ length: particleCount }).map((_, i) => ({
           id: i,
           emoji: emojis[Math.floor(Math.random() * emojis.length)],
@@ -1682,7 +1496,7 @@ export const FishingGameSection: React.FC = () => {
           playSound('caught');
         }
 
-        const unlockDelay = caughtFish?.rarity === 'Mitos' ? 2200 : caughtFish?.rarity === 'Legendaris' ? 1500 : 900;
+        const unlockDelay = caughtFish?.rarity === 'Mitos' ? 2000 : caughtFish?.rarity === 'Legendaris' ? 1400 : 800;
         setTimeout(() => {
           setCaughtActionUnlocked(true);
         }, unlockDelay);
@@ -1721,7 +1535,7 @@ export const FishingGameSection: React.FC = () => {
     }
   };
 
-  // Hardcore fluctuating reeling decay with dynamic fish struggle surges
+  // Reeling decay physics
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (gameState === 'reeling' && fish) {
@@ -1729,7 +1543,6 @@ export const FishingGameSection: React.FC = () => {
       const rarityMultiplier = fish.rarity === 'Mitos' ? 1.55 : fish.rarity === 'Legendaris' ? 1.35 : fish.rarity === 'Sangat Langka' ? 1.20 : 1.0;
 
       interval = setInterval(() => {
-        // Natural fish thrash simulation: surges (bursts of resistance) & brief pauses
         const timeVal = Date.now() / 320;
         const surgeFactor = 1 + Math.sin(timeVal) * 0.45 + (Math.random() * 0.35 - 0.15);
         const dynamicDecayRate = Math.max(0.40, (fish.difficulty * 1.30 * rarityMultiplier * surgeFactor) * (1 - currentRod.strengthBonus * 0.45));
@@ -1753,7 +1566,6 @@ export const FishingGameSection: React.FC = () => {
     };
   }, [gameState, fish, equippedRod]);
 
-  // Fishing rod bending angle calculation
   let rodAngleDeg = -12;
   if (gameState === 'idle') rodAngleDeg = -15;
   else if (gameState === 'preparing') rodAngleDeg = -62;
@@ -1762,10 +1574,18 @@ export const FishingGameSection: React.FC = () => {
   else if (gameState === 'reeling') rodAngleDeg = -30;
   else rodAngleDeg = -22;
 
+  const currentEquippedRodItem = React.useMemo(() => 
+    RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0], 
+  [equippedRod]);
+  
+  const currentEquippedBaitItem = React.useMemo(() => 
+    BAITS_DATABASE.find(b => b.id === equippedBait) || BAITS_DATABASE[0], 
+  [equippedBait]);
+
   return (
     <section
       id="fishing"
-      className="relative w-full h-[100dvh] z-[100] bg-black flex items-center justify-center select-none touch-none font-mono overflow-hidden"
+      className="relative w-full h-[100dvh] z-[100] bg-slate-950 flex items-center justify-center select-none touch-none font-mono overflow-hidden"
       style={{
         fontFamily: '"Press Start 2P", monospace',
         imageRendering: 'pixelated',
@@ -1791,42 +1611,26 @@ export const FishingGameSection: React.FC = () => {
             0% { transform: translateX(0); }
             100% { transform: translateX(-32px); }
           }
-
           @keyframes kelpSway {
             0%, 100% { transform: rotate(-5deg); }
             50% { transform: rotate(7deg); }
           }
-
           @keyframes floatBubble {
             0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
             100% { transform: translateY(-130px) scale(1.3); opacity: 0; }
           }
-
           @keyframes fishSwimLeft {
             0% { transform: translateX(820px) scaleX(1); }
             100% { transform: translateX(-100px) scaleX(1); }
           }
-
-          @keyframes fishSwimRight {
-            0% { transform: translateX(-100px) scaleX(-1); }
-            100% { transform: translateX(820px) scaleX(-1); }
-          }
-
-          @keyframes rayRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-
           @keyframes rodVibrate {
             0%, 100% { transform: rotate(-30deg); }
             50% { transform: rotate(-26deg); }
           }
-
           @keyframes bobberGentleFloat {
             0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
             50% { transform: translate(-50%, -50%) translateY(4px); }
           }
-
           @keyframes shake {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
             20% { transform: translate(-4px, 4px) rotate(-1deg); }
@@ -1834,140 +1638,146 @@ export const FishingGameSection: React.FC = () => {
             60% { transform: translate(-3px, -2px) rotate(-1deg); }
             80% { transform: translate(3px, 3px) rotate(1deg); }
           }
-
           @keyframes rainFall {
             0% { transform: translateY(-100px) translateX(0); }
             100% { transform: translateY(700px) translateX(-150px); }
           }
-
           @keyframes particleFloatUp {
             0% { transform: translateY(0) scale(0.6); opacity: 0; }
             25% { opacity: 1; transform: translateY(-30px) scale(1.2); }
             100% { transform: translateY(-160px) scale(0.4); opacity: 0; }
           }
-
-          @keyframes rainbowShift {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-          }
-
           @keyframes shockwaveExpand {
             0% { transform: scale(0.6); opacity: 0.9; }
             100% { transform: scale(2.6); opacity: 0; }
           }
-
           @keyframes reelSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
-
-          @keyframes sweetSpotPulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(250,204,21,0.9)); }
-            50% { transform: scale(1.04); filter: drop-shadow(0 0 16px rgba(234,179,8,1)); }
+          @keyframes divineRing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
 
-          @keyframes alertStrobe {
-            0%, 100% { background-color: rgba(239, 68, 68, 0.95); }
-            50% { background-color: rgba(185, 28, 28, 0.95); }
-          }
-
-          .animate-water {
-            animation: waterWave 1.8s linear infinite;
-          }
-          .animate-kelp {
-            animation: kelpSway 3.2s ease-in-out infinite;
-            transform-origin: bottom center;
-          }
-          .animate-rod-vibrate {
-            animation: rodVibrate 0.08s infinite;
-          }
-          .animate-bobber-float {
-            animation: bobberGentleFloat 1.8s ease-in-out infinite;
-          }
-          .animate-particle-float {
-            animation: particleFloatUp 2s ease-out infinite;
-          }
-          .animate-rainbow-shift {
-            animation: rainbowShift 4s linear infinite;
-          }
-          .animate-shockwave {
-            animation: shockwaveExpand 1.6s ease-out infinite;
-          }
-          .animate-reel-spin {
-            animation: reelSpin 0.35s linear infinite;
-          }
-          .animate-sweet-spot {
-            animation: sweetSpotPulse 1s ease-in-out infinite;
-          }
+          .animate-water { animation: waterWave 1.8s linear infinite; }
+          .animate-kelp { animation: kelpSway 3.2s ease-in-out infinite; transform-origin: bottom center; }
+          .animate-rod-vibrate { animation: rodVibrate 0.08s infinite; }
+          .animate-bobber-float { animation: bobberGentleFloat 1.8s ease-in-out infinite; }
+          .animate-particle-float { animation: particleFloatUp 2s ease-out infinite; }
+          .animate-shockwave { animation: shockwaveExpand 1.6s ease-out infinite; }
+          .animate-reel-spin { animation: reelSpin 0.35s linear infinite; }
         `}
       </style>
 
-      {/* Top Header Navigation & Stats */}
-      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-[200] flex flex-col gap-2 pointer-events-none">
-        {/* Top Row: Back Button, Jakarta Live Clock, Controls */}
-        <div className="flex justify-between items-start gap-2 flex-wrap sm:flex-nowrap">
+      {/* ================= TOP ARCADE HUD & CONTROL DECK ================= */}
+      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-[200] flex flex-col gap-2 pointer-events-none">
+        {/* Row 1: Primary Navigation, Live Jakarta Time & Control Cluster */}
+        <div className="flex justify-between items-center gap-2 flex-wrap sm:flex-nowrap">
+          {/* Left: Home / Back & Live Jakarta Clock */}
           <div className="flex items-center gap-2 pointer-events-auto">
             <button
               onClick={() => {
                 playSound('click');
                 navigate('/');
               }}
-              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black px-3 py-1.5 sm:px-4 sm:py-2 hover:bg-amber-200 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
+              className="bg-amber-300 hover:bg-amber-200 text-slate-950 border-[3px] border-black px-3 py-1.5 flex items-center gap-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer font-black text-[9px] sm:text-[10px]"
+              title="Kembali ke Portofolio Utama"
             >
-              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">BACK</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>HOME</span>
             </button>
 
-            {/* Jakarta Realtime Live Clock Badge */}
+            {/* Jakarta Live Clock Pill */}
             <button
               onClick={() => {
                 playSound('click');
                 setIsRealtimeJakarta(!isRealtimeJakarta);
                 if (!isRealtimeJakarta) {
                   setTimeOfDay(jakartaClock.naturalTimeOfDay);
-                  triggerFloatingText('📍 AUTO WAKTU JAKARTA AKTIF!', 400, 200, '#38bdf8');
+                  triggerFloatingText('📍 AUTO WAKTU JAKARTA AKTIF', 400, 200, '#38bdf8');
                 } else {
                   triggerFloatingText('MANUAL WAKTU AKTIF', 400, 200, '#facc15');
                 }
               }}
-              className={`border-[3px] sm:border-[4px] border-black px-2.5 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+              className={`border-[3px] border-black px-2.5 py-1 flex items-center gap-1.5 shadow-[3px_3px_0_0_#000] transition-all cursor-pointer ${
                 isRealtimeJakarta
-                  ? 'bg-gradient-to-r from-sky-200 via-amber-100 to-sky-100 text-slate-950 font-black'
-                  : 'bg-amber-100 text-slate-700 font-bold hover:bg-amber-200'
+                  ? 'bg-sky-200 text-slate-950'
+                  : 'bg-amber-100 text-slate-700 hover:bg-amber-200'
               }`}
-              title="Klik untuk Toggle Auto Waktu Realtime Jakarta (WIB) / Manual"
+              title="Toggle Auto Waktu Realtime Jakarta / Manual"
             >
-              <Compass className="w-3.5 h-3.5 text-blue-800 animate-spin" style={{ animationDuration: '10s' }} />
-              <div className="flex flex-col text-left leading-tight">
-                <span className="text-[8.5px] sm:text-[9.5px] font-black flex items-center gap-1">
-                  <span>📍 Jakarta</span>
-                  <span className="text-blue-900 font-mono">{jakartaClock.timeString} WIB</span>
+              <Compass className="w-3.5 h-3.5 text-blue-900 animate-spin" style={{ animationDuration: '12s' }} />
+              <div className="flex flex-col text-left leading-none">
+                <span className="text-[8.5px] sm:text-[9px] font-black text-slate-900">
+                  {jakartaClock.timeString} <span className="text-[7.5px] text-blue-900">WIB</span>
                 </span>
-                <span className="text-[7px] sm:text-[8px] text-slate-600 uppercase font-bold">
-                  {isRealtimeJakarta ? `AUTO • ${timeOfDay.toUpperCase()}` : `MANUAL • ${timeOfDay.toUpperCase()}`}
+                <span className="text-[7px] text-slate-600 font-bold uppercase mt-0.5">
+                  {isRealtimeJakarta ? `AUTO • ${timeOfDay}` : `MANUAL • ${timeOfDay}`}
                 </span>
               </div>
             </button>
           </div>
 
-          {/* Controls Right */}
-          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pointer-events-auto mt-1 sm:mt-0">
-            {/* Admin Active Odds Badge */}
-            {isAdmin && adminOdds.enabled && (
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsOddsOpen(true);
-                }}
-                className="bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 border-[3px] sm:border-[4px] border-black px-2 py-1 text-[8.5px] sm:text-[9px] font-black flex items-center gap-1 drop-shadow-[3px_3px_0_rgba(0,0,0,1)] animate-pulse cursor-pointer"
-                title="Admin Odds Override Aktif! Klik untuk ubah."
-              >
-                <Crown className="w-3.5 h-3.5 fill-slate-950" />
-                <span>ODDS: {(adminOdds.mythic * 100).toFixed(0)}% MITOS</span>
-              </button>
-            )}
+          {/* Right: Arcade Control Deck */}
+          <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+            {/* Coins Counter */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsShopOpen(true);
+              }}
+              className="bg-amber-300 hover:bg-amber-200 text-slate-950 border-[3px] border-black px-2.5 py-1.5 flex items-center gap-1 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer font-black text-[9px] sm:text-[10px]"
+              title="Buka Toko Alat Pancing"
+            >
+              <Coins className="w-3.5 h-3.5 text-amber-900" />
+              <span>{coins}</span>
+            </button>
 
-            {/* Dynamic Weather Button */}
+            {/* Shop Button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsShopOpen(true);
+              }}
+              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer"
+              title="Toko Joran & Umpan"
+            >
+              <ShoppingBag className="w-3.5 h-3.5 text-amber-900" />
+            </button>
+
+            {/* Species Journal */}
+            <button
+              onClick={() => {
+                playFishingSound('page', soundEnabled);
+                setIsJournalOpen(true);
+              }}
+              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer relative"
+              title="Jurnal Ikan"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-blue-800" />
+              {discoveredSpecies.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-emerald-600 text-white text-[7px] font-black px-1 rounded-full border border-black">
+                  {discoveredSpecies.length}
+                </span>
+              )}
+            </button>
+
+            {/* Odds Button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsOddsOpen(true);
+              }}
+              className={`border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer ${
+                adminOdds.enabled && isAdmin ? 'bg-amber-400 text-slate-950 ring-2 ring-yellow-400 animate-pulse' : 'bg-amber-100 hover:bg-amber-200 text-slate-950'
+              }`}
+              title="Peluang Ikan (Drop Rates)"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-blue-700" />
+            </button>
+
+            {/* Weather Switcher */}
             <button
               onClick={() => {
                 playSound('click');
@@ -1978,174 +1788,69 @@ export const FishingGameSection: React.FC = () => {
                 setIsAutoWeather(false);
                 triggerFloatingText(`CUACA: ${nextW.toUpperCase()}`, 400, 200, '#38bdf8');
               }}
-              className={`border-[3px] sm:border-[4px] border-black px-2 py-1 sm:px-2.5 sm:py-1.5 flex items-center gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-0.5 cursor-pointer ${
-                weather === 'badai'
-                  ? 'bg-slate-900 text-yellow-300 font-black'
-                  : weather === 'kabut_mistis'
-                  ? 'bg-purple-900 text-purple-200 font-black'
-                  : weather === 'hujan'
-                  ? 'bg-sky-800 text-sky-200 font-black'
-                  : weather === 'berawan'
-                  ? 'bg-slate-300 text-slate-900 font-black'
-                  : 'bg-amber-200 text-amber-950 font-black'
-              }`}
-              title="Klik untuk ganti cuaca. Cuaca mempengaruhi buff ikan langka/mitos!"
+              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black px-2 py-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer text-xs flex items-center gap-1"
+              title="Ganti Cuaca Samudra"
             >
-              <span className="text-xs">
+              <span>
                 {weather === 'cerah' && '☀️'}
                 {weather === 'berawan' && '⛅'}
                 {weather === 'hujan' && '🌧️'}
                 {weather === 'badai' && '⛈️'}
                 {weather === 'kabut_mistis' && '🌫️'}
               </span>
-              <span className="text-[8px] sm:text-[9px] uppercase hidden md:inline">{weather.replace('_', ' ')}</span>
             </button>
 
-            {/* Coins Button / Quick Shop */}
+            {/* Audio Toggle */}
             <button
               onClick={() => {
-                playSound('click');
-                setIsShopOpen(true);
+                if (!soundEnabled) playFishingSound('click', true);
+                setSoundEnabled(!soundEnabled);
               }}
-              className="bg-amber-200 hover:bg-amber-300 text-slate-900 border-[3px] sm:border-[4px] border-black px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
-              title="Buka Toko Alat Pancing"
+              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer"
+              title="Toggle Suara"
             >
-              <Coins className="w-3.5 h-3.5 text-amber-800" />
-              <span className="text-[9px] sm:text-[10px] font-black text-amber-950">{coins}</span>
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-slate-900" /> : <VolumeX className="w-3.5 h-3.5 text-red-600" />}
             </button>
 
-            {/* Shop Button */}
-            <button
-              onClick={() => {
-                playSound('click');
-                setIsShopOpen(true);
-              }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-              title="Toko Alat Pancing (Joran & Umpan)"
-            >
-              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-900" />
-            </button>
-
-            {/* Odds / Drop Rates Button */}
-            <button
-              onClick={() => {
-                playSound('click');
-                setIsOddsOpen(true);
-              }}
-              className={`border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer relative ${
-                adminOdds.enabled && isAdmin ? 'bg-amber-300 ring-2 ring-yellow-400' : 'bg-amber-100 hover:bg-amber-200 text-slate-900'
-              }`}
-              title="Peluang & Rarity Ikan"
-            >
-              <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
-              {adminOdds.enabled && isAdmin && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 rounded-full border border-black" />
-              )}
-            </button>
-
-            {/* Time Selector */}
-            <div className="bg-amber-100 border-[3px] sm:border-[4px] border-black p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsRealtimeJakarta(false);
-                  setTimeOfDay('pagi');
-                }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' && !isRealtimeJakarta ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
-                title="Pagi Cerah"
-              >
-                <Sun className="w-3.5 h-3.5 text-amber-700" />
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsRealtimeJakarta(false);
-                  setTimeOfDay('siang');
-                }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'siang' && !isRealtimeJakarta ? 'bg-sky-400 text-slate-950 border border-black' : 'hover:bg-amber-200'}`}
-                title="Siang Terik"
-              >
-                <Sun className="w-3.5 h-3.5 text-sky-800" />
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsRealtimeJakarta(false);
-                  setTimeOfDay('senja');
-                }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' && !isRealtimeJakarta ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
-                title="Senja Keemasan"
-              >
-                <Flame className="w-3.5 h-3.5 text-orange-800" />
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsRealtimeJakarta(false);
-                  setTimeOfDay('malam');
-                }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' && !isRealtimeJakarta ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
-                title="Malam Berbintang"
-              >
-                <Moon className="w-3.5 h-3.5 text-amber-300" />
-              </button>
-            </div>
-
+            {/* Fullscreen */}
             <button
               onClick={() => {
                 playSound('click');
                 toggleFullscreen();
               }}
-              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer hidden sm:block"
+              title={isFullscreen ? "Keluar Fullscreen" : "Layar Penuh"}
             >
-              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-            </button>
-
-            <button
-              onClick={() => {
-                playSound('page');
-                setIsJournalOpen(true);
-              }}
-              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-              title="Jurnal Ikan"
-            >
-              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (!soundEnabled) {
-                  playFishingSound('click', true);
-                }
-                setSoundEnabled(!soundEnabled);
-              }}
-              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
-            >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />}
+              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
 
-        {/* Bottom Row: Stats & Equipped Gear */}
-        <div className="flex flex-wrap justify-end gap-2 pointer-events-none">
-          <div className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black px-2.5 py-1.5 sm:px-3.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] pointer-events-auto">
-            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
-            <span className="text-[9px] sm:text-[10px] font-bold">PTS: <span className="text-blue-600">{score}</span></span>
+        {/* Row 2: Live Telemetry Bar (Score, Fish, Rod & Bait, Combo) */}
+        <div className="flex justify-end pointer-events-auto">
+          <div className="bg-amber-100 text-slate-950 border-[3px] border-black px-3 py-1.5 flex items-center gap-2 sm:gap-3 shadow-[3px_3px_0_0_#000] text-[8.5px] sm:text-[9.5px] font-black flex-wrap">
+            <div className="flex items-center gap-1">
+              <Trophy className="w-3.5 h-3.5 text-amber-600" />
+              <span>PTS: <strong className="text-blue-700">{score}</strong></span>
+            </div>
             <span className="text-slate-400">|</span>
-            <span className="text-[9px] sm:text-[10px] font-bold">FISH: <span className="text-emerald-700">{caughtCount}</span></span>
+            <div>
+              <span>IKAN: <strong className="text-emerald-700">{caughtCount}</strong></span>
+            </div>
             <span className="text-slate-400">|</span>
-            <span className="text-[9px] sm:text-[10px] font-bold">
-              {RODS_DATABASE.find(r => r.id === equippedRod)?.icon} {RODS_DATABASE.find(r => r.id === equippedRod)?.name.split(' ')[1]}
-            </span>
+            <div className="flex items-center gap-1 text-slate-800">
+              <span>{currentEquippedRodItem.icon}</span>
+              <span className="hidden sm:inline">{currentEquippedRodItem.name.split(' ')[1]}</span>
+            </div>
             <span className="text-slate-400">|</span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-purple-700">
-              {BAITS_DATABASE.find(b => b.id === equippedBait)?.icon} {equippedBait !== 'worm' ? `(${baitCounts[equippedBait] || 0})` : ''}
-            </span>
+            <div className="flex items-center gap-1 text-purple-800">
+              <span>{currentEquippedBaitItem.icon}</span>
+              <span>{equippedBait !== 'worm' ? `(${baitCounts[equippedBait] || 0})` : '∞'}</span>
+            </div>
             {combo > 1 && (
               <>
                 <span className="text-slate-400">|</span>
-                <span className="text-[9px] sm:text-[10px] font-black text-rose-600 animate-pulse flex items-center gap-0.5">
+                <span className="text-rose-600 animate-pulse flex items-center gap-0.5">
                   🔥 x{combo}
                 </span>
               </>
@@ -2153,29 +1858,30 @@ export const FishingGameSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Meters */}
-        <div className="w-full flex justify-center pointer-events-none mt-2">
+        {/* Meters / Dynamic Mini-Game HUD overlays */}
+        <div className="w-full flex justify-center pointer-events-none mt-1">
           <AnimatePresence>
+            {/* Power Meter */}
             {gameState === 'preparing' && (
               <motion.div
                 key="power-meter"
-                initial={{ y: -40, opacity: 0, scale: 0.9 }}
+                initial={{ y: -30, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: -40, opacity: 0, scale: 0.9 }}
-                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none transition-all ${
+                exit={{ y: -30, opacity: 0, scale: 0.95 }}
+                className={`p-3 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_#000] pointer-events-none transition-all ${
                   power >= 80 && power <= 95
-                    ? 'bg-gradient-to-b from-amber-100 to-yellow-200 ring-4 ring-yellow-400 animate-sweet-spot'
+                    ? 'bg-amber-100 ring-4 ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.7)]'
                     : 'bg-amber-100'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1.5 font-black text-xs text-slate-900">
+                <div className="flex justify-between items-center mb-1.5 font-black text-[11px] sm:text-xs text-slate-900">
                   <span className="flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-500 fill-amber-400" />
-                    <span>POWER LEMPARAN</span>
+                    <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
+                    <span>TENAGA LEMPARAN</span>
                   </span>
-                  <span className={`font-mono text-sm px-2 py-0.5 border-2 border-black rounded ${
+                  <span className={`font-mono text-xs sm:text-sm px-2 py-0.5 border-2 border-black rounded ${
                     power >= 80 && power <= 95
-                      ? 'bg-yellow-400 text-slate-950 font-black shadow-sm'
+                      ? 'bg-yellow-400 text-slate-950 font-black shadow-xs animate-pulse'
                       : power > 95
                       ? 'bg-red-500 text-white font-black'
                       : 'bg-slate-900 text-yellow-300'
@@ -2184,55 +1890,54 @@ export const FishingGameSection: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Track with Needle & Segmented Ticks */}
-                <div className="w-full h-[32px] bg-slate-950 border-[3px] border-black p-0.5 relative overflow-hidden rounded-sm">
-                  {/* Background Segment Ticks */}
+                <div className="w-full h-[28px] sm:h-[32px] bg-slate-950 border-[3px] border-black p-0.5 relative overflow-hidden rounded-xs">
+                  {/* Ticks */}
                   <div className="absolute inset-0 flex justify-between px-1.5 pointer-events-none opacity-25 z-0">
                     {Array.from({ length: 10 }).map((_, i) => (
                       <div key={i} className="w-[1px] h-full bg-white" />
                     ))}
                   </div>
 
-                  {/* Perfect Cast Sweet Spot Zone (80% - 95%) */}
+                  {/* Sweet Spot */}
                   <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-400/50 border-x-2 border-yellow-300 z-10 flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.8)] animate-pulse">
                     <span className="text-[7.5px] font-black text-yellow-200 tracking-tighter drop-shadow-[1px_1px_0_#000]">PERFECT</span>
                   </div>
 
-                  {/* Progress Fill Bar */}
+                  {/* Fill */}
                   <div
-                    className={`h-full transition-all duration-75 relative rounded-sm ${
+                    className={`h-full transition-all duration-75 relative rounded-xs ${
                       power >= 96
-                        ? 'bg-gradient-to-r from-sky-400 via-amber-400 to-red-600 shadow-[0_0_15px_rgba(239,68,68,1)]'
+                        ? 'bg-gradient-to-r from-sky-400 via-amber-400 to-red-600'
                         : 'bg-gradient-to-r from-sky-400 via-amber-400 to-rose-600'
                     }`}
                     style={{ width: `${Math.max(1, Math.min(100, power))}%` }}
                   >
-                    {/* Glowing Leading Edge Needle */}
-                    <div className="absolute top-0 bottom-0 right-0 w-[4px] bg-white shadow-[0_0_10px_#fff]" />
+                    <div className="absolute top-0 bottom-0 right-0 w-[4px] bg-white shadow-[0_0_8px_#fff]" />
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-2 text-[8.5px] font-black">
-                  <span className="text-slate-600">0% (LEMAH)</span>
+                <div className="flex justify-between items-center mt-2 text-[8px] sm:text-[8.5px] font-black">
+                  <span className="text-slate-600">0%</span>
                   <span className={`px-2 py-0.5 rounded border border-black ${
                     power >= 80 && power <= 95
                       ? 'bg-amber-400 text-slate-950 font-black animate-pulse'
-                      : 'bg-amber-200/70 text-slate-800'
+                      : 'bg-amber-200/80 text-slate-800'
                   }`}>
-                    {power < 35 ? '💤 PENGISIAN AWAL' : power < 80 ? '⚡ MENGISI TENAGA...' : power <= 95 ? '⭐ TARGET IDEAL! LEPAS SEKARANG! ⭐' : '🔥 OVERPOWER!'}
+                    {power < 35 ? '💤 MENGISI TENAGA...' : power < 80 ? '⚡ TERUS ISI...' : power <= 95 ? '⭐ TARGET IDEAL! LEPAS SEKARANG! ⭐' : '🔥 MAX OVERPOWER!'}
                   </span>
-                  <span className="text-rose-700">100% (MAX)</span>
+                  <span className="text-rose-700">100%</span>
                 </div>
               </motion.div>
             )}
 
+            {/* Reeling Tension Meter */}
             {gameState === 'reeling' && (
               <motion.div
                 key="reeling-meter"
-                initial={{ y: -40, opacity: 0, scale: 0.9 }}
+                initial={{ y: -30, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: -40, opacity: 0, scale: 0.9 }}
-                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none transition-all ${
+                exit={{ y: -30, opacity: 0, scale: 0.95 }}
+                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_#000] pointer-events-none transition-all ${
                   reelProgress < 28
                     ? 'bg-red-100 border-red-600 ring-4 ring-red-500 animate-pulse'
                     : reelProgress > 75
@@ -2241,31 +1946,29 @@ export const FishingGameSection: React.FC = () => {
                 }`}
               >
                 <div className="flex justify-between items-center mb-1.5 font-black text-xs">
-                  {/* Animated Spinning Reel Spool Icon */}
                   <span className={`flex items-center gap-2 ${
                     reelProgress < 28 ? 'text-red-700 animate-bounce' : reelProgress > 75 ? 'text-emerald-800' : 'text-blue-700'
                   }`}>
-                    <div className="w-5 h-5 bg-slate-900 text-yellow-300 border-2 border-black rounded-full flex items-center justify-center text-xs animate-reel-spin shadow-sm">
+                    <div className="w-5 h-5 bg-slate-900 text-yellow-300 border-2 border-black rounded-full flex items-center justify-center text-xs animate-reel-spin shadow-xs">
                       ⚙️
                     </div>
-                    <span>
-                      {reelProgress < 28 ? '⚠️ TEGANGAN KRITIS! IKAN MENARIK!' : reelProgress > 75 ? '✨ IKAN SUDAH DEKAT! TAHAN!' : '⚡ TARIK! TAP FAST BERULANG KALI!'}
+                    <span className="text-[10px] sm:text-xs">
+                      {reelProgress < 28 ? '⚠️ TEGANGAN KRITIS! IKAN MENARIK!' : reelProgress > 75 ? '✨ IKAN DEKAT! TAHAN!' : '⚡ TARIK! TAP CEPAT BERULANG KALI!'}
                     </span>
                   </span>
-                  <span className="font-mono text-sm font-black px-2 py-0.5 bg-slate-900 text-yellow-300 border-2 border-black rounded">
+                  <span className="font-mono text-xs sm:text-sm font-black px-2 py-0.5 bg-slate-900 text-yellow-300 border-2 border-black rounded">
                     {Math.round(reelProgress)}%
                   </span>
                 </div>
 
-                <div className="w-full h-[30px] bg-slate-950 border-[3px] border-black p-1 relative rounded-sm overflow-hidden">
-                  {/* Dynamic Gradient Bar */}
+                <div className="w-full h-[28px] sm:h-[30px] bg-slate-950 border-[3px] border-black p-1 relative rounded-xs overflow-hidden">
                   <div
                     className={`h-full transition-all duration-75 relative ${
                       reelProgress < 28
-                        ? 'bg-gradient-to-r from-red-600 to-rose-500 shadow-[0_0_15px_rgba(239,68,68,1)]'
+                        ? 'bg-gradient-to-r from-red-600 to-rose-500'
                         : reelProgress > 75
-                        ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 shadow-[0_0_15px_rgba(16,185,129,1)]'
-                        : 'bg-gradient-to-r from-blue-600 via-sky-400 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.8)]'
+                        ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300'
+                        : 'bg-gradient-to-r from-blue-600 via-sky-400 to-cyan-300'
                     }`}
                     style={{ width: `${Math.max(0, Math.min(100, reelProgress))}%` }}
                   >
@@ -2273,12 +1976,12 @@ export const FishingGameSection: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-1.5 text-[8.5px] font-black text-slate-700">
+                <div className="flex justify-between items-center mt-1.5 text-[8px] sm:text-[8.5px] font-black text-slate-700">
                   <span className="flex items-center gap-1">
                     <span>JARAK:</span>
                     <strong className="text-blue-700">{Math.max(0, Math.round((100 - reelProgress) * 0.4))}m</strong>
                   </span>
-                  <span className={`px-2 py-0.5 rounded border border-black text-[8px] ${
+                  <span className={`px-2 py-0.5 rounded border border-black text-[7.5px] sm:text-[8px] ${
                     reelProgress < 28 ? 'bg-red-500 text-white animate-pulse' : reelProgress > 75 ? 'bg-emerald-600 text-white' : 'bg-amber-300 text-slate-900'
                   }`}>
                     {reelProgress < 28 ? '⚠️ RESISTENSI TINGGI' : reelProgress > 75 ? '🟢 TANGKAPAN AMAN' : '🔵 MENARIK KAIL'}
@@ -2291,7 +1994,7 @@ export const FishingGameSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Main 800x600 Scaled Retro Game Canvas */}
+      {/* ================= MAIN 800x600 SCALED CANVAS ================= */}
       <div
         ref={gameCanvasRef}
         style={{
@@ -2306,9 +2009,8 @@ export const FishingGameSection: React.FC = () => {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       >
-        {/* ================= SKY & CELESTIAL BODY ================= */}
+        {/* Sky & Atmospheric Bands */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Sky Gradient Bands according to Time of Day */}
           {timeOfDay === 'pagi' && (
             <>
               <div className="absolute top-0 inset-x-0 bg-[#0284c7]" style={{ bottom: waterHeight + 285 }} />
@@ -2318,7 +2020,6 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute inset-x-0 h-[65px] bg-[#e0f2fe]" style={{ bottom: waterHeight }} />
             </>
           )}
-
           {timeOfDay === 'siang' && (
             <>
               <div className="absolute top-0 inset-x-0 bg-[#0284c7]" style={{ bottom: waterHeight + 285 }} />
@@ -2328,7 +2029,6 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute inset-x-0 h-[65px] bg-[#bae6fd]" style={{ bottom: waterHeight }} />
             </>
           )}
-
           {timeOfDay === 'senja' && (
             <>
               <div className="absolute top-0 inset-x-0 bg-[#431407]" style={{ bottom: waterHeight + 285 }} />
@@ -2338,7 +2038,6 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute inset-x-0 h-[65px] bg-[#fdba74]" style={{ bottom: waterHeight }} />
             </>
           )}
-
           {timeOfDay === 'malam' && (
             <>
               <div className="absolute top-0 inset-x-0 bg-[#020617]" style={{ bottom: waterHeight + 285 }} />
@@ -2347,7 +2046,6 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute inset-x-0 h-[75px] bg-[#312e81]" style={{ bottom: waterHeight + 65 }} />
               <div className="absolute inset-x-0 h-[65px] bg-[#4338ca]" style={{ bottom: waterHeight }} />
 
-              {/* Twinkling Stars */}
               <div className="absolute left-12 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ bottom: waterHeight + 230 }} />
               <div className="absolute left-64 w-2 h-2 bg-amber-200 rounded-full animate-pulse" style={{ bottom: waterHeight + 210 }} />
               <div className="absolute right-96 w-1.5 h-1.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s', bottom: waterHeight + 220 }} />
@@ -2355,10 +2053,9 @@ export const FishingGameSection: React.FC = () => {
             </>
           )}
 
-          {/* Weather Visual Overlays */}
+          {/* Weather Effects */}
           {weather === 'hujan' && (
             <>
-              {/* Rain Streaks */}
               {Array.from({ length: 30 }).map((_, idx) => (
                 <div
                   key={idx}
@@ -2376,9 +2073,7 @@ export const FishingGameSection: React.FC = () => {
 
           {weather === 'badai' && (
             <>
-              {/* Storm Dark Cloud Band */}
               <div className="absolute top-0 inset-x-0 h-[90px] bg-slate-950/40 pointer-events-none" />
-              {/* Storm Rain Streaks */}
               {Array.from({ length: 45 }).map((_, idx) => (
                 <div
                   key={idx}
@@ -2398,7 +2093,7 @@ export const FishingGameSection: React.FC = () => {
             <div className="absolute inset-x-0 h-[120px] bg-gradient-to-t from-purple-500/25 via-pink-400/15 to-transparent pointer-events-none animate-pulse" style={{ bottom: waterHeight }} />
           )}
 
-          {/* Sun / Moon Graphic */}
+          {/* Sun / Moon */}
           <div className="absolute right-[70px]" style={{ bottom: waterHeight + 170 }}>
             {timeOfDay === 'malam' ? (
               <div className="relative">
@@ -2423,7 +2118,7 @@ export const FishingGameSection: React.FC = () => {
             )}
           </div>
 
-          {/* Multi-layered Drifting Parallax Pixel Clouds */}
+          {/* Drifting Clouds */}
           <motion.div
             animate={{ x: [-140, 880] }}
             transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
@@ -2450,36 +2145,21 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Flying Pixel Birds */}
-          <motion.div
-            animate={{ x: [-60, 860], y: [0, -12, 0] }}
-            transition={{ x: { duration: 20, repeat: Infinity, ease: 'linear' }, y: { duration: 2, repeat: Infinity, ease: 'easeInOut' } }}
-            className="absolute left-0 text-slate-700 text-[10px] font-bold"
-            style={{ bottom: waterHeight + 150 }}
-          >
-            v v
-          </motion.div>
-
-          {/* ================= MOUNTAINS & LANDSCAPE ================= */}
+          {/* Mountains */}
           <div className="absolute left-0 w-full h-[140px]" style={{ bottom: waterHeight }}>
             <svg width="800" height="140" className="absolute bottom-0 inset-x-0" shapeRendering="crispEdges">
-              {/* Far Mountain 1 */}
               <polygon points="30,140 120,35 210,140" fill="#475569" />
               <polygon points="105,35 120,35 135,35 120,55" fill="#f8fafc" />
 
-              {/* Far Mountain 2 */}
               <polygon points="170,140 295,15 420,140" fill="#334155" />
               <polygon points="275,15 295,15 315,15 295,40" fill="#f8fafc" />
 
-              {/* Far Mountain 3 */}
               <polygon points="440,140 550,45 660,140" fill="#475569" />
               <polygon points="535,45 550,45 565,45 550,65" fill="#f8fafc" />
 
-              {/* Far Mountain 4 */}
               <polygon points="620,140 715,55 810,140" fill="#334155" />
             </svg>
 
-            {/* Midground Hills & Pine Tree Silhouettes */}
             <div className="absolute bottom-0 inset-x-0 h-[40px] bg-[#166534] flex items-end justify-between px-6">
               <div className="w-[110px] h-[22px] bg-[#15803d] rounded-t-lg" />
               <div className="w-[190px] h-[32px] bg-[#15803d] rounded-t-lg" />
@@ -2487,7 +2167,7 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Pier Grass Slope (Left side) */}
+          {/* Pier Grass Slope */}
           <div className="absolute left-0 w-[220px] h-[65px] bg-[#15803d] border-b-[6px] border-[#166534]" style={{ bottom: waterHeight - 10 }}>
             <div className="absolute top-0 inset-x-0 h-[8px] bg-[#22c55e]" />
             <div className="absolute top-[35px] inset-x-0 bottom-0 bg-[#78350f] border-t-[4px] border-[#92400e]" />
@@ -2496,9 +2176,9 @@ export const FishingGameSection: React.FC = () => {
             <div className="absolute top-[5px] left-[150px] w-[6px] h-[6px] bg-amber-300" />
           </div>
 
-          {/* ================= WATER & UNDERWATER ================= */}
+          {/* Water & Underwater */}
           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-[#0284c7] via-[#0369a1] to-[#0f172a] overflow-hidden" style={{ height: waterHeight }}>
-            {/* Animated Waves Layer */}
+            {/* Animated Waves */}
             <div className="absolute top-0 inset-x-0 h-[10px] bg-[#38bdf8]/90 flex overflow-hidden">
               <div className="w-[832px] h-full flex animate-water">
                 {Array.from({ length: 26 }).map((_, i) => (
@@ -2510,16 +2190,16 @@ export const FishingGameSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Shimmer Lines */}
+            {/* Shimmer */}
             <div className="absolute top-[20px] left-[220px] w-[70px] h-[4px] bg-sky-200/60" />
             <div className="absolute top-[38px] left-[460px] w-[100px] h-[4px] bg-sky-200/50" />
             <div className="absolute top-[22px] left-[690px] w-[60px] h-[4px] bg-sky-200/60" />
 
-            {/* Underwater Light Shafts (Caustics) */}
+            {/* Light Shafts */}
             <div className="absolute top-0 left-[300px] w-[80px] h-full bg-gradient-to-b from-sky-200/15 to-transparent -rotate-12 pointer-events-none" />
             <div className="absolute top-0 left-[520px] w-[100px] h-full bg-gradient-to-b from-sky-200/15 to-transparent -rotate-12 pointer-events-none" />
 
-            {/* Submerged Wooden Support Pillars */}
+            {/* Pillars */}
             <div className="absolute top-0 left-[35px] w-[22px] h-[190px] bg-[#451a03] border-r-[3px] border-[#78350f]">
               <div className="absolute bottom-[20px] inset-x-0 h-[30px] bg-emerald-900/80" />
             </div>
@@ -2530,25 +2210,22 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute bottom-[10px] inset-x-0 h-[25px] bg-emerald-900/80" />
             </div>
 
-            {/* Seabed Layer */}
+            {/* Seabed */}
             <div className="absolute bottom-0 inset-x-0 h-[30px] bg-[#d97706] border-t-[4px] border-[#b45309]">
-              <div className="absolute top-[6px] left-[260px] w-[16px] h-[8px] bg-[#78350f] rounded-t-sm" />
-              <div className="absolute top-[10px] left-[430px] w-[20px] h-[10px] bg-[#92400e] rounded-t-sm" />
+              <div className="absolute top-[6px] left-[260px] w-[16px] h-[8px] bg-[#78350f] rounded-t-xs" />
+              <div className="absolute top-[10px] left-[430px] w-[20px] h-[10px] bg-[#92400e] rounded-t-xs" />
               <div className="absolute top-[8px] left-[620px] w-[14px] h-[6px] bg-[#fef08a]" />
-              {/* Starfish */}
               <div className="absolute top-[12px] left-[500px] w-[10px] h-[10px] bg-rose-500 rotate-12" />
             </div>
 
-            {/* Swaying Underwater Seaweed */}
+            {/* Seaweed & Bubbles */}
             <div className="absolute bottom-[26px] left-[270px] w-[10px] h-[65px] bg-emerald-600 animate-kelp rounded-t-full" />
             <div className="absolute bottom-[26px] left-[282px] w-[8px] h-[90px] bg-emerald-500 animate-kelp rounded-t-full" style={{ animationDelay: '0.8s' }} />
             <div className="absolute bottom-[26px] left-[560px] w-[12px] h-[75px] bg-emerald-600 animate-kelp rounded-t-full" style={{ animationDelay: '1.4s' }} />
 
-            {/* Animated Bubbles */}
             <div className="absolute bottom-[30px] left-[310px] w-[6px] h-[6px] rounded-full border border-white/60" style={{ animation: 'floatBubble 4s infinite linear' }} />
             <div className="absolute bottom-[30px] left-[590px] w-[8px] h-[8px] rounded-full border border-white/60" style={{ animation: 'floatBubble 5s infinite linear', animationDelay: '2s' }} />
 
-            {/* Ambient Animated Fish Swimming Underwater */}
             <div
               className="absolute top-[70px] opacity-70 flex items-center gap-1"
               style={{ animation: 'fishSwimLeft 14s linear infinite' }}
@@ -2558,28 +2235,20 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </div>
 
-          {/* ================= PIER & FISHERMAN ================= */}
+          {/* Pier & Lantern */}
           <div className="absolute left-0 w-[230px] h-[32px] bg-[#78350f] border-y-[4px] border-[#451a03] shadow-[0_6px_0_rgba(0,0,0,0.4)]" style={{ bottom: waterHeight - 30 }}>
-            {/* Pier vertical supports going into water */}
             <div className="absolute top-full left-[20px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
             <div className="absolute top-full left-[110px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
             <div className="absolute top-full left-[200px] w-[12px] h-[80px] bg-[#451a03] border-x-[2px] border-[#290f01] opacity-90" />
-            
-            <div className="absolute top-0 bottom-0 left-[45px] w-[3px] bg-[#451a03]" />
-            <div className="absolute top-0 bottom-0 left-[90px] w-[3px] bg-[#451a03]" />
-            <div className="absolute top-0 bottom-0 left-[135px] w-[3px] bg-[#451a03]" />
-            <div className="absolute top-0 bottom-0 left-[180px] w-[3px] bg-[#451a03]" />
 
-            {/* Tackle Bucket */}
-            <div className="absolute -top-[24px] left-[32px] w-[20px] h-[24px] bg-slate-700 border-[2px] border-black rounded-b-sm">
+            <div className="absolute -top-[24px] left-[32px] w-[20px] h-[24px] bg-slate-700 border-[2px] border-black rounded-b-xs">
               <div className="absolute top-[2px] inset-x-[2px] h-[6px] bg-sky-300" />
             </div>
-            {/* Tackle Box */}
             <div className="absolute -top-[16px] left-[68px] w-[22px] h-[16px] bg-red-600 border-[2px] border-black">
               <div className="absolute top-[2px] left-[6px] w-[10px] h-[3px] bg-yellow-400" />
             </div>
 
-            {/* Glowing Pier Lantern */}
+            {/* Lantern */}
             <div className="absolute -top-[32px] left-[180px] z-20">
               <div className="w-[12px] h-[4px] bg-amber-900 border border-black mx-auto" />
               <div className="w-[16px] h-[18px] bg-amber-300 border-[2px] border-black relative overflow-hidden shadow-[0_0_15px_rgba(251,191,36,0.9)] animate-pulse">
@@ -2587,42 +2256,37 @@ export const FishingGameSection: React.FC = () => {
                 <div className="absolute top-1 left-1.5 w-1 h-2 bg-white rounded-full" />
               </div>
               <div className="w-[20px] h-[4px] bg-amber-950 border border-black mx-auto" />
-              {/* Light beam glow cone */}
               <div className="absolute top-full -left-6 w-16 h-12 bg-gradient-to-b from-amber-300/30 to-transparent pointer-events-none rounded-b-full" />
             </div>
           </div>
 
-          {/* Fisherman Character */}
+          {/* Fisherman */}
           <div className="absolute left-[105px] z-10" style={{ bottom: waterHeight - 5 }}>
-            {/* Wooden Stool */}
             <div className="absolute bottom-[0px] left-[10px] w-[28px] h-[18px] bg-[#451a03] border-[2px] border-black">
               <div className="absolute top-[18px] left-[2px] w-[4px] h-[20px] bg-[#451a03]" />
               <div className="absolute top-[18px] right-[2px] w-[4px] h-[20px] bg-[#451a03]" />
             </div>
 
-            {/* Character Body */}
             <div className="absolute bottom-[16px] left-[12px] w-[20px] h-[22px] bg-blue-800 border-[2px] border-black" />
-            <div className="absolute bottom-[36px] left-[8px] w-[26px] h-[32px] bg-amber-400 border-[2px] border-black rounded-t-sm">
+            <div className="absolute bottom-[36px] left-[8px] w-[26px] h-[32px] bg-amber-400 border-[2px] border-black rounded-t-xs">
               <div className="absolute top-[4px] left-[11px] w-[4px] h-[24px] bg-amber-600" />
             </div>
 
-            {/* Head & Cap */}
             <div className="absolute bottom-[66px] left-[10px] w-[22px] h-[20px] bg-amber-200 border-[2px] border-black">
               <div className="absolute top-[6px] right-[4px] w-[3px] h-[3px] bg-black" />
               <div className="absolute bottom-0 inset-x-0 h-[6px] bg-amber-800" />
             </div>
-            <div className="absolute bottom-[84px] left-[6px] w-[30px] h-[10px] bg-amber-500 border-[2px] border-black rounded-t-md">
+            <div className="absolute bottom-[84px] left-[6px] w-[30px] h-[10px] bg-amber-500 border-[2px] border-black rounded-t-xs">
               <div className="absolute bottom-0 right-[-6px] w-[14px] h-[4px] bg-amber-600" />
             </div>
 
-            {/* Reeling Sweat */}
             {gameState === 'reeling' && (
               <div className="absolute -top-[95px] left-[30px] text-sky-400 font-bold text-xs animate-bounce">
                 💦
               </div>
             )}
 
-            {/* Fisherman Arm & Fishing Rod */}
+            {/* Arm & Rod */}
             <div
               className={`absolute bottom-[48px] left-[20px] origin-[4px_16px] transition-transform duration-200 ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
               style={{ transform: `rotate(${rodAngleDeg}deg)` }}
@@ -2632,12 +2296,9 @@ export const FishingGameSection: React.FC = () => {
               <div className="absolute top-[-4px] left-[16px] w-[28px] h-[8px] bg-amber-900 border-[2px] border-black" />
               <div className="absolute top-[-8px] left-[26px] w-[10px] h-[10px] bg-slate-300 border-[2px] border-black rounded-full" />
 
-              {/* Flexible Curved Rod with dynamic rod skin color */}
               <div
                 className="absolute top-[-3px] left-[42px] w-[165px] h-[4px] border-t border-black shadow-[0_0_4px_rgba(0,0,0,0.5)]"
-                style={{
-                  backgroundColor: RODS_DATABASE.find(r => r.id === equippedRod)?.color || '#facc15',
-                }}
+                style={{ backgroundColor: currentEquippedRodItem.color || '#facc15' }}
               />
               <div className="absolute top-[-3px] left-[205px] w-[10px] h-[4px] bg-red-600">
                 <div ref={rodTipRef} className="absolute top-[2px] right-0 w-[1px] h-[1px] opacity-0 pointer-events-none" />
@@ -2645,7 +2306,7 @@ export const FishingGameSection: React.FC = () => {
             </div>
           </div>
 
-          {/* ================= REAL-TIME FISHING LINE ================= */}
+          {/* Fishing Line */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
             <svg width="800" height={canvasHeight} className="absolute inset-0 pointer-events-none z-20">
               <path
@@ -2663,24 +2324,21 @@ export const FishingGameSection: React.FC = () => {
             </svg>
           )}
 
-          {/* ================= BOBBER & SPLASH PARTICLES ================= */}
+          {/* Bobber & Alert */}
           {(gameState === 'casting' || gameState === 'waiting' || gameState === 'biting' || gameState === 'reeling') && (
             <div
               className={`absolute z-20 flex flex-col items-center justify-center ${gameState === 'waiting' ? 'animate-bobber-float' : ''}`}
               style={{ left: bobberPos.x, top: bobberPos.y, transform: 'translate(-50%, -50%)' }}
             >
               <div className={`relative ${gameState === 'biting' ? 'animate-bounce' : gameState === 'reeling' ? 'animate-[shake_0.15s_infinite]' : ''}`}>
-                {/* Water Ripples */}
                 {(gameState === 'waiting' || gameState === 'biting') && (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[10px] border-[2px] border-sky-200 rounded-full animate-ping opacity-75" />
                 )}
 
-                {/* Bobber Float Graphic */}
                 <div className="w-[10px] h-[4px] bg-yellow-400 mx-auto" />
                 <div className="w-[14px] h-[10px] bg-red-600 border-x border-black" />
                 <div className="w-[14px] h-[10px] bg-white border-x border-b border-black" />
 
-                {/* Biting Alert Overlay */}
                 <AnimatePresence>
                   {gameState === 'biting' && (
                     <motion.div
@@ -2689,11 +2347,11 @@ export const FishingGameSection: React.FC = () => {
                       exit={{ scale: 0 }}
                       className="absolute bottom-[35px] left-1/2 -translate-x-1/2 flex flex-col items-center z-30"
                     >
-                      <div className="bg-red-600 text-yellow-300 font-black text-[28px] px-3 py-1 border-[3px] border-black drop-shadow-[4px_4px_0_rgba(0,0,0,1)] animate-pulse">
+                      <div className="bg-red-600 text-yellow-300 font-black text-[28px] px-3 py-1 border-[3px] border-black shadow-[4px_4px_0_0_#000] animate-pulse">
                         !
                       </div>
                       <div className="text-[9px] font-bold text-white bg-black px-2 py-0.5 mt-1 border border-white whitespace-nowrap">
-                        TAP NOW!
+                        TAP SEKARANG!
                       </div>
                     </motion.div>
                   )}
@@ -2702,7 +2360,7 @@ export const FishingGameSection: React.FC = () => {
             </div>
           )}
 
-          {/* Dynamic Splashes */}
+          {/* Splashes */}
           {splashes.map(sp => (
             <div
               key={sp.id}
@@ -2715,7 +2373,7 @@ export const FishingGameSection: React.FC = () => {
             </div>
           ))}
 
-          {/* Floating Points & Text Pops */}
+          {/* Floating Pops */}
           <AnimatePresence>
             {floatingTexts.map(ft => (
               <motion.div
@@ -2724,7 +2382,7 @@ export const FishingGameSection: React.FC = () => {
                 animate={{ opacity: 1, y: -40, scale: 1.1 }}
                 exit={{ opacity: 0, y: -70 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="absolute pointer-events-none z-40 text-xs font-black drop-shadow-[2px_2px_0_#000] border border-black bg-black/80 px-2.5 py-1 rounded-sm"
+                className="absolute pointer-events-none z-40 text-xs font-black drop-shadow-[2px_2px_0_#000] border border-black bg-black/85 px-2.5 py-1 rounded-xs"
                 style={{ left: ft.x, top: ft.y, color: ft.color, transform: 'translate(-50%, -50%)' }}
               >
                 {ft.text}
@@ -2733,9 +2391,8 @@ export const FishingGameSection: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* ================= INTERACTIVE OVERLAYS & MODALS ================= */}
+        {/* ================= MODALS & STATE OVERLAYS ================= */}
         <AnimatePresence>
-          {/* Fishing Journal Modal */}
           {isJournalOpen && (
             <FishingJournal
               key="journal-modal"
@@ -2747,7 +2404,6 @@ export const FishingGameSection: React.FC = () => {
             />
           )}
 
-          {/* Odds / Rates Modal */}
           {isOddsOpen && (
             <FishingOddsModal
               key="odds-modal"
@@ -2762,7 +2418,6 @@ export const FishingGameSection: React.FC = () => {
             />
           )}
 
-          {/* Shop Modal */}
           {isShopOpen && (
             <FishingShopModal
               key="shop-modal"
@@ -2781,75 +2436,70 @@ export const FishingGameSection: React.FC = () => {
             />
           )}
 
-          {/* Start Screen Modal */}
+          {/* Start Screen */}
           {gameState === 'idle' && !hasStarted && (
             <motion.div
               key="start-screen"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/75 z-40 p-4"
+              className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/75 z-40 p-4 select-none"
               onClick={() => {
                 unlockAudio();
                 playSound('click');
                 startPreparing();
               }}
             >
-              <div className="bg-amber-100 border-[6px] border-black p-6 sm:p-8 shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center max-w-[520px] w-full relative mt-6">
-                <div className="bg-blue-600 text-white border-[4px] border-black py-2.5 px-6 -mt-10 mx-auto inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+              <div className="bg-amber-100 border-[6px] border-black p-6 sm:p-8 shadow-[10px_10px_0_0_#000] text-center max-w-[520px] w-full relative mt-4">
+                <div className="bg-blue-600 text-white border-[4px] border-black py-2.5 px-6 -mt-11 mx-auto inline-block shadow-[4px_4px_0_0_#000]">
                   <h1 className="text-[18px] sm:text-[22px] font-black tracking-wider text-yellow-300 drop-shadow-[2px_2px_0_#000]">
-                    PIXEL FISHING PRO
+                    ENCORE FISHING PRO
                   </h1>
                 </div>
 
-                <div className="mt-6 space-y-3 text-[10px] font-bold text-slate-800 text-left bg-amber-50 p-4 border-[3px] border-black leading-relaxed">
+                <div className="mt-5 space-y-2 text-[9.5px] font-bold text-slate-800 text-left bg-amber-50 p-3.5 border-[3px] border-black leading-relaxed">
                   <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[9px]">1</span>
-                    <span>Tahan layar untuk mengisi Power lemparan.</span>
+                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">1</span>
+                    <span>Tahan layar untuk mengisi Tenaga lemparan.</span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[9px]">2</span>
-                    <span>Lepas layar untuk melempar umpan kail.</span>
+                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">2</span>
+                    <span>Lepas di zona <strong className="text-amber-800">PERFECT (80-95%)</strong> untuk strike cepat.</span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[9px]">3</span>
-                    <span>Tunggu tanda (<span className="text-red-600 font-black text-sm">!</span>) muncul di air.</span>
+                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">3</span>
+                    <span>Saat tanda (<span className="text-red-600 font-black text-sm">!</span>) muncul, segera TAP layar!</span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[9px]">4</span>
-                    <span>Segera TAP saat ikan menggigit!</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[9px]">5</span>
-                    <span>TAP cepat berulang kali untuk menarik ikan.</span>
+                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">4</span>
+                    <span>TAP cepat berulang kali untuk menarik ikan ke perahu.</span>
                   </p>
                 </div>
 
-                <div className="mt-6 bg-blue-600 text-white font-bold text-xs py-3.5 border-[4px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] animate-pulse cursor-pointer">
-                  TAP LAYAR UNTUK MULAI
+                <div className="mt-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs py-3 border-[4px] border-black shadow-[4px_4px_0_0_#000] animate-pulse cursor-pointer">
+                  KLIK / TAP UNTUK MEMULAI
                 </div>
               </div>
             </motion.div>
           )}
 
-          {/* Fullscreen Celebration Screen Flash */}
+          {/* Flash screen on catch */}
           {flashScreen && (
             <div className="absolute inset-0 bg-white z-[60] pointer-events-none animate-ping" />
           )}
 
-          {/* Catch Result Modal - Ultra Enhanced for High / Mythic / Legendary Rarity */}
+          {/* Catch Result Celebration Modal */}
           {gameState === 'caught' && fish && fishStats && (
             <motion.div
               key="catch-modal"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/92 z-50 p-3 sm:p-4 overflow-hidden"
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-50 p-3 sm:p-4 overflow-hidden select-none"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              {/* Organic Celestial Aurora & Nebula Glows (No harsh rotating square) */}
+              {/* Aurora background */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
-                {/* Multi-layered soft atmospheric glow */}
                 <div
                   className={`w-[520px] h-[520px] rounded-full blur-3xl opacity-60 animate-pulse ${
                     fish.rarity === 'Mitos'
@@ -2859,22 +2509,15 @@ export const FishingGameSection: React.FC = () => {
                       : 'bg-gradient-to-tr from-sky-500 to-emerald-400'
                   }`}
                 />
-                <div
-                  className="w-[360px] h-[360px] rounded-full blur-2xl opacity-40 bg-cyan-400 animate-pulse"
-                  style={{ animationDelay: '1.2s' }}
-                />
-
-                {/* Subtle Ethereal Halo Rings for Mythic/Legendary */}
                 {(fish.rarity === 'Mitos' || fish.rarity === 'Legendaris') && (
                   <>
                     <div className="absolute w-[420px] h-[420px] rounded-full border border-amber-400/30 animate-[divineRing_24s_linear_infinite]" />
-                    <div className="absolute w-[500px] h-[500px] rounded-full border border-purple-400/20 border-dashed animate-[divineRing_36s_linear_infinite_reverse]" />
                     <div className="absolute w-[300px] h-[300px] rounded-full border-[3px] border-amber-300/40 animate-shockwave" />
                   </>
                 )}
               </div>
 
-              {/* Fullscreen Celebration Confetti & Sparkles */}
+              {/* Confetti particles */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                 {confettiParticles.map(p => (
                   <div
@@ -2893,23 +2536,23 @@ export const FishingGameSection: React.FC = () => {
                 ))}
               </div>
 
-              {/* Main Trophy Card */}
+              {/* Trophy Card */}
               <motion.div
                 initial={{ scale: 0.35, y: 35, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 transition={{ type: 'spring', damping: 15, stiffness: 190 }}
                 className={`bg-amber-100 border-[6px] ${
                   fish.rarity === 'Mitos'
-                    ? 'border-purple-600 shadow-[0_0_60px_rgba(168,85,247,0.9),0_0_100px_rgba(234,179,8,0.6),10px_10px_0_0_#000]'
+                    ? 'border-purple-600 shadow-[0_0_60px_rgba(168,85,247,0.9),10px_10px_0_0_#000]'
                     : fish.rarity === 'Legendaris'
                     ? 'border-amber-500 shadow-[0_0_50px_rgba(234,179,8,0.8),10px_10px_0_0_#000]'
-                    : 'border-black shadow-[10px_10px_0_0_rgba(0,0,0,1)]'
+                    : 'border-black shadow-[10px_10px_0_0_#000]'
                 } p-5 sm:p-6 w-full max-w-[440px] text-slate-900 text-center relative z-10 flex flex-col max-h-[580px] overflow-hidden`}
               >
-                <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-2">
+                <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-1">
                   {/* Grand Banner */}
                   <div
-                    className={`py-2.5 px-4 mb-2.5 inline-block shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-[4px] border-black ${
+                    className={`py-2 px-4 mb-2.5 inline-block shadow-[4px_4px_0_0_#000] border-[4px] border-black ${
                       fish.rarity === 'Mitos'
                         ? 'bg-gradient-to-r from-purple-800 via-pink-600 to-amber-500 text-white animate-pulse'
                         : fish.rarity === 'Legendaris'
@@ -2917,95 +2560,82 @@ export const FishingGameSection: React.FC = () => {
                         : 'bg-emerald-600 text-white'
                     }`}
                   >
-                    <h2 className="text-[13px] sm:text-[15px] font-black text-yellow-300 flex items-center justify-center gap-1.5 tracking-wide">
+                    <h2 className="text-[12px] sm:text-[14px] font-black text-yellow-300 flex items-center justify-center gap-1.5 tracking-wide">
                       {fish.rarity === 'Mitos' ? (
-                        <>⭐ 👑 SANG MAHA MITOS DEWA SAMUDRA! 👑 ⭐</>
+                        <>⭐ 👑 MAHA MITOS DEWA SAMUDRA! 👑 ⭐</>
                       ) : fish.rarity === 'Legendaris' ? (
                         <>👑 🏆 TANGKAPAN LEGENDARIS! 🏆 👑</>
                       ) : (
-                        <><Sparkles className="w-5 h-5 text-yellow-300" /> TERTANGKAP!</>
+                        <><Sparkles className="w-4 h-4 text-yellow-300" /> TERTANGKAP!</>
                       )}
                     </h2>
                   </div>
 
-                  {/* Mythic Lore Pill Tag */}
-                  {fish.rarity === 'Mitos' && (
-                    <div className="mb-2">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-purple-950 text-amber-300 border-[2px] border-amber-400 text-[8px] font-black tracking-widest shadow-sm">
-                        ⚡ PUSAKA SAMUDRA PURBA (1% ODDS) ⚡
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Fish Showcase Pedestal with Floating Animation */}
+                  {/* Showcase Pedestal */}
                   <div className="flex justify-center my-2">
                     <div
-                      className={`w-[140px] h-[140px] border-[4px] ${
+                      className={`w-[130px] h-[130px] border-[4px] ${
                         fish.rarity === 'Mitos'
                           ? 'border-purple-600 bg-gradient-to-tr from-slate-950 via-purple-950 to-indigo-950 shadow-[0_0_35px_rgba(168,85,247,0.9)]'
                           : fish.rarity === 'Legendaris'
                           ? 'border-amber-500 bg-gradient-to-tr from-amber-200 to-yellow-100 shadow-[0_0_25px_rgba(234,179,8,0.8)]'
                           : 'border-black bg-gradient-to-b from-sky-100 to-amber-100'
-                      } shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center p-2 relative overflow-hidden`}
+                      } shadow-[5px_5px_0_0_#000] flex items-center justify-center p-2 relative overflow-hidden`}
                     >
-                      {/* Ambient Caustic Ripples inside Pedestal for Mythic */}
-                      {fish.rarity === 'Mitos' && (
-                        <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-300/30 via-purple-500/20 to-transparent" />
-                      )}
-
                       <motion.div
                         animate={{ y: [-5, 5, -5], rotate: [-4, 4, -4] }}
                         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                         className="relative z-10"
                       >
-                        <FishGraphic id={fish.id} size={115} />
+                        <FishGraphic id={fish.id} size={105} />
                       </motion.div>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 mb-3">
-                    <h3 className="text-[15px] sm:text-[17px] font-black text-slate-900">{fish.name}</h3>
+                  {/* Stats & Details */}
+                  <div className="space-y-1.5 mb-2.5">
+                    <h3 className="text-[14px] sm:text-[16px] font-black text-slate-900">{fish.name}</h3>
                     <div
-                      className="inline-block px-3 py-1 text-slate-900 border-[2px] border-black text-[10px] font-black uppercase tracking-wider"
+                      className="inline-block px-3 py-0.5 text-slate-900 border-[2px] border-black text-[9px] font-black uppercase tracking-wider"
                       style={{ backgroundColor: fish.badgeBg }}
                     >
                       RARITY: {fish.rarity}
                     </div>
-                    <p className="text-[10px] text-slate-700 italic px-2 mt-1 leading-snug">{fish.description}</p>
+                    <p className="text-[9.5px] text-slate-700 italic px-2 mt-0.5 leading-snug">{fish.description}</p>
 
-                    <div className="flex justify-center gap-3 mt-2 text-[10px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
+                    <div className="flex justify-center gap-3 mt-2 text-[9.5px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
                       <span>BERAT: <strong className="text-blue-700">{fishStats.weight} kg</strong></span>
                       <span>PANJANG: <strong className="text-blue-700">{fishStats.length} cm</strong></span>
                     </div>
 
-                    <div className="flex justify-center items-center gap-3 mt-2 text-[10px] font-black">
-                      <span className="text-emerald-800 bg-emerald-100 px-2.5 py-1 border border-emerald-800 shadow-sm">
+                    <div className="flex justify-center items-center gap-3 mt-2 text-[9.5px] font-black">
+                      <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 border border-emerald-800 shadow-xs">
                         + {fish.points} PTS
                       </span>
-                      <span className="text-amber-900 bg-amber-200 px-2.5 py-1 border border-amber-800 shadow-sm">
+                      <span className="text-amber-900 bg-amber-200 px-2 py-0.5 border border-amber-800 shadow-xs">
                         🪙 +{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} KOIN
                       </span>
                     </div>
                   </div>
 
-                  {/* Accidental Click Protection & Action Area */}
+                  {/* Actions */}
                   {!caughtActionUnlocked ? (
-                    <div className="mt-4 py-3 px-4 bg-slate-900 border-[3px] border-amber-400 text-yellow-300 text-[10px] font-black tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.5)]">
+                    <div className="mt-3 py-2.5 px-4 bg-slate-900 border-[3px] border-amber-400 text-yellow-300 text-[9.5px] font-black tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.5)]">
                       <Sparkles className="w-4 h-4 animate-spin text-amber-400" />
-                      <span className="animate-pulse">✨ MEMBUKA KEAJAIBAN TANGKAPAN...</span>
+                      <span className="animate-pulse">✨ MEMBUKA HASIL TANGKAPAN...</span>
                     </div>
                   ) : sellConfirmation ? (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mt-3 p-3 bg-red-950/95 border-[3px] border-red-500 text-white space-y-2 shadow-[0_0_25px_rgba(239,68,68,0.7)]"
+                      className="mt-2 p-3 bg-red-950 border-[3px] border-red-500 text-white space-y-2 shadow-[0_0_25px_rgba(239,68,68,0.7)]"
                     >
-                      <div className="flex items-center justify-center gap-1.5 text-red-400 text-[11px] font-black">
+                      <div className="flex items-center justify-center gap-1.5 text-red-400 text-[10.5px] font-black">
                         <Shield className="w-4 h-4 text-amber-400" />
                         <span>KONFIRMASI JUAL IKAN LANGKA</span>
                       </div>
-                      <p className="text-[9px] text-slate-200 leading-snug">
-                        Ikan <strong>{fish.name}</strong> ({fish.rarity}) sangat langka dan berharga. Yakin ingin menjualnya seharga <strong>+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} 🪙</strong>?
+                      <p className="text-[8.5px] text-slate-200 leading-snug">
+                        Ikan <strong>{fish.name}</strong> ({fish.rarity}) sangat bernilai. Yakin ingin menjualnya seharga <strong>+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} 🪙</strong>?
                       </p>
                       <div className="flex gap-2 pt-1">
                         <button
@@ -3014,7 +2644,7 @@ export const FishingGameSection: React.FC = () => {
                             playSound('click');
                             setSellConfirmation(false);
                           }}
-                          className="flex-1 py-2.5 bg-amber-400 text-slate-950 border-[3px] border-black font-black text-[10px] hover:bg-amber-300 shadow-[3px_3px_0_0_#000] cursor-pointer active:translate-y-0.5"
+                          className="flex-1 py-2 bg-amber-400 text-slate-950 border-[2px] border-black font-black text-[9px] hover:bg-amber-300 shadow-[2px_2px_0_0_#000] cursor-pointer"
                         >
                           BATAL (SIMPAN)
                         </button>
@@ -3027,32 +2657,30 @@ export const FishingGameSection: React.FC = () => {
                             triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
                             setGameState('idle');
                           }}
-                          className="flex-1 py-2.5 bg-red-600 text-white border-[3px] border-black font-black text-[10px] hover:bg-red-500 shadow-[3px_3px_0_0_#000] cursor-pointer active:translate-y-0.5"
+                          className="flex-1 py-2 bg-red-600 text-white border-[2px] border-black font-black text-[9px] hover:bg-red-500 shadow-[2px_2px_0_0_#000] cursor-pointer"
                         >
-                          YA, TETAP JUAL
+                          TETAP JUAL
                         </button>
                       </div>
                     </motion.div>
                   ) : (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex gap-3 mt-4"
+                      className="flex gap-2.5 mt-3"
                     >
-                      {/* Main Primary Action: SIMPAN KE JURNAL (Gold Pulsating) */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           playSound('click');
                           setGameState('idle');
                         }}
-                        className="flex-1 py-3.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 border-[4px] border-black font-black text-xs hover:brightness-110 transition-all shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer flex items-center justify-center gap-1.5"
+                        className="flex-1 py-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 border-[3px] border-black font-black text-xs hover:brightness-110 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5"
                       >
                         <Check className="w-4 h-4 text-emerald-800" />
                         <span>SIMPAN KE JURNAL</span>
                       </button>
 
-                      {/* Secondary Action: JUAL */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -3067,7 +2695,7 @@ export const FishingGameSection: React.FC = () => {
                             setGameState('idle');
                           }
                         }}
-                        className="py-3.5 px-3 sm:px-4 bg-emerald-600 text-white border-[4px] border-black font-black text-xs hover:bg-emerald-500 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer flex items-center gap-1"
+                        className="py-3 px-3 sm:px-4 bg-emerald-600 text-white border-[3px] border-black font-black text-xs hover:bg-emerald-500 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer flex items-center gap-1"
                       >
                         <Coins className="w-3.5 h-3.5 text-yellow-300" />
                         <span>JUAL (+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))}🪙)</span>
@@ -3079,27 +2707,27 @@ export const FishingGameSection: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Escape Result Modal */}
+          {/* Escaped Screen */}
           {gameState === 'escaped' && (
             <motion.div
               key="escape-modal"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4"
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4 select-none"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="bg-red-700 border-[6px] border-black p-6 w-full max-w-[420px] text-white shadow-[10px_10px_0_0_rgba(0,0,0,1)] text-center relative">
-                <h2 className="text-[20px] font-black mb-4 text-yellow-300 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">
+              <div className="bg-red-700 border-[5px] border-black p-5 sm:p-6 w-full max-w-[400px] text-white shadow-[8px_8px_0_0_#000] text-center relative">
+                <h2 className="text-[18px] font-black mb-3 text-yellow-300 drop-shadow-[2px_2px_0_#000]">
                   IKAN LEPAS...
                 </h2>
 
-                <div className="flex justify-center my-4">
-                  <div className="w-[90px] h-[90px] border-[4px] border-black bg-slate-900 flex items-center justify-center shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                    <AlertCircle className="w-[50px] h-[50px] text-amber-400" />
+                <div className="flex justify-center my-3">
+                  <div className="w-[80px] h-[80px] border-[3px] border-black bg-slate-900 flex items-center justify-center shadow-sm">
+                    <AlertCircle className="w-[45px] h-[45px] text-amber-400" />
                   </div>
                 </div>
 
-                <div className="text-[10px] font-bold bg-red-900/80 p-3 border-[2px] border-black mb-6 leading-relaxed">
+                <div className="text-[9.5px] font-bold bg-red-900/90 p-2.5 border-[2px] border-black mb-4 leading-relaxed">
                   {escapeReason === 'early' && 'Terlalu Cepat! Kamu menarik kail sebelum ikan menggigit.'}
                   {escapeReason === 'missed' && 'Terlalu Lambat! Ikan keburu kabur memakan umpan.'}
                   {escapeReason === 'failed' && 'Tenaga Ikan Terlalu Kuat! Tarikanmu kalah kencang.'}
@@ -3111,7 +2739,7 @@ export const FishingGameSection: React.FC = () => {
                     playSound('click');
                     setGameState('idle');
                   }}
-                  className="w-full py-3.5 bg-white text-slate-900 border-[4px] border-black font-black text-xs hover:bg-slate-200 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer"
+                  className="w-full py-3 bg-white text-slate-900 border-[3px] border-black font-black text-xs hover:bg-slate-100 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer"
                 >
                   COBA LAGI
                 </button>
