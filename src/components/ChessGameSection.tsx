@@ -491,7 +491,7 @@ export const ChessGameSection: React.FC = () => {
 
       if (newChess.isCheckmate()) {
         playAudioEffect('gameover');
-      } else if (newChess.inCheck()) {
+      } else if (newChess.isCheck()) {
         playAudioEffect('check');
       } else {
         playAudioEffect('move');
@@ -603,7 +603,7 @@ export const ChessGameSection: React.FC = () => {
 
               if (newGame.isCheckmate()) {
                 playAudioEffect('gameover');
-              } else if (newGame.inCheck()) {
+              } else if (newGame.isCheck()) {
                 playAudioEffect('check');
               } else if (moveResult.captured) {
                 playAudioEffect('capture');
@@ -679,7 +679,7 @@ export const ChessGameSection: React.FC = () => {
           if (newGame.isCheckmate()) {
             playAudioEffect('gameover');
             setGameResult(newGame.turn() === 'w' ? 'Black wins by Checkmate!' : 'White wins by Checkmate!');
-          } else if (newGame.inCheck()) {
+          } else if (newGame.isCheck()) {
             playAudioEffect('check');
           } else if (moveResult.captured) {
             playAudioEffect('capture');
@@ -910,7 +910,7 @@ export const ChessGameSection: React.FC = () => {
 
     // Check indicator on King
     const isKingInCheck =
-      game.inCheck() &&
+      game.isCheck() &&
       piece &&
       piece.type === 'k' &&
       piece.color === game.turn();
@@ -1390,12 +1390,12 @@ export const ChessGameSection: React.FC = () => {
                 </div>
                 <span
                   className={`px-2.5 py-1 rounded-full font-mono text-[11px] font-bold ${
-                    game.inCheck()
+                    game.isCheck()
                       ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
                       : 'bg-[#FFF5D7] dark:bg-slate-800 text-[#E195AB] dark:text-[#FFCCE1] border border-[#FFCCE1]/50 dark:border-slate-700'
                   }`}
                 >
-                  {game.inCheck()
+                  {game.isCheck()
                     ? 'CHECK!'
                     : `${game.turn() === 'w' ? 'White' : 'Black'}'s Turn`}
                 </span>
