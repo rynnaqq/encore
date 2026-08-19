@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Users, Plus, Hash, Trophy, Copy, Check, User, Activity, RefreshCw, AlertCircle, Database, Cloud, Clock } from 'lucide-react';
 import { getSupabaseCredentials } from '../lib/supabaseClient';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
