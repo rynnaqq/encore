@@ -1,13 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins, ShoppingBag, BarChart3, CloudRain, Zap, Check, Shield } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX, Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins, ShoppingBag, BarChart3, CloudRain, Zap, Check, Shield, Crown, Settings2, Sliders, Cloud, RefreshCw, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isAdminName, AdminBadge } from './AdminBadge';
 import { FishGraphic } from './FishGraphic';
 import { playFishingSound, unlockAudio, FishingSoundType } from '../lib/fishingAudio';
 
 type GameState = 'idle' | 'preparing' | 'casting' | 'waiting' | 'biting' | 'reeling' | 'caught' | 'escaped';
-type TimeOfDay = 'pagi' | 'senja' | 'malam' | 'badai';
+export type TimeOfDay = 'pagi' | 'siang' | 'senja' | 'malam';
+export type WeatherType = 'cerah' | 'berawan' | 'hujan' | 'badai' | 'kabut_mistis';
+
+export interface AdminOddsConfig {
+  enabled: boolean;
+  mythic: number; // 0 - 1.0 (e.g. 0.5 for 50%)
+  legendary: number;
+  epic: number;
+  rare: number;
+  common: number;
+}
 
 interface FloatingText {
   id: string;
@@ -56,85 +67,116 @@ export interface BaitItem {
 }
 
 export const RODS_DATABASE: RodItem[] = [
-  { id: 'bamboo', name: 'Joran Bambu Klasik', price: 0, icon: '🎋', description: 'Joran tradisional dari bambu petung pilihan.', reelSpeedBonus: 0, strengthBonus: 0, luckBonus: 0, color: '#eab308' },
-  { id: 'carbon', name: 'Joran Serat Karbon Pro', price: 500, icon: '🎣', description: 'Ringan & lentur, kecepatan tarik +25% & ketahanan +20%.', reelSpeedBonus: 0.25, strengthBonus: 0.20, luckBonus: 0.15, color: '#38bdf8' },
-  { id: 'gold', name: 'Joran Naga Emas Hoki', price: 1500, icon: '🔱', description: 'Berlapis emas murni, peluang ikan Langka & Koin +50%.', reelSpeedBonus: 0.40, strengthBonus: 0.35, luckBonus: 0.40, color: '#facc15' },
-  { id: 'poseidon', name: 'Trisula Poseidon Atlantis', price: 4000, icon: '⚡', description: 'Pusaka dewa samudra, peluang Mitos +150% & Auto-Reel Burst!', reelSpeedBonus: 0.65, strengthBonus: 0.50, luckBonus: 0.90, color: '#a855f7' }
+  { id: 'bamboo', name: 'Joran Bambu Klasik', price: 0, icon: '🎋', description: 'Joran tradisional bambu petung pilihan.', reelSpeedBonus: 0, strengthBonus: 0, luckBonus: 0, color: '#eab308' },
+  { id: 'carbon', name: 'Joran Serat Karbon Pro', price: 1200, icon: '🎣', description: 'Ringan & lentur, kecepatan tarik +25% & ketahanan +20%.', reelSpeedBonus: 0.25, strengthBonus: 0.20, luckBonus: 0.15, color: '#38bdf8' },
+  { id: 'gold', name: 'Joran Naga Emas Hoki', price: 4500, icon: '🔱', description: 'Berlapis emas murni, peluang ikan Langka & Koin +50%.', reelSpeedBonus: 0.40, strengthBonus: 0.35, luckBonus: 0.40, color: '#facc15' },
+  { id: 'poseidon', name: 'Trisula Poseidon Atlantis', price: 15000, icon: '⚡', description: 'Pusaka dewa samudra, peluang Mitos +150% & Auto-Reel Burst!', reelSpeedBonus: 0.65, strengthBonus: 0.50, luckBonus: 0.90, color: '#a855f7' },
+  { id: 'cosmic', name: 'Tongkat Bintang Shenlong', price: 50000, icon: '🌌', description: 'Artefak langit tak terbatas! Tarikan +80%, Koin x2 & Hoki Mitos Ekstrem!', reelSpeedBonus: 0.80, strengthBonus: 0.70, luckBonus: 1.60, color: '#ec4899' }
 ];
 
 export const BAITS_DATABASE: BaitItem[] = [
   { id: 'worm', name: 'Cacing Tanah', price: 0, icon: '🪱', description: 'Umpan dasar tak terbatas.', biteSpeedBonus: 0, rareBonus: 0, mythicBonus: 0 },
-  { id: 'pellet', name: 'Pelet Aroma Master', price: 30, icon: '🧆', description: 'Ikan menyambar 50% lebih cepat.', biteSpeedBonus: 0.5, rareBonus: 0.15, mythicBonus: 0 },
-  { id: 'shrimp', name: 'Udang Laut Fosfor', price: 80, icon: '🦐', description: 'Peluang ikan Langka & Sangat Langka meningkat drastis.', biteSpeedBonus: 0.35, rareBonus: 0.45, mythicBonus: 0.15 },
-  { id: 'star', name: 'Umpan Bintang Mitos', price: 200, icon: '⭐', description: 'Memikat ikan Legendaris & Mitos Purba dari kedalaman.', biteSpeedBonus: 0.45, rareBonus: 0.70, mythicBonus: 0.85 }
+  { id: 'pellet', name: 'Pelet Aroma Master', price: 80, icon: '🧆', description: 'Ikan menyambar 50% lebih cepat.', biteSpeedBonus: 0.5, rareBonus: 0.15, mythicBonus: 0 },
+  { id: 'shrimp', name: 'Udang Laut Fosfor', price: 350, icon: '🦐', description: 'Peluang ikan Langka & Sangat Langka meningkat drastis.', biteSpeedBonus: 0.35, rareBonus: 0.45, mythicBonus: 0.15 },
+  { id: 'star', name: 'Umpan Bintang Mitos', price: 1500, icon: '⭐', description: 'Memikat ikan Legendaris & Mitos Purba dari kedalaman.', biteSpeedBonus: 0.45, rareBonus: 0.70, mythicBonus: 0.85 },
+  { id: 'nectar', name: 'Nektar Dewa Samudra', price: 5000, icon: '🍯', description: 'Aroma sakral penarik makhluk Mitos dan Dewa tertinggi.', biteSpeedBonus: 0.60, rareBonus: 1.10, mythicBonus: 2.00 }
 ];
 
 export const FISH_DATABASE: FishType[] = [
-  // Biasa (Common)
-  { id: 'shoe', name: 'Sepatu Boots Tua', rarity: 'Biasa', color: '#a8a29e', secondaryColor: '#57534e', badgeBg: '#e7e5e4', difficulty: 0.35, minWeight: 0.3, maxWeight: 0.9, points: 25, coins: 12, description: 'Boot tua basah yang tersangkut di dasar sungai.' },
-  { id: 'teri', name: 'Ikan Teri Neon', rarity: 'Biasa', color: '#38bdf8', secondaryColor: '#0284c7', badgeBg: '#e0f2fe', difficulty: 0.6, minWeight: 0.1, maxWeight: 0.4, points: 50, coins: 25, description: 'Ikan hias mungil berkilau biru neon saat terkena cahaya.' },
-  { id: 'nila', name: 'Ikan Nila Emas', rarity: 'Biasa', color: '#facc15', secondaryColor: '#ca8a04', badgeBg: '#fef9c3', difficulty: 1.0, minWeight: 0.8, maxWeight: 2.8, points: 100, coins: 50, description: 'Sisiknya kuning berkilau seperti emas murni.' },
-  { id: 'mujair', name: 'Ikan Mujair Bintik', rarity: 'Biasa', color: '#64748b', secondaryColor: '#334155', badgeBg: '#f1f5f9', difficulty: 0.8, minWeight: 0.5, maxWeight: 1.5, points: 80, coins: 40, description: 'Ikan air tawar yang tangguh dan mudah berkembang biak.' },
-  { id: 'wader', name: 'Ikan Wader Pari', rarity: 'Biasa', color: '#cbd5e1', secondaryColor: '#94a3b8', badgeBg: '#f8fafc', difficulty: 0.5, minWeight: 0.05, maxWeight: 0.2, points: 40, coins: 20, description: 'Ikan kecil perak yang hidup bergerombol di perairan dangkal.' },
-  { id: 'sepat', name: 'Ikan Sepat Rawa', rarity: 'Biasa', color: '#9ca3af', secondaryColor: '#4b5563', badgeBg: '#f3f4f6', difficulty: 0.65, minWeight: 0.1, maxWeight: 0.3, points: 35, coins: 18, description: 'Suka bersembunyi di balik tanaman air.' },
-  { id: 'kepiting', name: 'Kepiting Kecil', rarity: 'Biasa', color: '#f87171', secondaryColor: '#b91c1c', badgeBg: '#fef2f2', difficulty: 0.9, minWeight: 0.2, maxWeight: 0.8, points: 60, coins: 30, description: 'Suka mencapit umpanmu dengan capitnya yang kecil.' },
-  { id: 'ranting', name: 'Ranting Pohon', rarity: 'Biasa', color: '#78350f', secondaryColor: '#451a03', badgeBg: '#fffbeb', difficulty: 0.2, minWeight: 0.5, maxWeight: 2.0, points: 10, coins: 5, description: 'Hanya sepotong kayu yang tersangkut.' },
-  { id: 'kaleng', name: 'Kaleng Bekas', rarity: 'Biasa', color: '#94a3b8', secondaryColor: '#475569', badgeBg: '#f8fafc', difficulty: 0.3, minWeight: 0.1, maxWeight: 0.5, points: 15, coins: 8, description: 'Sampah yang terbuang. Jagalah kebersihan lingkungan!' },
-  { id: 'betik', name: 'Ikan Betik', rarity: 'Biasa', color: '#65a30d', secondaryColor: '#3f6212', badgeBg: '#f7fee7', difficulty: 0.7, minWeight: 0.2, maxWeight: 0.6, points: 55, coins: 28, description: 'Ikan kuat yang bisa hidup di air keruh.' },
-  { id: 'guppy', name: 'Ikan Guppy Pelangi', rarity: 'Biasa', color: '#f472b6', secondaryColor: '#ec4899', badgeBg: '#fdf2f8', difficulty: 0.55, minWeight: 0.05, maxWeight: 0.2, points: 65, coins: 32, description: 'Ekornya mekar indah seperti kipas beraneka warna.' },
-  { id: 'keong', name: 'Keong Emas Sawah', rarity: 'Biasa', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 0.25, minWeight: 0.1, maxWeight: 0.4, points: 30, coins: 15, description: 'Cangkang keong kuning mengkilap di dasar lumpur.' },
+  // Biasa (Common) - Harga rendah sengit
+  { id: 'shoe', name: 'Sepatu Boots Tua', rarity: 'Biasa', color: '#a8a29e', secondaryColor: '#57534e', badgeBg: '#e7e5e4', difficulty: 0.45, minWeight: 0.3, maxWeight: 0.9, points: 10, coins: 3, description: 'Boot tua basah yang tersangkut di dasar sungai.' },
+  { id: 'kaleng', name: 'Kaleng Bekas', rarity: 'Biasa', color: '#94a3b8', secondaryColor: '#475569', badgeBg: '#f8fafc', difficulty: 0.35, minWeight: 0.1, maxWeight: 0.5, points: 8, coins: 2, description: 'Sampah yang terbuang. Jagalah kebersihan lingkungan!' },
+  { id: 'ranting', name: 'Ranting Pohon', rarity: 'Biasa', color: '#78350f', secondaryColor: '#451a03', badgeBg: '#fffbeb', difficulty: 0.3, minWeight: 0.5, maxWeight: 2.0, points: 5, coins: 2, description: 'Hanya sepotong kayu yang tersangkut.' },
+  { id: 'keong', name: 'Keong Emas Sawah', rarity: 'Biasa', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 0.45, minWeight: 0.1, maxWeight: 0.4, points: 15, coins: 5, description: 'Cangkang keong kuning mengkilap di dasar lumpur.' },
+  { id: 'sepat', name: 'Ikan Sepat Rawa', rarity: 'Biasa', color: '#9ca3af', secondaryColor: '#4b5563', badgeBg: '#f3f4f6', difficulty: 0.6, minWeight: 0.1, maxWeight: 0.3, points: 20, coins: 7, description: 'Suka bersembunyi di balik tanaman air.' },
+  { id: 'wader', name: 'Ikan Wader Pari', rarity: 'Biasa', color: '#cbd5e1', secondaryColor: '#94a3b8', badgeBg: '#f8fafc', difficulty: 0.55, minWeight: 0.05, maxWeight: 0.2, points: 25, coins: 9, description: 'Ikan kecil perak yang hidup bergerombol di perairan dangkal.' },
+  { id: 'teri', name: 'Ikan Teri Neon', rarity: 'Biasa', color: '#38bdf8', secondaryColor: '#0284c7', badgeBg: '#e0f2fe', difficulty: 0.65, minWeight: 0.1, maxWeight: 0.4, points: 30, coins: 11, description: 'Ikan hias mungil berkilau biru neon saat terkena cahaya.' },
+  { id: 'mujair', name: 'Ikan Mujair Bintik', rarity: 'Biasa', color: '#64748b', secondaryColor: '#334155', badgeBg: '#f1f5f9', difficulty: 0.8, minWeight: 0.5, maxWeight: 1.5, points: 40, coins: 14, description: 'Ikan air tawar yang tangguh dan mudah berkembang biak.' },
+  { id: 'betik', name: 'Ikan Betik', rarity: 'Biasa', color: '#65a30d', secondaryColor: '#3f6212', badgeBg: '#f7fee7', difficulty: 0.75, minWeight: 0.2, maxWeight: 0.6, points: 35, coins: 13, description: 'Ikan kuat yang bisa hidup di air keruh.' },
+  { id: 'nila', name: 'Ikan Nila Emas', rarity: 'Biasa', color: '#facc15', secondaryColor: '#ca8a04', badgeBg: '#fef9c3', difficulty: 0.95, minWeight: 0.8, maxWeight: 2.8, points: 55, coins: 18, description: 'Sisiknya kuning berkilau seperti emas murni.' },
+  { id: 'kepiting', name: 'Kepiting Kecil', rarity: 'Biasa', color: '#f87171', secondaryColor: '#b91c1c', badgeBg: '#fef2f2', difficulty: 0.9, minWeight: 0.2, maxWeight: 0.8, points: 48, coins: 16, description: 'Suka mencapit umpanmu dengan capitnya yang kecil.' },
+  { id: 'guppy', name: 'Ikan Guppy Pelangi', rarity: 'Biasa', color: '#f472b6', secondaryColor: '#ec4899', badgeBg: '#fdf2f8', difficulty: 0.7, minWeight: 0.05, maxWeight: 0.2, points: 50, coins: 18, description: 'Ekornya mekar indah seperti kipas beraneka warna.' },
   
-  // Langka (Rare)
-  { id: 'lele', name: 'Ikan Lele Raksasa', rarity: 'Langka', color: '#475569', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 1.6, minWeight: 3.5, maxWeight: 8.5, points: 250, coins: 120, description: 'Kumisnya panjang dan perlawanannya sangat sengit!' },
-  { id: 'gabus', name: 'Ikan Gabus Loreng', rarity: 'Langka', color: '#4d7c0f', secondaryColor: '#14532d', badgeBg: '#f0fdf4', difficulty: 1.8, minWeight: 2.0, maxWeight: 6.5, points: 300, coins: 150, description: 'Predator air tawar dengan gigi tajam dan corak loreng.' },
-  { id: 'gurame', name: 'Gurame Padang', rarity: 'Langka', color: '#fb923c', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.4, minWeight: 2.5, maxWeight: 5.0, points: 280, coins: 140, description: 'Pipih, lezat, dan memiliki warna cerah memikat.' },
-  { id: 'patin', name: 'Ikan Patin Sungai', rarity: 'Langka', color: '#cbd5e1', secondaryColor: '#64748b', badgeBg: '#f8fafc', difficulty: 1.5, minWeight: 2.0, maxWeight: 10.0, points: 260, coins: 130, description: 'Dagingnya tebal dan tarikannya cukup kuat.' },
-  { id: 'kura', name: 'Kura-kura Sungai', rarity: 'Langka', color: '#166534', secondaryColor: '#064e3b', badgeBg: '#f0fdf4', difficulty: 1.9, minWeight: 1.5, maxWeight: 4.0, points: 320, coins: 160, description: 'Tempurungnya keras, sangat berat saat ditarik.' },
-  { id: 'belut', name: 'Belut Listrik', rarity: 'Langka', color: '#eab308', secondaryColor: '#854d0e', badgeBg: '#fefce8', difficulty: 2.0, minWeight: 1.0, maxWeight: 3.5, points: 350, coins: 180, description: 'Hati-hati! Ikan ini bisa memberikan sengatan kecil.' },
-  { id: 'udang', name: 'Udang Galah Raksasa', rarity: 'Langka', color: '#f97316', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.7, minWeight: 0.5, maxWeight: 1.5, points: 290, coins: 145, description: 'Capitnya panjang berwarna biru, rasanya pasti lezat.' },
-  { id: 'channa', name: 'Ikan Channa Maru', rarity: 'Langka', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fef3c7', difficulty: 2.1, minWeight: 1.8, maxWeight: 5.5, points: 380, coins: 195, description: 'Channa berkepala ular dengan motif bunga kuning keemasan.' },
-  { id: 'bawal', name: 'Ikan Bawal Bintang', rarity: 'Langka', color: '#94a3b8', secondaryColor: '#334155', badgeBg: '#f8fafc', difficulty: 1.75, minWeight: 1.2, maxWeight: 3.8, points: 310, coins: 155, description: 'Ikan berbadan lebar dan bertenaga besar saat melawan kail.' },
-  { id: 'lobster', name: 'Lobster Biru Samudra', rarity: 'Langka', color: '#0284c7', secondaryColor: '#0369a1', badgeBg: '#e0f2fe', difficulty: 2.2, minWeight: 0.8, maxWeight: 2.2, points: 400, coins: 210, description: 'Warna birunya sangat mencolok dan langka di alam liar.' },
+  // Langka (Rare) - Nilai menengah & perlawanan sengit
+  { id: 'patin', name: 'Ikan Patin Sungai', rarity: 'Langka', color: '#cbd5e1', secondaryColor: '#64748b', badgeBg: '#f8fafc', difficulty: 1.7, minWeight: 2.0, maxWeight: 10.0, points: 150, coins: 75, description: 'Dagingnya tebal dan tarikannya cukup kuat.' },
+  { id: 'gurame', name: 'Gurame Padang', rarity: 'Langka', color: '#fb923c', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 1.6, minWeight: 2.5, maxWeight: 5.0, points: 170, coins: 85, description: 'Pipih, lezat, dan memiliki warna cerah memikat.' },
+  { id: 'bawal', name: 'Ikan Bawal Bintang', rarity: 'Langka', color: '#94a3b8', secondaryColor: '#334155', badgeBg: '#f8fafc', difficulty: 1.8, minWeight: 1.2, maxWeight: 3.8, points: 190, coins: 95, description: 'Ikan berbadan lebar dan bertenaga besar saat melawan kail.' },
+  { id: 'lele', name: 'Ikan Lele Raksasa', rarity: 'Langka', color: '#475569', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 2.1, minWeight: 3.5, maxWeight: 8.5, points: 230, coins: 120, description: 'Kumisnya panjang dan perlawanannya sangat sengit!' },
+  { id: 'gabus', name: 'Ikan Gabus Loreng', rarity: 'Langka', color: '#4d7c0f', secondaryColor: '#14532d', badgeBg: '#f0fdf4', difficulty: 2.2, minWeight: 2.0, maxWeight: 6.5, points: 250, coins: 135, description: 'Predator air tawar dengan gigi tajam dan corak loreng.' },
+  { id: 'kura', name: 'Kura-kura Sungai', rarity: 'Langka', color: '#166534', secondaryColor: '#064e3b', badgeBg: '#f0fdf4', difficulty: 2.3, minWeight: 1.5, maxWeight: 4.0, points: 270, coins: 145, description: 'Tempurungnya keras, sangat berat saat ditarik.' },
+  { id: 'belut', name: 'Belut Listrik', rarity: 'Langka', color: '#eab308', secondaryColor: '#854d0e', badgeBg: '#fefce8', difficulty: 2.5, minWeight: 1.0, maxWeight: 3.5, points: 300, coins: 165, description: 'Hati-hati! Ikan ini bisa memberikan sengatan kecil.' },
+  { id: 'udang', name: 'Udang Galah Raksasa', rarity: 'Langka', color: '#f97316', secondaryColor: '#c2410c', badgeBg: '#fff7ed', difficulty: 2.1, minWeight: 0.5, maxWeight: 1.5, points: 260, coins: 140, description: 'Capitnya panjang berwarna biru, rasanya pasti lezat.' },
+  { id: 'channa', name: 'Ikan Channa Maru', rarity: 'Langka', color: '#f59e0b', secondaryColor: '#b45309', badgeBg: '#fef3c7', difficulty: 2.6, minWeight: 1.8, maxWeight: 5.5, points: 350, coins: 195, description: 'Channa berkepala ular dengan motif bunga kuning keemasan.' },
+  { id: 'lobster', name: 'Lobster Biru Samudra', rarity: 'Langka', color: '#0284c7', secondaryColor: '#0369a1', badgeBg: '#e0f2fe', difficulty: 2.7, minWeight: 0.8, maxWeight: 2.2, points: 380, coins: 220, description: 'Warna birunya sangat mencolok dan langka di alam liar.' },
   
-  // Sangat Langka (Epic)
-  { id: 'koi', name: 'Ikan Mas Koi Royal', rarity: 'Sangat Langka', color: '#f87171', secondaryColor: '#fef2f2', badgeBg: '#fee2e2', difficulty: 2.3, minWeight: 2.5, maxWeight: 6.0, points: 500, coins: 280, description: 'Simbol keberuntungan bertotol merah putih indah.' },
-  { id: 'arwana', name: 'Arwana Super Red', rarity: 'Sangat Langka', color: '#dc2626', secondaryColor: '#7f1d1d', badgeBg: '#fef2f2', difficulty: 2.6, minWeight: 1.5, maxWeight: 4.5, points: 650, coins: 380, description: 'Raja akuarium dengan sisik merah merona yang mahal harganya.' },
-  { id: 'belida', name: 'Ikan Belida Lopis', rarity: 'Sangat Langka', color: '#9ca3af', secondaryColor: '#374151', badgeBg: '#f3f4f6', difficulty: 2.4, minWeight: 3.0, maxWeight: 7.0, points: 600, coins: 340, description: 'Bentuknya unik seperti pisau, sangat langka di alam liar.' },
-  { id: 'pari', name: 'Pari Air Tawar', rarity: 'Sangat Langka', color: '#d6d3d1', secondaryColor: '#78716c', badgeBg: '#fafaf9', difficulty: 2.5, minWeight: 5.0, maxWeight: 15.0, points: 550, coins: 310, description: 'Bentuknya pipih melebar, sangat jarang terlihat.' },
-  { id: 'pesut', name: 'Pesut Mahakam', rarity: 'Sangat Langka', color: '#bfdbfe', secondaryColor: '#60a5fa', badgeBg: '#eff6ff', difficulty: 2.8, minWeight: 10.0, maxWeight: 30.0, points: 700, coins: 420, description: 'Mamalia air tawar yang cerdas dan bersahabat.' },
-  { id: 'piranha', name: 'Piranha Merah', rarity: 'Sangat Langka', color: '#ef4444', secondaryColor: '#991b1b', badgeBg: '#fef2f2', difficulty: 2.7, minWeight: 0.8, maxWeight: 2.5, points: 680, coins: 400, description: 'Ikan predator buas dengan gigi setajam silet.' },
-  { id: 'arapaima', name: 'Ikan Arapaima Gigas', rarity: 'Sangat Langka', color: '#b91c1c', secondaryColor: '#1e293b', badgeBg: '#fee2e2', difficulty: 2.9, minWeight: 20.0, maxWeight: 75.0, points: 800, coins: 480, description: 'Raksasa sungai Amazon berlidah tulang dan bersisik merah.' },
-  { id: 'aligator', name: 'Ikan Aligator Gar', rarity: 'Sangat Langka', color: '#334155', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 2.85, minWeight: 8.0, maxWeight: 25.0, points: 720, coins: 430, description: 'Moncongnya panjang mirip buaya dengan deretan taring tajam.' },
-  { id: 'peacock', name: 'Ikan Peacock Bass', rarity: 'Sangat Langka', color: '#10b981', secondaryColor: '#f59e0b', badgeBg: '#ecfdf5', difficulty: 2.65, minWeight: 2.0, maxWeight: 6.0, points: 640, coins: 370, description: 'Corak ekornya menyerupai mata merak dengan kilau hijau zamrud.' },
+  // Sangat Langka (Epic) - Harga tinggi, tarikan berat
+  { id: 'koi', name: 'Ikan Mas Koi Royal', rarity: 'Sangat Langka', color: '#f87171', secondaryColor: '#fef2f2', badgeBg: '#fee2e2', difficulty: 2.9, minWeight: 2.5, maxWeight: 6.0, points: 550, coins: 380, description: 'Simbol keberuntungan bertotol merah putih indah.' },
+  { id: 'belida', name: 'Ikan Belida Lopis', rarity: 'Sangat Langka', color: '#9ca3af', secondaryColor: '#374151', badgeBg: '#f3f4f6', difficulty: 3.1, minWeight: 3.0, maxWeight: 7.0, points: 620, coins: 440, description: 'Bentuknya unik seperti pisau, sangat langka di alam liar.' },
+  { id: 'pari', name: 'Pari Air Tawar', rarity: 'Sangat Langka', color: '#d6d3d1', secondaryColor: '#78716c', badgeBg: '#fafaf9', difficulty: 3.3, minWeight: 5.0, maxWeight: 15.0, points: 700, coins: 510, description: 'Bentuknya pipih melebar, sangat jarang terlihat.' },
+  { id: 'piranha', name: 'Piranha Merah', rarity: 'Sangat Langka', color: '#ef4444', secondaryColor: '#991b1b', badgeBg: '#fef2f2', difficulty: 3.5, minWeight: 0.8, maxWeight: 2.5, points: 760, coins: 580, description: 'Ikan predator buas dengan gigi setajam silet.' },
+  { id: 'peacock', name: 'Ikan Peacock Bass', rarity: 'Sangat Langka', color: '#10b981', secondaryColor: '#f59e0b', badgeBg: '#ecfdf5', difficulty: 3.4, minWeight: 2.0, maxWeight: 6.0, points: 740, coins: 560, description: 'Corak ekornya menyerupai mata merak dengan kilau hijau zamrud.' },
+  { id: 'arwana', name: 'Arwana Super Red', rarity: 'Sangat Langka', color: '#dc2626', secondaryColor: '#7f1d1d', badgeBg: '#fef2f2', difficulty: 3.8, minWeight: 1.5, maxWeight: 4.5, points: 900, coins: 750, description: 'Raja akuarium dengan sisik merah merona yang mahal harganya.' },
+  { id: 'pesut', name: 'Pesut Mahakam', rarity: 'Sangat Langka', color: '#bfdbfe', secondaryColor: '#60a5fa', badgeBg: '#eff6ff', difficulty: 4.0, minWeight: 10.0, maxWeight: 30.0, points: 1000, coins: 850, description: 'Mamalia air tawar yang cerdas dan bersahabat.' },
+  { id: 'aligator', name: 'Ikan Aligator Gar', rarity: 'Sangat Langka', color: '#334155', secondaryColor: '#0f172a', badgeBg: '#f1f5f9', difficulty: 4.2, minWeight: 8.0, maxWeight: 25.0, points: 1150, coins: 980, description: 'Moncongnya panjang mirip buaya dengan deretan taring tajam.' },
+  { id: 'arapaima', name: 'Ikan Arapaima Gigas', rarity: 'Sangat Langka', color: '#b91c1c', secondaryColor: '#1e293b', badgeBg: '#fee2e2', difficulty: 4.5, minWeight: 20.0, maxWeight: 75.0, points: 1350, coins: 1250, description: 'Raksasa sungai Amazon berlidah tulang dan bersisik merah.' },
   
-  // Legendaris (Legendary)
-  { id: 'megalodon', name: 'Hiu Megalodon Purba', rarity: 'Legendaris', color: '#38bdf8', secondaryColor: '#f1f5f9', badgeBg: '#bae6fd', difficulty: 3.4, minWeight: 30.0, maxWeight: 80.0, points: 1400, coins: 900, description: 'Predator samudra purba yang legendaris! Sangat langka.' },
-  { id: 'kraken', name: 'Bayi Kraken', rarity: 'Legendaris', color: '#a855f7', secondaryColor: '#581c87', badgeBg: '#faf5ff', difficulty: 3.6, minWeight: 15.0, maxWeight: 45.0, points: 1600, coins: 1100, description: 'Makhluk mitologi berwujud gurita raksasa berukuran kecil.' },
-  { id: 'naga', name: 'Naga Air Zamrud', rarity: 'Legendaris', color: '#10b981', secondaryColor: '#047857', badgeBg: '#ecfdf5', difficulty: 3.8, minWeight: 25.0, maxWeight: 80.0, points: 2000, coins: 1400, description: 'Naga gaib penunggu kedalaman, memancarkan aura magis hijau.' },
-  { id: 'leviathan', name: 'Leviathan Air Tawar', rarity: 'Legendaris', color: '#1e3a8a', secondaryColor: '#172554', badgeBg: '#eff6ff', difficulty: 4.0, minWeight: 50.0, maxWeight: 150.0, points: 2500, coins: 1800, description: 'Raksasa mitologi yang menguasai perairan dalam.' },
-  { id: 'cumi', name: 'Cumi-cumi Raksasa', rarity: 'Legendaris', color: '#f43f5e', secondaryColor: '#9f1239', badgeBg: '#fff1f2', difficulty: 3.7, minWeight: 30.0, maxWeight: 70.0, points: 1800, coins: 1250, description: 'Tentakelnya sangat kuat, bisa menyemburkan tinta hitam.' },
-  { id: 'hiuhantu', name: 'Hiu Hantu Tembus Pandang', rarity: 'Legendaris', color: '#f8fafc', secondaryColor: '#cbd5e1', badgeBg: '#f1f5f9', difficulty: 3.75, minWeight: 10.0, maxWeight: 25.0, points: 1900, coins: 1300, description: 'Tubuhnya transparan, hanya terlihat matanya yang bersinar.' },
-  { id: 'duyung', name: 'Putri Duyung Emas', rarity: 'Legendaris', color: '#fcd34d', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 4.1, minWeight: 40.0, maxWeight: 65.0, points: 3000, coins: 2200, description: 'Sosok mitos cantik yang membawa keberuntungan tiada tara.' },
-  { id: 'oarfish', name: 'Ikan Naga Oarfish Samudra', rarity: 'Legendaris', color: '#e2e8f0', secondaryColor: '#ef4444', badgeBg: '#f8fafc', difficulty: 3.85, minWeight: 35.0, maxWeight: 90.0, points: 2200, coins: 1600, description: 'Ikan pita raksasa penjelajah palung laut terdalam dengan mahkota merah.' },
+  // Legendaris (Legendary) - Berharga fantastis, perlawanan dahsyat
+  { id: 'kraken', name: 'Bayi Kraken', rarity: 'Legendaris', color: '#a855f7', secondaryColor: '#581c87', badgeBg: '#faf5ff', difficulty: 4.8, minWeight: 15.0, maxWeight: 45.0, points: 2500, coins: 2500, description: 'Makhluk mitologi berwujud gurita raksasa berukuran kecil.' },
+  { id: 'cumi', name: 'Cumi-cumi Raksasa', rarity: 'Legendaris', color: '#f43f5e', secondaryColor: '#9f1239', badgeBg: '#fff1f2', difficulty: 5.0, minWeight: 30.0, maxWeight: 70.0, points: 2900, coins: 3000, description: 'Tentakelnya sangat kuat, bisa menyemburkan tinta hitam.' },
+  { id: 'megalodon', name: 'Hiu Megalodon Purba', rarity: 'Legendaris', color: '#38bdf8', secondaryColor: '#f1f5f9', badgeBg: '#bae6fd', difficulty: 5.3, minWeight: 30.0, maxWeight: 80.0, points: 3400, coins: 3600, description: 'Predator samudra purba yang legendaris! Sangat langka.' },
+  { id: 'hiuhantu', name: 'Hiu Hantu Tembus Pandang', rarity: 'Legendaris', color: '#f8fafc', secondaryColor: '#cbd5e1', badgeBg: '#f1f5f9', difficulty: 5.4, minWeight: 10.0, maxWeight: 25.0, points: 3800, coins: 4000, description: 'Tubuhnya transparan, hanya terlihat matanya yang bersinar.' },
+  { id: 'oarfish', name: 'Ikan Naga Oarfish Samudra', rarity: 'Legendaris', color: '#e2e8f0', secondaryColor: '#ef4444', badgeBg: '#f8fafc', difficulty: 5.6, minWeight: 35.0, maxWeight: 90.0, points: 4300, coins: 4600, description: 'Ikan pita raksasa penjelajah palung laut terdalam dengan mahkota merah.' },
+  { id: 'naga', name: 'Naga Air Zamrud', rarity: 'Legendaris', color: '#10b981', secondaryColor: '#047857', badgeBg: '#ecfdf5', difficulty: 6.0, minWeight: 25.0, maxWeight: 80.0, points: 5000, coins: 5400, description: 'Naga gaib penunggu kedalaman, memancarkan aura magis hijau.' },
+  { id: 'leviathan', name: 'Leviathan Air Tawar', rarity: 'Legendaris', color: '#1e3a8a', secondaryColor: '#172554', badgeBg: '#eff6ff', difficulty: 6.3, minWeight: 50.0, maxWeight: 150.0, points: 6000, coins: 6500, description: 'Raksasa mitologi yang menguasai perairan dalam.' },
+  { id: 'duyung', name: 'Putri Duyung Emas', rarity: 'Legendaris', color: '#fcd34d', secondaryColor: '#b45309', badgeBg: '#fffbeb', difficulty: 6.6, minWeight: 40.0, maxWeight: 65.0, points: 7500, coins: 8000, description: 'Sosok mitos cantik yang membawa keberuntungan tiada tara.' },
 
-  // Mitos / Dewa (Mythic - Ultra Rare 1%)
-  { id: 'shenlong', name: 'Naga Emas Shenlong', rarity: 'Mitos', color: '#facc15', secondaryColor: '#854d0e', badgeBg: '#fef08a', difficulty: 4.8, minWeight: 100.0, maxWeight: 350.0, points: 6000, coins: 5000, description: 'Naga langit suci pembawa berkah kekayaan tiada tara, bermahkota mustika naga.' },
-  { id: 'phoenix', name: 'Phoenix Abadi Samudra', rarity: 'Mitos', color: '#06b6d4', secondaryColor: '#0891b2', badgeBg: '#cffafe', difficulty: 4.6, minWeight: 80.0, maxWeight: 280.0, points: 5500, coins: 4500, description: 'Burung mitos bersayap air es abadi yang terlahir dari tetesan embun samudra.' },
-  { id: 'atlantis', name: 'Dewa Penjaga Atlantis', rarity: 'Mitos', color: '#14b8a6', secondaryColor: '#0f766e', badgeBg: '#ccfbf1', difficulty: 5.0, minWeight: 120.0, maxWeight: 450.0, points: 7000, coins: 6000, description: 'Penguasa samudra kuno berzirah emas dan bertrisula keramat.' },
-  { id: 'cosmic', name: 'Ikan Bintang Galaksi', rarity: 'Mitos', color: '#6366f1', secondaryColor: '#4338ca', badgeBg: '#e0e7ff', difficulty: 5.2, minWeight: 150.0, maxWeight: 600.0, points: 8000, coins: 7500, description: 'Makhluk kosmik yang tercipta dari gugusan bintang galaksi dan nebula alam semesta.' }
+  // Mitos / Dewa (Mythic - Sangat Sulit & Mewah)
+  { id: 'phoenix', name: 'Phoenix Abadi Samudra', rarity: 'Mitos', color: '#06b6d4', secondaryColor: '#0891b2', badgeBg: '#cffafe', difficulty: 7.0, minWeight: 80.0, maxWeight: 280.0, points: 12000, coins: 15000, description: 'Burung mitos bersayap air es abadi yang terlahir dari tetesan embun samudra.' },
+  { id: 'atlantis', name: 'Dewa Penjaga Atlantis', rarity: 'Mitos', color: '#14b8a6', secondaryColor: '#0f766e', badgeBg: '#ccfbf1', difficulty: 7.4, minWeight: 120.0, maxWeight: 450.0, points: 16000, coins: 20000, description: 'Penguasa samudra kuno berzirah emas dan bertrisula keramat.' },
+  { id: 'shenlong', name: 'Naga Emas Shenlong', rarity: 'Mitos', color: '#facc15', secondaryColor: '#854d0e', badgeBg: '#fef08a', difficulty: 7.8, minWeight: 100.0, maxWeight: 350.0, points: 20000, coins: 25000, description: 'Naga langit suci pembawa berkah kekayaan tiada tara, bermahkota mustika naga.' },
+  { id: 'cosmic', name: 'Ikan Bintang Galaksi', rarity: 'Mitos', color: '#6366f1', secondaryColor: '#4338ca', badgeBg: '#e0e7ff', difficulty: 8.2, minWeight: 150.0, maxWeight: 600.0, points: 25000, coins: 32000, description: 'Makhluk kosmik yang tercipta dari gugusan bintang galaksi dan nebula alam semesta.' }
 ];
 
-export const calculateRarityRates = (rodId: string, baitId: string) => {
-  const rod = RODS_DATABASE.find(r => r.id === rodId) || RODS_DATABASE[0];
-  const bait = BAITS_DATABASE.find(b => b.id === baitId) || BAITS_DATABASE[0];
+export const calculateRarityRates = (
+  rodId: string,
+  baitId: string,
+  weather?: WeatherType,
+  adminOdds?: AdminOddsConfig
+) => {
+  // If admin override is active, use admin rates directly
+  if (adminOdds && adminOdds.enabled) {
+    const mythic = Math.max(0, adminOdds.mythic);
+    const legendary = Math.max(0, adminOdds.legendary);
+    const epic = Math.max(0, adminOdds.epic);
+    const rare = Math.max(0, adminOdds.rare);
+    const common = Math.max(0, adminOdds.common);
+    return { common, rare, epic, legendary, mythic };
+  }
 
-  let mythicChance = 0.01 + rod.luckBonus * 0.008 + bait.mythicBonus * 0.015;
-  let legendaryChance = 0.05 + rod.luckBonus * 0.03 + bait.rareBonus * 0.035;
-  let epicChance = 0.14 + rod.luckBonus * 0.05 + bait.rareBonus * 0.06;
-  let rareChance = 0.30 + rod.luckBonus * 0.05 + bait.rareBonus * 0.08;
-  
+  const rod = RODS_DATABASE.find((r) => r.id === rodId) || RODS_DATABASE[0];
+  const bait = BAITS_DATABASE.find((b) => b.id === baitId) || BAITS_DATABASE[0];
+
+  // Weather bonuses
+  let weatherMythicBonus = 0;
+  let weatherRareBonus = 0;
+  if (weather === 'badai') {
+    weatherMythicBonus = 0.005;
+    weatherRareBonus = 0.04;
+  } else if (weather === 'kabut_mistis') {
+    weatherMythicBonus = 0.012;
+    weatherRareBonus = 0.06;
+  } else if (weather === 'hujan') {
+    weatherRareBonus = 0.025;
+  }
+
+  // Hardcore base odds: 0.5% Mythic, 3.5% Legendary, 11% Epic, 25% Rare, 60% Common
+  let mythicChance = 0.005 + rod.luckBonus * 0.006 + bait.mythicBonus * 0.012 + weatherMythicBonus;
+  let legendaryChance = 0.035 + rod.luckBonus * 0.025 + bait.rareBonus * 0.03 + weatherRareBonus;
+  let epicChance = 0.11 + rod.luckBonus * 0.04 + bait.rareBonus * 0.05 + (weather === 'hujan' ? 0.03 : 0);
+  let rareChance = 0.25 + rod.luckBonus * 0.05 + bait.rareBonus * 0.07;
+
   const totalSpecial = mythicChance + legendaryChance + epicChance + rareChance;
-  const commonChance = Math.max(0.08, 1 - totalSpecial);
+  const commonChance = Math.max(0.05, 1 - totalSpecial);
 
   return {
     common: commonChance,
@@ -145,27 +187,33 @@ export const calculateRarityRates = (rodId: string, baitId: string) => {
   };
 };
 
-const getRandomFish = (rodId: string, baitId: string): FishType => {
-  const rates = calculateRarityRates(rodId, baitId);
+const getRandomFish = (
+  rodId: string,
+  baitId: string,
+  weather?: WeatherType,
+  adminOdds?: AdminOddsConfig
+): FishType => {
+  const rates = calculateRarityRates(rodId, baitId, weather, adminOdds);
   const rand = Math.random();
 
   if (rand < rates.mythic) {
-    const mythic = FISH_DATABASE.filter(f => f.rarity === 'Mitos');
+    const mythic = FISH_DATABASE.filter((f) => f.rarity === 'Mitos');
     return mythic[Math.floor(Math.random() * mythic.length)];
   } else if (rand < rates.mythic + rates.legendary) {
-    const legendaris = FISH_DATABASE.filter(f => f.rarity === 'Legendaris');
+    const legendaris = FISH_DATABASE.filter((f) => f.rarity === 'Legendaris');
     return legendaris[Math.floor(Math.random() * legendaris.length)];
   } else if (rand < rates.mythic + rates.legendary + rates.epic) {
-    const sgtLangka = FISH_DATABASE.filter(f => f.rarity === 'Sangat Langka');
+    const sgtLangka = FISH_DATABASE.filter((f) => f.rarity === 'Sangat Langka');
     return sgtLangka[Math.floor(Math.random() * sgtLangka.length)];
   } else if (rand < rates.mythic + rates.legendary + rates.epic + rates.rare) {
-    const langka = FISH_DATABASE.filter(f => f.rarity === 'Langka');
+    const langka = FISH_DATABASE.filter((f) => f.rarity === 'Langka');
     return langka[Math.floor(Math.random() * langka.length)];
   } else {
-    const biasa = FISH_DATABASE.filter(f => f.rarity === 'Biasa');
+    const biasa = FISH_DATABASE.filter((f) => f.rarity === 'Biasa');
     return biasa[Math.floor(Math.random() * biasa.length)];
   }
 };
+
 
 const FishingJournal: React.FC<{
   score: number;
@@ -415,101 +463,458 @@ const FishingJournal: React.FC<{
   );
 };
 
+const getJakartaTimeInfo = () => {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Jakarta',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(now);
+    const hour = parseInt(parts.find((p) => p.type === 'hour')?.value || '12', 10);
+    const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+
+    let naturalTimeOfDay: TimeOfDay = 'pagi';
+    if (hour >= 5 && hour < 11) {
+      naturalTimeOfDay = 'pagi';
+    } else if (hour >= 11 && hour < 15) {
+      naturalTimeOfDay = 'siang';
+    } else if (hour >= 15 && (hour < 18 || (hour === 18 && minute < 30))) {
+      naturalTimeOfDay = 'senja';
+    } else {
+      naturalTimeOfDay = 'malam';
+    }
+
+    return { hour, minute, second, timeString, naturalTimeOfDay };
+  } catch (e) {
+    const now = new Date();
+    const jktHour = (now.getUTCHours() + 7) % 24;
+    const naturalTimeOfDay: TimeOfDay =
+      jktHour >= 5 && jktHour < 11
+        ? 'pagi'
+        : jktHour >= 11 && jktHour < 15
+        ? 'siang'
+        : jktHour >= 15 && jktHour < 18
+        ? 'senja'
+        : 'malam';
+    return {
+      hour: jktHour,
+      minute: now.getUTCMinutes(),
+      second: now.getUTCSeconds(),
+      timeString: `${String(jktHour).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`,
+      naturalTimeOfDay,
+    };
+  }
+};
+
 const FishingOddsModal: React.FC<{
   equippedRod: string;
   equippedBait: string;
+  weather: WeatherType;
+  adminOdds: AdminOddsConfig;
+  setAdminOdds: React.Dispatch<React.SetStateAction<AdminOddsConfig>>;
+  setCoins?: React.Dispatch<React.SetStateAction<number>>;
   onClose: () => void;
   soundEnabled?: boolean;
-}> = ({ equippedRod, equippedBait, onClose, soundEnabled }) => {
-  const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
-  const currentBait = BAITS_DATABASE.find(b => b.id === equippedBait) || BAITS_DATABASE[0];
-  const rates = calculateRarityRates(equippedRod, equippedBait);
+}> = ({
+  equippedRod,
+  equippedBait,
+  weather,
+  adminOdds,
+  setAdminOdds,
+  setCoins,
+  onClose,
+  soundEnabled,
+}) => {
+  const { currentUser } = useAuth();
+  const isAdmin = currentUser ? (currentUser.role === 'admin' || isAdminName(currentUser.username)) : false;
+  const [activeTab, setActiveTab] = useState<'odds' | 'admin'>(isAdmin && adminOdds.enabled ? 'admin' : 'odds');
+
+  const currentRod = RODS_DATABASE.find((r) => r.id === equippedRod) || RODS_DATABASE[0];
+  const currentBait = BAITS_DATABASE.find((b) => b.id === equippedBait) || BAITS_DATABASE[0];
+  const rates = calculateRarityRates(equippedRod, equippedBait, weather, adminOdds);
+
+  const applyPreset = (preset: 'normal' | 'mythic50' | 'god100' | 'allLegend' | 'hardcore') => {
+    playFishingSound('upgrade', soundEnabled);
+    if (preset === 'normal') {
+      setAdminOdds({
+        enabled: true,
+        mythic: 0.005,
+        legendary: 0.035,
+        epic: 0.11,
+        rare: 0.25,
+        common: 0.60,
+      });
+    } else if (preset === 'mythic50') {
+      setAdminOdds({
+        enabled: true,
+        mythic: 0.50,
+        legendary: 0.25,
+        epic: 0.15,
+        rare: 0.10,
+        common: 0.00,
+      });
+    } else if (preset === 'god100') {
+      setAdminOdds({
+        enabled: true,
+        mythic: 1.00,
+        legendary: 0.00,
+        epic: 0.00,
+        rare: 0.00,
+        common: 0.00,
+      });
+    } else if (preset === 'allLegend') {
+      setAdminOdds({
+        enabled: true,
+        mythic: 0.20,
+        legendary: 0.70,
+        epic: 0.10,
+        rare: 0.00,
+        common: 0.00,
+      });
+    } else if (preset === 'hardcore') {
+      setAdminOdds({
+        enabled: true,
+        mythic: 0.001,
+        legendary: 0.009,
+        epic: 0.05,
+        rare: 0.14,
+        common: 0.80,
+      });
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-4 font-mono"
+      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-amber-100 border-[6px] border-black p-5 sm:p-6 w-full max-w-[480px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative flex flex-col max-h-[85vh] overflow-y-auto">
+      <div className="bg-amber-100 border-[6px] border-black p-4 sm:p-6 w-full max-w-[520px] shadow-[10px_10px_0_0_rgba(0,0,0,1)] relative flex flex-col max-h-[88vh] overflow-y-auto custom-scrollbar">
         <button
           onClick={() => {
             playFishingSound('click', soundEnabled);
             onClose();
           }}
-          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer"
+          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:scale-95 cursor-pointer z-10"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2 border-b-[3px] border-black pb-2 mb-4 pr-6">
-          <BarChart3 className="w-6 h-6 text-blue-700" />
-          <h2 className="text-base sm:text-lg font-black text-slate-900">PELUANG IKAN (ODDS)</h2>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-[3px] border-black pb-2 mb-3 pr-8">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
+            <h2 className="text-sm sm:text-base font-black text-slate-900">PELUANG IKAN & PROBABILITAS</h2>
+          </div>
+          {adminOdds.enabled && (
+            <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 text-[9px] font-black px-2 py-0.5 border border-black rounded-full shadow-xs animate-pulse">
+              👑 ADMIN OVERRIDE ON
+            </span>
+          )}
         </div>
 
-        {/* Current Equip Buffs */}
-        <div className="bg-white border-[3px] border-black p-3 mb-4 space-y-1.5 text-[10px]">
-          <div className="font-black text-slate-700 text-[11px] mb-1">PERLENGKAPAN AKTIF:</div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-600">Joran: {currentRod.icon} {currentRod.name}</span>
-            <span className="text-emerald-600 font-black">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
+        {/* Admin Tab Switcher if User is Admin */}
+        {isAdmin && (
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => {
+                playFishingSound('click', soundEnabled);
+                setActiveTab('odds');
+              }}
+              className={`flex-1 py-1.5 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
+                activeTab === 'odds' ? 'bg-blue-600 text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-slate-700 hover:bg-amber-50'
+              }`}
+            >
+              📊 STATUS ODDS SAAT INI
+            </button>
+            <button
+              onClick={() => {
+                playFishingSound('click', soundEnabled);
+                setActiveTab('admin');
+              }}
+              className={`flex-1 py-1.5 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                activeTab === 'admin' ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-amber-200 text-amber-950 hover:bg-amber-300'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5 fill-slate-950" />
+              <span>ADMIN GOD MODE</span>
+            </button>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-600">Umpan: {currentBait.icon} {currentBait.name}</span>
-            <span className="text-purple-600 font-black">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
-          </div>
-        </div>
+        )}
 
-        {/* Rates Breakdown */}
-        <div className="space-y-2.5 mb-4">
-          <div className="bg-white border-[2px] border-black p-2.5 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-slate-400 border border-black" />
-              <span className="text-xs font-black text-slate-800">BIASA (Common)</span>
+        {activeTab === 'odds' ? (
+          <>
+            {/* Current Equip & Weather Buffs */}
+            <div className="bg-white border-[3px] border-black p-2.5 sm:p-3 mb-3 space-y-1.5 text-[10px]">
+              <div className="font-black text-slate-700 text-[11px] mb-1 flex items-center justify-between">
+                <span>FAKTOR AKTIF:</span>
+                <span className="text-slate-500 font-bold uppercase">Cuaca: {weather.toUpperCase()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-600">Joran: {currentRod.icon} {currentRod.name}</span>
+                <span className="text-emerald-600 font-black">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-600">Umpan: {currentBait.icon} {currentBait.name}</span>
+                <span className="text-purple-600 font-black">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
+              </div>
+              {weather === 'badai' && (
+                <div className="flex items-center justify-between text-sky-700 font-black">
+                  <span>⛈️ Efek Badai Petir</span>
+                  <span>+25% Langka & Mitos</span>
+                </div>
+              )}
+              {weather === 'kabut_mistis' && (
+                <div className="flex items-center justify-between text-purple-700 font-black">
+                  <span>🌫️ Efek Kabut Mistis</span>
+                  <span>+50% Mitos Purba</span>
+                </div>
+              )}
             </div>
-            <span className="text-xs font-black text-slate-700 font-mono">{(rates.common * 100).toFixed(1)}%</span>
-          </div>
 
-          <div className="bg-sky-50 border-[2px] border-blue-600 p-2.5 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-blue-500 border border-black" />
-              <span className="text-xs font-black text-blue-800">LANGKA (Rare)</span>
+            {/* Rates Breakdown */}
+            <div className="space-y-2 mb-3">
+              <div className="bg-white border-[2px] border-black p-2 flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-slate-400 border border-black" />
+                  <span className="text-xs font-black text-slate-800">BIASA (Common)</span>
+                </div>
+                <span className="text-xs font-black text-slate-700 font-mono">{(rates.common * 100).toFixed(1)}%</span>
+              </div>
+
+              <div className="bg-sky-50 border-[2px] border-blue-600 p-2 flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-blue-500 border border-black" />
+                  <span className="text-xs font-black text-blue-800">LANGKA (Rare)</span>
+                </div>
+                <span className="text-xs font-black text-blue-800 font-mono">{(rates.rare * 100).toFixed(1)}%</span>
+              </div>
+
+              <div className="bg-purple-50 border-[2px] border-purple-600 p-2 flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-purple-500 border border-black" />
+                  <span className="text-xs font-black text-purple-800">SANGAT LANGKA (Epic)</span>
+                </div>
+                <span className="text-xs font-black text-purple-800 font-mono">{(rates.epic * 100).toFixed(1)}%</span>
+              </div>
+
+              <div className="bg-amber-50 border-[2px] border-amber-600 p-2 flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-amber-400 border border-black animate-pulse" />
+                  <span className="text-xs font-black text-amber-900">👑 LEGENDARIS</span>
+                </div>
+                <span className="text-xs font-black text-amber-900 font-mono">{(rates.legendary * 100).toFixed(1)}%</span>
+              </div>
+
+              <div className="bg-gradient-to-r from-rose-100 via-amber-100 to-purple-100 border-[3px] border-purple-800 p-2 flex items-center justify-between shadow-md">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-rose-500 border border-black animate-ping" />
+                  <span className="text-xs font-black text-purple-950 flex items-center gap-1">
+                    ⭐ MITOS / DEWA
+                  </span>
+                </div>
+                <span className="text-xs font-black text-rose-700 font-mono">{(rates.mythic * 100).toFixed(1)}%</span>
+              </div>
             </div>
-            <span className="text-xs font-black text-blue-800 font-mono">{(rates.rare * 100).toFixed(1)}%</span>
-          </div>
 
-          <div className="bg-purple-50 border-[2px] border-purple-600 p-2.5 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-purple-500 border border-black" />
-              <span className="text-xs font-black text-purple-800">SANGAT LANGKA (Epic)</span>
+            <p className="text-[9.5px] text-slate-600 italic text-center">
+              *Tingkatkan joran dan umpan di Toko Pancing untuk memperbesar peluang tangkapan dewa.
+            </p>
+          </>
+        ) : (
+          /* ================= ADMIN GOD MODE ODDS CONTROL PANEL ================= */
+          <div className="space-y-3">
+            {/* Master Toggle */}
+            <div className="bg-slate-900 text-white border-[3px] border-amber-400 p-3 flex items-center justify-between shadow-md">
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-black text-yellow-300">
+                  <Crown className="w-4 h-4 fill-yellow-300" />
+                  <span>KONTROL ODDS KHUSUS ADMIN</span>
+                </div>
+                <p className="text-[9px] text-slate-300 mt-0.5">
+                  {adminOdds.enabled
+                    ? 'Status: Kustom Odds AKTIF menimpa probabilitas normal!'
+                    : 'Status: Standar (Probabilitas normal berlaku).'}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  playFishingSound('click', soundEnabled);
+                  setAdminOdds((prev) => ({ ...prev, enabled: !prev.enabled }));
+                }}
+                className={`px-3 py-1.5 text-xs font-black border-[2px] border-black transition-all cursor-pointer ${
+                  adminOdds.enabled
+                    ? 'bg-emerald-500 text-slate-950 shadow-[2px_2px_0_0_#fff]'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                {adminOdds.enabled ? '✓ AKTIF' : 'NONAKTIF'}
+              </button>
             </div>
-            <span className="text-xs font-black text-purple-800 font-mono">{(rates.epic * 100).toFixed(1)}%</span>
-          </div>
 
-          <div className="bg-amber-50 border-[2px] border-amber-600 p-2.5 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-400 border border-black animate-pulse" />
-              <span className="text-xs font-black text-amber-900">👑 LEGENDARIS</span>
+            {/* Quick Presets */}
+            <div className="bg-white border-[3px] border-black p-3 space-y-2">
+              <div className="text-[11px] font-black text-slate-900 flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 text-amber-600" />
+                <span>PRESET CEPAT ADMIN:</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px]">
+                <button
+                  onClick={() => applyPreset('god100')}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                >
+                  🌌 100% MITOS
+                </button>
+                <button
+                  onClick={() => applyPreset('mythic50')}
+                  className="bg-gradient-to-r from-rose-500 to-amber-500 hover:opacity-90 text-white font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                >
+                  ⚡ HUJAN MITOS (50%)
+                </button>
+                <button
+                  onClick={() => applyPreset('allLegend')}
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                >
+                  👑 ALL-LEGENDARY
+                </button>
+                <button
+                  onClick={() => applyPreset('normal')}
+                  className="bg-sky-500 hover:bg-sky-400 text-white font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                >
+                  🎲 NORMAL HARMONIS
+                </button>
+                <button
+                  onClick={() => applyPreset('hardcore')}
+                  className="bg-rose-900 hover:bg-rose-800 text-rose-100 font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                >
+                  💀 HARDCORE HELL
+                </button>
+                {setCoins && (
+                  <button
+                    onClick={() => {
+                      playFishingSound('upgrade', soundEnabled);
+                      setCoins((c) => c + 10000);
+                    }}
+                    className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black shadow-xs active:scale-95 cursor-pointer text-center"
+                  >
+                    🪙 +10K KOIN TEST
+                  </button>
+                )}
+              </div>
             </div>
-            <span className="text-xs font-black text-amber-900 font-mono">{(rates.legendary * 100).toFixed(1)}%</span>
-          </div>
 
-          <div className="bg-gradient-to-r from-rose-100 via-amber-100 to-purple-100 border-[3px] border-purple-800 p-2.5 flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500 border border-black animate-ping" />
-              <span className="text-xs font-black text-purple-950 flex items-center gap-1">
-                ⭐ MITOS / DEWA
-              </span>
+            {/* Custom Sliders */}
+            <div className="bg-white border-[3px] border-black p-3 space-y-2.5">
+              <div className="text-[11px] font-black text-slate-900 flex items-center justify-between">
+                <span>CUSTOM PERSENTASE ODDS:</span>
+                <span className="text-[9px] text-slate-500">Geser slider untuk mengatur</span>
+              </div>
+
+              {/* Mythic Slider */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-black text-purple-900">
+                  <span>⭐ MITOS:</span>
+                  <span className="font-mono">{(adminOdds.mythic * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(adminOdds.mythic * 100)}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) / 100;
+                    setAdminOdds((prev) => ({ ...prev, enabled: true, mythic: val }));
+                  }}
+                  className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+              </div>
+
+              {/* Legendary Slider */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-black text-amber-900">
+                  <span>👑 LEGENDARIS:</span>
+                  <span className="font-mono">{(adminOdds.legendary * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(adminOdds.legendary * 100)}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) / 100;
+                    setAdminOdds((prev) => ({ ...prev, enabled: true, legendary: val }));
+                  }}
+                  className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                />
+              </div>
+
+              {/* Epic Slider */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-black text-indigo-900">
+                  <span>💎 SANGAT LANGKA (Epic):</span>
+                  <span className="font-mono">{(adminOdds.epic * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(adminOdds.epic * 100)}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) / 100;
+                    setAdminOdds((prev) => ({ ...prev, enabled: true, epic: val }));
+                  }}
+                  className="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                />
+              </div>
+
+              {/* Rare Slider */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-black text-blue-900">
+                  <span>🐟 LANGKA (Rare):</span>
+                  <span className="font-mono">{(adminOdds.rare * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(adminOdds.rare * 100)}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) / 100;
+                    setAdminOdds((prev) => ({ ...prev, enabled: true, rare: val }));
+                  }}
+                  className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+
+              {/* Common Slider */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-black text-slate-700">
+                  <span>👞 BIASA (Common):</span>
+                  <span className="font-mono">{(adminOdds.common * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(adminOdds.common * 100)}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) / 100;
+                    setAdminOdds((prev) => ({ ...prev, enabled: true, common: val }));
+                  }}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
+                />
+              </div>
             </div>
-            <span className="text-xs font-black text-rose-700 font-mono">{(rates.mythic * 100).toFixed(1)}%</span>
           </div>
-        </div>
-
-        <p className="text-[10px] text-slate-600 italic text-center">
-          *Gunakan Joran Naga Emas / Trisula Poseidon dan Umpan Bintang Mitos untuk peluang tangkapan dewa tertinggi!
-        </p>
+        )}
       </div>
     </motion.div>
   );
@@ -781,6 +1186,7 @@ const FishingShopModal: React.FC<{
 export const FishingGameSection: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const isAdmin = currentUser ? (currentUser.role === 'admin' || isAdminName(currentUser.username)) : false;
   
   const [gameState, setGameState] = useState<GameState>('idle');
   const [power, setPower] = useState(0);
@@ -794,10 +1200,9 @@ export const FishingGameSection: React.FC = () => {
   const [scale, setScale] = useState({ x: 1, y: 1 });
   const [canvasHeight, setCanvasHeight] = useState(600);
   const [score, setScore] = useState(0);
-  const [coins, setCoins] = useState(150);
+  const [coins, setCoins] = useState(50); // Hardcore starting coins
   const [caughtCount, setCaughtCount] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('pagi');
   const [isPerfectCast, setIsPerfectCast] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [splashes, setSplashes] = useState<{ id: string; x: number; y: number }[]>([]);
@@ -814,11 +1219,76 @@ export const FishingGameSection: React.FC = () => {
   const [flashScreen, setFlashScreen] = useState(false);
   const [confettiParticles, setConfettiParticles] = useState<{ id: number; emoji: string; x: number; y: number; delay: number; speed: number; scale: number }[]>([]);
 
+  // Realtime Jakarta (WIB - UTC+7) & Dynamic Weather Engine
+  const [jakartaClock, setJakartaClock] = useState(() => getJakartaTimeInfo());
+  const [isRealtimeJakarta, setIsRealtimeJakarta] = useState<boolean>(true);
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(() => getJakartaTimeInfo().naturalTimeOfDay);
+  const [weather, setWeather] = useState<WeatherType>('cerah');
+  const [isAutoWeather, setIsAutoWeather] = useState<boolean>(true);
+  
+  // Admin Custom Odds configuration
+  const [adminOdds, setAdminOdds] = useState<AdminOddsConfig>(() => {
+    try {
+      const saved = localStorage.getItem('admin_fishing_odds_override');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { enabled: false, mythic: 0.005, legendary: 0.035, epic: 0.11, rare: 0.25, common: 0.60 };
+  });
+
+  // Save admin odds override
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin_fishing_odds_override', JSON.stringify(adminOdds));
+    } catch (e) {}
+  }, [adminOdds]);
+
+  // Realtime Jakarta Clock interval (1s)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const info = getJakartaTimeInfo();
+      setJakartaClock(info);
+      if (isRealtimeJakarta) {
+        setTimeOfDay(info.naturalTimeOfDay);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isRealtimeJakarta]);
+
+  // Dynamic Weather Engine cycle (changes every 60-90s if auto is on)
+  useEffect(() => {
+    if (!isAutoWeather) return;
+
+    const pickRandomWeather = (): WeatherType => {
+      const r = Math.random();
+      if (r < 0.38) return 'cerah';
+      if (r < 0.62) return 'berawan';
+      if (r < 0.78) return 'hujan';
+      if (r < 0.90) return 'badai';
+      return 'kabut_mistis';
+    };
+
+    const interval = setInterval(() => {
+      const nextW = pickRandomWeather();
+      setWeather(nextW);
+      if (nextW === 'badai') {
+        playFishingSound('bite', soundEnabled);
+        triggerFloatingText('⚡ BADAI PETIR TIBA! (+25% LANGKA/MITOS)', 400, 260, '#38bdf8');
+      } else if (nextW === 'kabut_mistis') {
+        playFishingSound('perfect', soundEnabled);
+        triggerFloatingText('🌫️ KABUT MISTIS TIBA! (+50% MITOS DEWA)', 400, 260, '#c084fc');
+      } else if (nextW === 'hujan') {
+        triggerFloatingText('🌧️ HUJAN TIBA! (+10% EPIC)', 400, 260, '#60a5fa');
+      }
+    }, 70000);
+
+    return () => clearInterval(interval);
+  }, [isAutoWeather, soundEnabled]);
+
   // Equipment & Inventory
   const [equippedRod, setEquippedRod] = useState('bamboo');
   const [ownedRods, setOwnedRods] = useState<string[]>(['bamboo']);
   const [equippedBait, setEquippedBait] = useState('worm');
-  const [baitCounts, setBaitCounts] = useState<Record<string, number>>({ pellet: 5, shrimp: 2, star: 0 });
+  const [baitCounts, setBaitCounts] = useState<Record<string, number>>({ pellet: 5, shrimp: 2, star: 0, nectar: 0 });
 
   const [activeUser, setActiveUser] = useState<string | null>(null);
 
@@ -830,36 +1300,36 @@ export const FishingGameSection: React.FC = () => {
         try {
           const parsed = JSON.parse(savedData);
           setScore(parsed.score || 0);
-          setCoins(parsed.coins !== undefined ? parsed.coins : 150);
+          setCoins(parsed.coins !== undefined ? parsed.coins : 50);
           setCaughtCount(parsed.caughtCount || 0);
           setDiscoveredSpecies(parsed.discoveredSpecies || []);
           setEquippedRod(parsed.equippedRod || 'bamboo');
           setOwnedRods(parsed.ownedRods || ['bamboo']);
           setEquippedBait(parsed.equippedBait || 'worm');
-          setBaitCounts(parsed.baitCounts || { pellet: 5, shrimp: 2, star: 0 });
+          setBaitCounts(parsed.baitCounts || { pellet: 5, shrimp: 2, star: 0, nectar: 0 });
         } catch (e) {
           console.error("Failed to parse fishing data", e);
         }
       } else {
         setScore(0);
-        setCoins(150);
+        setCoins(50);
         setCaughtCount(0);
         setDiscoveredSpecies([]);
         setEquippedRod('bamboo');
         setOwnedRods(['bamboo']);
         setEquippedBait('worm');
-        setBaitCounts({ pellet: 5, shrimp: 2, star: 0 });
+        setBaitCounts({ pellet: 5, shrimp: 2, star: 0, nectar: 0 });
       }
       setActiveUser(currentUser.username);
     } else {
       setScore(0);
-      setCoins(150);
+      setCoins(50);
       setCaughtCount(0);
       setDiscoveredSpecies([]);
       setEquippedRod('bamboo');
       setOwnedRods(['bamboo']);
       setEquippedBait('worm');
-      setBaitCounts({ pellet: 5, shrimp: 2, star: 0 });
+      setBaitCounts({ pellet: 5, shrimp: 2, star: 0, nectar: 0 });
       setActiveUser(null);
     }
   }, [currentUser]);
@@ -880,6 +1350,7 @@ export const FishingGameSection: React.FC = () => {
       localStorage.setItem(`fishing_data_${currentUser.username}`, JSON.stringify(dataToSave));
     }
   }, [score, coins, caughtCount, discoveredSpecies, equippedRod, ownedRods, equippedBait, baitCounts, currentUser, activeUser]);
+
 
   const waterHeight = Math.max(260, Math.floor(canvasHeight * 0.45));
   const waterSurfaceY = canvasHeight - waterHeight + 10;
@@ -1114,7 +1585,7 @@ export const FishingGameSection: React.FC = () => {
       if (escapeTimeoutRef.current) clearTimeout(escapeTimeoutRef.current);
       playSound('tap');
 
-      const randomFish = getRandomFish(equippedRod, equippedBait);
+      const randomFish = getRandomFish(equippedRod, equippedBait, weather, adminOdds);
       currentFishRef.current = randomFish;
 
       // Consume 1 special bait
@@ -1201,7 +1672,7 @@ export const FishingGameSection: React.FC = () => {
         const perfectBonus = isPerfectCast ? 50 : 0;
         const totalPts = basePts + comboBonus + perfectBonus;
 
-        const coinMultiplier = equippedRod === 'gold' ? 1.5 : 1.0;
+        const coinMultiplier = equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1.0;
         const earnedCoins = Math.round((caughtFish?.coins || 20) * coinMultiplier);
 
         setScore(s => s + totalPts);
@@ -1230,12 +1701,13 @@ export const FishingGameSection: React.FC = () => {
     }
   };
 
-  // Reeling decay interval with rod strength bonus
+  // Hardcore reeling decay interval with rod strength bonus
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (gameState === 'reeling' && fish) {
       const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
-      const decayRate = Math.max(0.45, (fish.difficulty * 1.05) * (1 - currentRod.strengthBonus * 0.4));
+      const rarityMultiplier = fish.rarity === 'Mitos' ? 1.55 : fish.rarity === 'Legendaris' ? 1.35 : fish.rarity === 'Sangat Langka' ? 1.20 : 1.0;
+      const decayRate = Math.max(0.65, (fish.difficulty * 1.30 * rarityMultiplier) * (1 - currentRod.strengthBonus * 0.45));
 
       interval = setInterval(() => {
         reelProgressRef.current -= decayRate;
@@ -1250,7 +1722,7 @@ export const FishingGameSection: React.FC = () => {
         const targetX = targetBobberXRef.current;
         const newBobberX = targetX - (reelProgressRef.current / 100) * (targetX - 250);
         setBobberPos({ x: Math.max(250, newBobberX), y: waterSurfaceY });
-      }, 40);
+      }, 42);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -1387,28 +1859,110 @@ export const FishingGameSection: React.FC = () => {
 
       {/* Top Header Navigation & Stats */}
       <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-[200] flex flex-col gap-2 pointer-events-none">
-        {/* Top Row: Back Button & Controls */}
-        <div className="flex justify-between items-start gap-2">
-          <button
-            onClick={() => {
-              playSound('click');
-              navigate('/');
-            }}
-            className="pointer-events-auto bg-amber-100 text-slate-900 border-[4px] border-black px-3 py-1.5 sm:px-4 sm:py-2 hover:bg-amber-200 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">BACK</span>
-          </button>
+        {/* Top Row: Back Button, Jakarta Live Clock, Controls */}
+        <div className="flex justify-between items-start gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <button
+              onClick={() => {
+                playSound('click');
+                navigate('/');
+              }}
+              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black px-3 py-1.5 sm:px-4 sm:py-2 hover:bg-amber-200 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">BACK</span>
+            </button>
 
-          {/* Controls */}
-          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pointer-events-auto">
+            {/* Jakarta Realtime Live Clock Badge */}
+            <button
+              onClick={() => {
+                playSound('click');
+                setIsRealtimeJakarta(!isRealtimeJakarta);
+                if (!isRealtimeJakarta) {
+                  setTimeOfDay(jakartaClock.naturalTimeOfDay);
+                  triggerFloatingText('📍 AUTO WAKTU JAKARTA AKTIF!', 400, 200, '#38bdf8');
+                } else {
+                  triggerFloatingText('MANUAL WAKTU AKTIF', 400, 200, '#facc15');
+                }
+              }}
+              className={`border-[3px] sm:border-[4px] border-black px-2.5 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                isRealtimeJakarta
+                  ? 'bg-gradient-to-r from-sky-200 via-amber-100 to-sky-100 text-slate-950 font-black'
+                  : 'bg-amber-100 text-slate-700 font-bold hover:bg-amber-200'
+              }`}
+              title="Klik untuk Toggle Auto Waktu Realtime Jakarta (WIB) / Manual"
+            >
+              <Compass className="w-3.5 h-3.5 text-blue-800 animate-spin" style={{ animationDuration: '10s' }} />
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[8.5px] sm:text-[9.5px] font-black flex items-center gap-1">
+                  <span>📍 Jakarta</span>
+                  <span className="text-blue-900 font-mono">{jakartaClock.timeString} WIB</span>
+                </span>
+                <span className="text-[7px] sm:text-[8px] text-slate-600 uppercase font-bold">
+                  {isRealtimeJakarta ? `AUTO • ${timeOfDay.toUpperCase()}` : `MANUAL • ${timeOfDay.toUpperCase()}`}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          {/* Controls Right */}
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 pointer-events-auto mt-1 sm:mt-0">
+            {/* Admin Active Odds Badge */}
+            {isAdmin && adminOdds.enabled && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setIsOddsOpen(true);
+                }}
+                className="bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 border-[3px] sm:border-[4px] border-black px-2 py-1 text-[8.5px] sm:text-[9px] font-black flex items-center gap-1 drop-shadow-[3px_3px_0_rgba(0,0,0,1)] animate-pulse cursor-pointer"
+                title="Admin Odds Override Aktif! Klik untuk ubah."
+              >
+                <Crown className="w-3.5 h-3.5 fill-slate-950" />
+                <span>ODDS: {(adminOdds.mythic * 100).toFixed(0)}% MITOS</span>
+              </button>
+            )}
+
+            {/* Dynamic Weather Button */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const weathers: WeatherType[] = ['cerah', 'berawan', 'hujan', 'badai', 'kabut_mistis'];
+                const nextIdx = (weathers.indexOf(weather) + 1) % weathers.length;
+                const nextW = weathers[nextIdx];
+                setWeather(nextW);
+                setIsAutoWeather(false);
+                triggerFloatingText(`CUACA: ${nextW.toUpperCase()}`, 400, 200, '#38bdf8');
+              }}
+              className={`border-[3px] sm:border-[4px] border-black px-2 py-1 sm:px-2.5 sm:py-1.5 flex items-center gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-0.5 cursor-pointer ${
+                weather === 'badai'
+                  ? 'bg-slate-900 text-yellow-300 font-black'
+                  : weather === 'kabut_mistis'
+                  ? 'bg-purple-900 text-purple-200 font-black'
+                  : weather === 'hujan'
+                  ? 'bg-sky-800 text-sky-200 font-black'
+                  : weather === 'berawan'
+                  ? 'bg-slate-300 text-slate-900 font-black'
+                  : 'bg-amber-200 text-amber-950 font-black'
+              }`}
+              title="Klik untuk ganti cuaca. Cuaca mempengaruhi buff ikan langka/mitos!"
+            >
+              <span className="text-xs">
+                {weather === 'cerah' && '☀️'}
+                {weather === 'berawan' && '⛅'}
+                {weather === 'hujan' && '🌧️'}
+                {weather === 'badai' && '⛈️'}
+                {weather === 'kabut_mistis' && '🌫️'}
+              </span>
+              <span className="text-[8px] sm:text-[9px] uppercase hidden md:inline">{weather.replace('_', ' ')}</span>
+            </button>
+
             {/* Coins Button / Quick Shop */}
             <button
               onClick={() => {
                 playSound('click');
                 setIsShopOpen(true);
               }}
-              className="bg-amber-200 hover:bg-amber-300 text-slate-900 border-[4px] border-black px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
+              className="bg-amber-200 hover:bg-amber-300 text-slate-900 border-[3px] sm:border-[4px] border-black px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform active:translate-y-1 cursor-pointer"
               title="Buka Toko Alat Pancing"
             >
               <Coins className="w-3.5 h-3.5 text-amber-800" />
@@ -1421,7 +1975,7 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 setIsShopOpen(true);
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              className="bg-amber-100 hover:bg-amber-200 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
               title="Toko Alat Pancing (Joran & Umpan)"
             >
               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-900" />
@@ -1433,20 +1987,26 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 setIsOddsOpen(true);
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              className={`border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer relative ${
+                adminOdds.enabled && isAdmin ? 'bg-amber-300 ring-2 ring-yellow-400' : 'bg-amber-100 hover:bg-amber-200 text-slate-900'
+              }`}
               title="Peluang & Rarity Ikan"
             >
               <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
+              {adminOdds.enabled && isAdmin && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 rounded-full border border-black" />
+              )}
             </button>
 
-            {/* Time / Weather Selector */}
-            <div className="bg-amber-100 border-[4px] border-black p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+            {/* Time Selector */}
+            <div className="bg-amber-100 border-[3px] sm:border-[4px] border-black p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
               <button
                 onClick={() => {
                   playSound('click');
+                  setIsRealtimeJakarta(false);
                   setTimeOfDay('pagi');
                 }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'pagi' && !isRealtimeJakarta ? 'bg-amber-400 border border-black' : 'hover:bg-amber-200'}`}
                 title="Pagi Cerah"
               >
                 <Sun className="w-3.5 h-3.5 text-amber-700" />
@@ -1454,9 +2014,21 @@ export const FishingGameSection: React.FC = () => {
               <button
                 onClick={() => {
                   playSound('click');
+                  setIsRealtimeJakarta(false);
+                  setTimeOfDay('siang');
+                }}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'siang' && !isRealtimeJakarta ? 'bg-sky-400 text-slate-950 border border-black' : 'hover:bg-amber-200'}`}
+                title="Siang Terik"
+              >
+                <Sun className="w-3.5 h-3.5 text-sky-800" />
+              </button>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setIsRealtimeJakarta(false);
                   setTimeOfDay('senja');
                 }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'senja' && !isRealtimeJakarta ? 'bg-orange-400 text-white border border-black' : 'hover:bg-amber-200'}`}
                 title="Senja Keemasan"
               >
                 <Flame className="w-3.5 h-3.5 text-orange-800" />
@@ -1464,22 +2036,13 @@ export const FishingGameSection: React.FC = () => {
               <button
                 onClick={() => {
                   playSound('click');
+                  setIsRealtimeJakarta(false);
                   setTimeOfDay('malam');
                 }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
+                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'malam' && !isRealtimeJakarta ? 'bg-indigo-900 text-amber-300 border border-black' : 'hover:bg-amber-200'}`}
                 title="Malam Berbintang"
               >
                 <Moon className="w-3.5 h-3.5 text-amber-300" />
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setTimeOfDay('badai');
-                }}
-                className={`p-1 sm:p-1.5 text-[9px] font-bold flex items-center gap-1 cursor-pointer ${timeOfDay === 'badai' ? 'bg-slate-800 text-sky-300 border border-black' : 'hover:bg-amber-200'}`}
-                title="Badai Petir Hujan"
-              >
-                <CloudRain className="w-3.5 h-3.5 text-sky-400" />
               </button>
             </div>
 
@@ -1488,7 +2051,7 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 toggleFullscreen();
               }}
-              className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
               title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             >
               {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
@@ -1499,7 +2062,7 @@ export const FishingGameSection: React.FC = () => {
                 playSound('page');
                 setIsJournalOpen(true);
               }}
-              className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
               title="Jurnal Ikan"
             >
               <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-700" />
@@ -1512,7 +2075,7 @@ export const FishingGameSection: React.FC = () => {
                 }
                 setSoundEnabled(!soundEnabled);
               }}
-              className="bg-amber-100 text-slate-900 border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
+              className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black p-1.5 sm:p-2 hover:bg-amber-200 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] cursor-pointer"
             >
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />}
             </button>
@@ -1521,7 +2084,7 @@ export const FishingGameSection: React.FC = () => {
 
         {/* Bottom Row: Stats & Equipped Gear */}
         <div className="flex flex-wrap justify-end gap-2 pointer-events-none">
-          <div className="bg-amber-100 text-slate-900 border-[4px] border-black px-2.5 py-1.5 sm:px-3.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] pointer-events-auto">
+          <div className="bg-amber-100 text-slate-900 border-[3px] sm:border-[4px] border-black px-2.5 py-1.5 sm:px-3.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] pointer-events-auto">
             <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
             <span className="text-[9px] sm:text-[10px] font-bold">PTS: <span className="text-blue-600">{score}</span></span>
             <span className="text-slate-400">|</span>
@@ -1626,6 +2189,16 @@ export const FishingGameSection: React.FC = () => {
             </>
           )}
 
+          {timeOfDay === 'siang' && (
+            <>
+              <div className="absolute top-0 inset-x-0 bg-[#0284c7]" style={{ bottom: waterHeight + 285 }} />
+              <div className="absolute inset-x-0 h-[70px] bg-[#0ea5e9]" style={{ bottom: waterHeight + 215 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#38bdf8]" style={{ bottom: waterHeight + 140 }} />
+              <div className="absolute inset-x-0 h-[75px] bg-[#7dd3fc]" style={{ bottom: waterHeight + 65 }} />
+              <div className="absolute inset-x-0 h-[65px] bg-[#bae6fd]" style={{ bottom: waterHeight }} />
+            </>
+          )}
+
           {timeOfDay === 'senja' && (
             <>
               <div className="absolute top-0 inset-x-0 bg-[#431407]" style={{ bottom: waterHeight + 285 }} />
@@ -1652,28 +2225,47 @@ export const FishingGameSection: React.FC = () => {
             </>
           )}
 
-          {timeOfDay === 'badai' && (
+          {/* Weather Visual Overlays */}
+          {weather === 'hujan' && (
             <>
-              <div className="absolute top-0 inset-x-0 bg-[#0f172a]" style={{ bottom: waterHeight + 285 }} />
-              <div className="absolute inset-x-0 h-[70px] bg-[#1e293b]" style={{ bottom: waterHeight + 215 }} />
-              <div className="absolute inset-x-0 h-[75px] bg-[#334155]" style={{ bottom: waterHeight + 140 }} />
-              <div className="absolute inset-x-0 h-[75px] bg-[#475569]" style={{ bottom: waterHeight + 65 }} />
-              <div className="absolute inset-x-0 h-[65px] bg-[#64748b]" style={{ bottom: waterHeight }} />
-
-              {/* Storm Rain Streaks */}
-              {Array.from({ length: 35 }).map((_, idx) => (
+              {/* Rain Streaks */}
+              {Array.from({ length: 30 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="absolute w-[2px] h-[30px] bg-sky-200/50"
+                  className="absolute w-[2px] h-[22px] bg-sky-200/60"
                   style={{
-                    left: `${(idx * 24) % 800}px`,
-                    top: '-50px',
-                    animation: `rainFall ${0.6 + (idx % 4) * 0.15}s linear infinite`,
-                    animationDelay: `${(idx * 0.08)}s`,
+                    left: `${(idx * 28) % 800}px`,
+                    top: '-40px',
+                    animation: `rainFall ${0.7 + (idx % 3) * 0.12}s linear infinite`,
+                    animationDelay: `${idx * 0.05}s`,
                   }}
                 />
               ))}
             </>
+          )}
+
+          {weather === 'badai' && (
+            <>
+              {/* Storm Dark Cloud Band */}
+              <div className="absolute top-0 inset-x-0 h-[90px] bg-slate-950/40 pointer-events-none" />
+              {/* Storm Rain Streaks */}
+              {Array.from({ length: 45 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="absolute w-[2.5px] h-[34px] bg-sky-200/70"
+                  style={{
+                    left: `${(idx * 20) % 800}px`,
+                    top: '-50px',
+                    animation: `rainFall ${0.45 + (idx % 4) * 0.1}s linear infinite`,
+                    animationDelay: `${idx * 0.06}s`,
+                  }}
+                />
+              ))}
+            </>
+          )}
+
+          {weather === 'kabut_mistis' && (
+            <div className="absolute inset-x-0 h-[120px] bg-gradient-to-t from-purple-500/25 via-pink-400/15 to-transparent pointer-events-none animate-pulse" style={{ bottom: waterHeight }} />
           )}
 
           {/* Sun / Moon Graphic */}
@@ -1684,7 +2276,7 @@ export const FishingGameSection: React.FC = () => {
                 <div className="absolute top-2 left-2 w-3 h-3 bg-amber-200/50 rounded-full" />
                 <div className="absolute bottom-3 right-3 w-4 h-4 bg-amber-200/40 rounded-full" />
               </div>
-            ) : timeOfDay === 'badai' ? (
+            ) : weather === 'badai' ? (
               <div className="relative">
                 <div className="w-[60px] h-[36px] bg-slate-700 rounded-full border-[3px] border-slate-900 shadow-md flex items-center justify-center">
                   <Zap className="w-5 h-5 text-yellow-400 animate-bounce" />
@@ -1692,7 +2284,7 @@ export const FishingGameSection: React.FC = () => {
               </div>
             ) : (
               <div className="relative">
-                <div className={`w-[52px] h-[52px] border-[4px] ${timeOfDay === 'senja' ? 'bg-[#FF7E47] border-[#EA580C] shadow-[0_0_30px_rgba(234,88,12,0.8)]' : 'bg-[#FEF08A] border-[#FACC15] shadow-[0_0_30px_rgba(253,224,71,0.8)]'}`} />
+                <div className={`w-[52px] h-[52px] border-[4px] ${timeOfDay === 'senja' ? 'bg-[#FF7E47] border-[#EA580C] shadow-[0_0_30px_rgba(234,88,12,0.8)]' : timeOfDay === 'siang' ? 'bg-[#FFFBEB] border-[#FACC15] shadow-[0_0_40px_rgba(253,224,71,1)]' : 'bg-[#FEF08A] border-[#FACC15] shadow-[0_0_30px_rgba(253,224,71,0.8)]'}`} />
                 <div className="absolute -top-3 left-3 w-[28px] h-[6px] bg-[#FDE047]" />
                 <div className="absolute -bottom-3 left-3 w-[28px] h-[6px] bg-[#FDE047]" />
                 <div className="absolute top-3 -left-3 w-[6px] h-[28px] bg-[#FDE047]" />
@@ -2031,6 +2623,10 @@ export const FishingGameSection: React.FC = () => {
               key="odds-modal"
               equippedRod={equippedRod}
               equippedBait={equippedBait}
+              weather={weather}
+              adminOdds={adminOdds}
+              setAdminOdds={setAdminOdds}
+              setCoins={setCoins}
               soundEnabled={soundEnabled}
               onClose={() => setIsOddsOpen(false)}
             />
@@ -2257,7 +2853,7 @@ export const FishingGameSection: React.FC = () => {
                         + {fish.points} PTS
                       </span>
                       <span className="text-amber-900 bg-amber-200 px-2.5 py-1 border border-amber-800 shadow-sm">
-                        🪙 +{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))} KOIN
+                        🪙 +{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} KOIN
                       </span>
                     </div>
                   </div>
@@ -2279,7 +2875,7 @@ export const FishingGameSection: React.FC = () => {
                         <span>KONFIRMASI JUAL IKAN LANGKA</span>
                       </div>
                       <p className="text-[9px] text-slate-200 leading-snug">
-                        Ikan <strong>{fish.name}</strong> ({fish.rarity}) sangat langka dan berharga. Yakin ingin menjualnya seharga <strong>+{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))} 🪙</strong>?
+                        Ikan <strong>{fish.name}</strong> ({fish.rarity}) sangat langka dan berharga. Yakin ingin menjualnya seharga <strong>+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} 🪙</strong>?
                       </p>
                       <div className="flex gap-2 pt-1">
                         <button
@@ -2296,7 +2892,7 @@ export const FishingGameSection: React.FC = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             playSound('upgrade');
-                            const extraCoins = Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1));
+                            const extraCoins = Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1));
                             setCoins(c => c + extraCoins);
                             triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
                             setGameState('idle');
@@ -2335,7 +2931,7 @@ export const FishingGameSection: React.FC = () => {
                             setSellConfirmation(true);
                           } else {
                             playSound('upgrade');
-                            const extraCoins = Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1));
+                            const extraCoins = Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1));
                             setCoins(c => c + extraCoins);
                             triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
                             setGameState('idle');
@@ -2344,7 +2940,7 @@ export const FishingGameSection: React.FC = () => {
                         className="py-3.5 px-3 sm:px-4 bg-emerald-600 text-white border-[4px] border-black font-black text-xs hover:bg-emerald-500 transition-colors shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 cursor-pointer flex items-center gap-1"
                       >
                         <Coins className="w-3.5 h-3.5 text-yellow-300" />
-                        <span>JUAL (+{Math.round(fish.coins * (equippedRod === 'gold' ? 1.5 : 1))}🪙)</span>
+                        <span>JUAL (+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))}🪙)</span>
                       </button>
                     </motion.div>
                   )}
