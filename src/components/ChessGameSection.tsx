@@ -1113,32 +1113,27 @@ export const ChessGameSection: React.FC = () => {
               const supaCreds = getSupabaseCredentials();
               if (supaCreds.isConfigured) {
                 handleJoinSupabaseRoom(code, false, opts);
-              }
-              if (socket) {
+              } else if (socket) {
                 socket.emit('create_room', { roomId: code, player: playerProfile, ...opts });
               }
             }}
             onJoinRoom={(code) => {
-              if (socket && isConnected) {
+              const supaCreds = getSupabaseCredentials();
+              if (supaCreds.isConfigured) {
+                handleJoinSupabaseRoom(code, true);
+              } else if (socket && isConnected) {
                 socket.emit('join_room', { roomId: code, player: playerProfile });
               } else {
-                const supaCreds = getSupabaseCredentials();
-                if (supaCreds.isConfigured) {
-                  handleJoinSupabaseRoom(code, true);
-                } else {
-                  alert('Kode room tidak ditemukan');
-                }
+                alert('Kode room tidak ditemukan');
               }
             }}
             onQuickMatch={() => {
-              if (socket && isConnected) {
+              const supaCreds = getSupabaseCredentials();
+              if (supaCreds.isConfigured) {
+                const code = '123456';
+                handleJoinSupabaseRoom(code);
+              } else if (socket && isConnected) {
                 socket.emit('quick_match', { player: playerProfile });
-              } else {
-                const supaCreds = getSupabaseCredentials();
-                if (supaCreds.isConfigured) {
-                  const code = '123456';
-                  handleJoinSupabaseRoom(code);
-                }
               }
             }}
             onLeaveRoom={() => {
