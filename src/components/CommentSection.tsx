@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName } from './AdminBadge';
+import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName, GuestBadge } from './AdminBadge';
+
 
 interface Comment {
   id: string;
@@ -583,9 +584,7 @@ export const CommentSection: React.FC = () => {
                           ) : isAdminName(comment.username) ? (
                             <AdminBadge />
                           ) : (
-                            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                              Guest
-                            </span>
+                            <GuestBadge />
                           )}
                         </div>
                         <span className="text-[10px] sm:text-xs text-slate-400 font-medium shrink-0">
@@ -720,9 +719,7 @@ export const CommentSection: React.FC = () => {
                                 ) : isAdminName(reply.username) ? (
                                   <AdminBadge />
                                 ) : (
-                                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
-                                    Guest
-                                  </span>
+                                  <GuestBadge size="sm" />
                                 )}
                               </div>
                               <span className="text-[10px] text-slate-400 font-medium shrink-0">
