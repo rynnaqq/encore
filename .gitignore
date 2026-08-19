@@ -5,6 +5,11 @@ coverage/
 .DS_Store
 *.log
 .env*
-!.env.example
 .agent/
 .agents/
+.impeccable/
+README.md
+PRODUCT.md
+.env.example
+assets/
+public/assets/
