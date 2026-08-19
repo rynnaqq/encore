@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Upload, Edit2, Trash2, X, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { Send, Upload, Edit2, Trash2, X, Download, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName, GuestBadge } from './AdminBadge';
@@ -839,12 +839,31 @@ export const CommentSection: React.FC = () => {
                 className="relative max-w-5xl max-h-full flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
               >
-                <button
-                  onClick={() => setPreviewImage(null)}
-                  className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-full flex items-center justify-center shadow-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 flex flex-col sm:flex-row items-center gap-2 z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!previewImage) return;
+                      const link = document.createElement('a');
+                      link.href = previewImage;
+                      link.download = `encore_image_${Date.now()}.png`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    title="Download Image"
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-full flex items-center justify-center shadow-xl hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                  <button
+                    onClick={() => setPreviewImage(null)}
+                    title="Close Preview"
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-full flex items-center justify-center shadow-xl hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
                 <img
                   src={previewImage}
                   alt="Preview"
