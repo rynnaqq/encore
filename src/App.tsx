@@ -18,9 +18,7 @@ import { motion, AnimatePresence } from 'motion/react';
 const FishingGameSection = lazy(() =>
   import('./components/FishingGameSection').then((m) => ({ default: m.FishingGameSection }))
 );
-const ChessGameSection = lazy(() =>
-  import('./components/ChessGameSection').then((m) => ({ default: m.ChessGameSection }))
-);
+
 const UnoGameSection = lazy(() =>
   import('./components/UnoGameSection').then((m) => ({ default: m.UnoGameSection }))
 );
@@ -167,23 +165,7 @@ function AnimatedRoutes({
               </ProtectedGameRoute>
             }
           />
-          <Route
-            path="/chess"
-            element={
-              <ProtectedGameRoute targetPath="/chess">
-                <motion.div
-                  key="route-chess"
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="gpu-smooth"
-                >
-                  <ChessGameSection />
-                </motion.div>
-              </ProtectedGameRoute>
-            }
-          />
+
           <Route
             path="/snake-ladders"
             element={

@@ -35,13 +35,7 @@ export const LoginPage: React.FC = () => {
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              onClick={() => navigate('/chess')}
-              className="p-3.5 rounded-2xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-xs flex flex-col items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
-            >
-              <Crown className="w-5 h-5" />
-              <span>Main Catur</span>
-            </button>
+
             <button
               onClick={() => navigate('/uno')}
               className="p-3.5 rounded-2xl bg-[#FFCCE1]/30 dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-xs flex flex-col items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"

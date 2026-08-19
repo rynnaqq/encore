@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'home', label: 'Home', path: '/' },
     { id: 'about', label: 'About', path: '/' },
     { id: 'fishing', label: 'Fishing Game', path: '/fishing' },
-    { id: 'chess', label: 'Chess Game', path: '/chess' },
+
     { id: 'snake', label: 'Snake & Ladders', path: '/snake-ladders' },
     { id: 'uno', label: 'UNO Game', path: '/uno' },
   ];
@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
 
     // Require login before entering any game (Fishing, Chess, Snake & Ladders, UNO)
-    const isProtectedGame = id === 'fishing' || id === 'chess' || id === 'snake' || id === 'uno' || path === '/fishing' || path === '/chess' || path === '/snake-ladders' || path === '/uno';
+    const isProtectedGame = id === 'fishing' || id === 'snake' || id === 'uno' || path === '/fishing' || path === '/snake-ladders' || path === '/uno';
     if (isProtectedGame && !currentUser) {
       openLoginModal(() => {
         navigate(path);
