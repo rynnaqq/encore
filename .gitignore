@@ -11,4 +11,4 @@ coverage/
 README.md
 PRODUCT.md
 .env.example
-assets/
+/assets/
