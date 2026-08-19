@@ -69,6 +69,8 @@ export const CommentSection: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
 
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -633,7 +635,8 @@ export const CommentSection: React.FC = () => {
                           <img 
                              src={comment.photoBase64} 
                              alt="Attached" 
-                             className="max-h-40 sm:max-h-48 max-w-full rounded-xl border border-slate-200 dark:border-slate-700 object-cover shadow-sm"
+                             onClick={() => setPreviewImage(comment.photoBase64)}
+                             className="max-h-40 sm:max-h-48 max-w-full rounded-xl border border-slate-200 dark:border-slate-700 object-cover shadow-sm cursor-pointer hover:opacity-90 hover:shadow-md transition-all duration-200"
                           />
                         </div>
                       )}
@@ -762,7 +765,8 @@ export const CommentSection: React.FC = () => {
                                 <img 
                                    src={reply.photoBase64} 
                                    alt="Attached" 
-                                   className="max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm"
+                                   onClick={() => setPreviewImage(reply.photoBase64)}
+                                   className="max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm cursor-pointer hover:opacity-90 hover:shadow-md transition-all duration-200"
                                 />
                               </div>
                             )}
@@ -809,6 +813,40 @@ export const CommentSection: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewImage(null)}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-8 cursor-zoom-out"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
+              className="relative max-w-5xl max-h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+            >
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-full flex items-center justify-center shadow-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
