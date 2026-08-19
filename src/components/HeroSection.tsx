@@ -8,28 +8,28 @@ const CodeShowcaseScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
 
   return (
-    <div className="relative w-full h-full bg-[#0f172a] text-slate-100 flex flex-col font-mono select-none overflow-hidden">
+    <div className="relative w-full h-full bg-slate-950 text-slate-100 flex flex-col font-mono select-none overflow-hidden">
       {/* Top Bar / Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[#1e293b] border-b border-slate-700/60 text-[10px] sm:text-xs">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900 border-b border-slate-800 text-[10px] sm:text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-          <span className="ml-1 text-slate-400 font-sans font-medium text-[10px] hidden sm:inline">encore-app.tsx</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-rose-500/90" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500/90" />
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/90" />
+          <span className="ml-1 text-slate-400 font-sans font-medium text-[10px] hidden sm:inline tracking-tight">encore-app.tsx</span>
         </div>
-        <div className="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-lg border border-slate-700">
+        <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
           <button
             onClick={() => setActiveTab('preview')}
-            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
-              activeTab === 'preview' ? 'bg-[#E195AB] text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+            className={`px-2.5 py-0.5 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+              activeTab === 'preview' ? 'bg-[#E195AB] text-white shadow-xs' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Preview
           </button>
           <button
             onClick={() => setActiveTab('code')}
-            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
-              activeTab === 'code' ? 'bg-[#E195AB] text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+            className={`px-2.5 py-0.5 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+              activeTab === 'code' ? 'bg-[#E195AB] text-white shadow-xs' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Code
@@ -38,7 +38,7 @@ const CodeShowcaseScreen: React.FC = () => {
       </div>
 
       {/* Screen Body */}
-      <div className={`flex-1 overflow-hidden relative flex flex-col justify-center ${activeTab === 'preview' ? 'p-0' : 'p-3 sm:p-4'}`}>
+      <div className={`flex-1 overflow-hidden relative flex flex-col justify-center ${activeTab === 'preview' ? 'p-0' : 'p-3.5 sm:p-5'}`}>
         {activeTab === 'preview' ? (
           <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center">
             <video 
@@ -50,17 +50,17 @@ const CodeShowcaseScreen: React.FC = () => {
               playsInline 
             />
             {/* Fallback text if video not found */}
-            <div className="absolute inset-0 flex items-center justify-center -z-10 text-slate-500 text-xs text-center p-4">
+            <div className="absolute inset-0 flex items-center justify-center -z-10 text-slate-500 text-xs text-center p-4 font-sans">
               Video will appear here<br/>(public/assets/videos/video.mp4)
             </div>
           </div>
         ) : (
-          <div className="text-[10px] sm:text-xs space-y-1 leading-relaxed text-slate-300">
-            <div><span className="text-pink-400">const</span> <span className="text-sky-300">developer</span> = &#123;</div>
-            <div className="pl-3"><span className="text-emerald-300">name</span>: <span className="text-amber-300">'Encore'</span>,</div>
-            <div className="pl-3"><span className="text-emerald-300">role</span>: <span className="text-amber-300">'Frontend Craftsman'</span>,</div>
-            <div className="pl-3"><span className="text-emerald-300">skills</span>: [<span className="text-amber-300">'React'</span>, <span className="text-amber-300">'TypeScript'</span>, <span className="text-amber-300">'Tailwind'</span>],</div>
-            <div className="pl-3"><span className="text-emerald-300">status</span>: <span className="text-amber-300">'Available for project'</span>,</div>
+          <div className="text-[10px] sm:text-xs space-y-1.5 leading-relaxed text-slate-300 font-mono">
+            <div><span className="text-pink-400 font-semibold">const</span> <span className="text-sky-300">developer</span> = &#123;</div>
+            <div className="pl-4"><span className="text-emerald-300">name</span>: <span className="text-amber-300">'Encore'</span>,</div>
+            <div className="pl-4"><span className="text-emerald-300">role</span>: <span className="text-amber-300">'Frontend Craftsman'</span>,</div>
+            <div className="pl-4"><span className="text-emerald-300">skills</span>: [<span className="text-amber-300">'React'</span>, <span className="text-amber-300">'TypeScript'</span>, <span className="text-amber-300">'Tailwind'</span>],</div>
+            <div className="pl-4"><span className="text-emerald-300">status</span>: <span className="text-amber-300">'Available for project'</span>,</div>
             <div>&#125;;</div>
           </div>
         )}
@@ -89,7 +89,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
     <section
       id="home"
       ref={containerRef}
-      className="min-h-screen pt-16 sm:pt-20 md:pt-24 pb-16 flex items-center justify-center relative overflow-hidden"
+      className="min-h-screen pt-20 sm:pt-24 md:pt-28 pb-16 flex items-center justify-center relative overflow-hidden"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 flex flex-col items-center">
         
@@ -103,22 +103,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
         >
           <div className="relative w-full max-w-[min(100%,560px)] sm:max-w-[620px] aspect-[16/9]">
             
-            {/* Top Left Animated Smiley */}
+            {/* Top Left Animated Smiley Sticker */}
             <motion.div
               animate={{
-                y: [0, -8, 0],
-                rotate: [-6, -3, -6],
+                y: [0, -6, 0],
+                rotate: [-6, -2, -6],
               }}
               transition={{
                 duration: 4,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              whileHover={{ scale: 1.15, rotate: 0 }}
-              className="absolute -top-2.5 -left-1 sm:-top-6 sm:-left-6 z-30 cursor-pointer"
+              whileHover={{ scale: 1.12, rotate: 0 }}
+              className="absolute -top-2.5 -left-1 sm:-top-5 sm:-left-5 z-30 cursor-pointer"
             >
-              <div className="bg-[#FFDD00] text-black w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-[1rem] flex items-center justify-center border-[2px] sm:border-[2.5px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-6 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 sm:w-6 sm:h-6">
+              <div className="bg-[#FFDD00] text-slate-950 w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center border border-black/80 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] -rotate-6 transition-transform">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 sm:w-5 sm:h-5">
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
                   <line x1="9" y1="9" x2="9.01" y2="9"></line>
@@ -127,11 +127,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
               </div>
             </motion.div>
 
-            {/* Bottom Right Animated Pill */}
+            {/* Bottom Right Animated Pill Sticker */}
             <motion.div
               animate={{
-                y: [0, 8, 0],
-                rotate: [3, 6, 3],
+                y: [0, 6, 0],
+                rotate: [3, 5, 3],
               }}
               transition={{
                 duration: 3.5,
@@ -139,26 +139,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
                 ease: "easeInOut",
                 delay: 1,
               }}
-              whileHover={{ scale: 1.1, rotate: 0 }}
-              className="absolute -bottom-2 right-1 sm:-bottom-4 sm:right-4 z-30 cursor-pointer"
+              whileHover={{ scale: 1.08, rotate: 0 }}
+              className="absolute -bottom-2 right-1 sm:-bottom-3 sm:right-3 z-30 cursor-pointer"
             >
-              <div className="bg-[#FF00E5] text-white px-3 py-1 sm:px-5 sm:py-2 rounded-full border-[2px] sm:border-[2.5px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rotate-3 flex items-center justify-center">
-                <span className="font-sans font-black text-[9px] sm:text-xs uppercase tracking-widest italic leading-none mt-0.5">Woah!</span>
+              <div className="bg-[#E195AB] text-white px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full border border-black/80 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] rotate-3 flex items-center justify-center">
+                <span className="font-mono font-black text-[9px] sm:text-[10px] uppercase tracking-wider italic leading-none">Crafted</span>
               </div>
             </motion.div>
             
             {/* Minimal Smartphone Frame */}
             <motion.div
-              whileHover={{ scale: 1.015, y: -4 }}
+              whileHover={{ scale: 1.01, y: -2 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="relative w-full h-full rounded-2xl border shadow-2xl overflow-hidden flex items-center justify-center transition-shadow border-[#FFCCE1] dark:border-slate-800 shadow-pink-200/50 dark:shadow-none hover:shadow-pink-300/80 dark:hover:shadow-none bg-white dark:bg-slate-900"
+              className="relative w-full h-full rounded-3xl border shadow-[0_12px_40px_rgb(0,0,0,0.08)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.4)] overflow-hidden flex items-center justify-center border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5"
             >
               
               {/* Speaker / Notch Accent */}
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFCCE1] dark:bg-slate-700 rounded-full z-30 hidden sm:block" />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1 h-6 bg-slate-300 dark:bg-slate-700 rounded-full z-30 hidden sm:block" />
 
               {/* Inner Screen Display */}
-              <div className="relative w-full h-full overflow-hidden group">
+              <div className="relative w-full h-full rounded-2xl overflow-hidden group border border-slate-800/40">
                 <CodeShowcaseScreen />
               </div>
             </motion.div>
@@ -176,7 +176,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
         >
           
           {/* Main Heading */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <h1 className="font-sans text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight flex flex-col items-start gap-1">
               <span className="text-slate-800 dark:text-slate-100">
                 Hello Everyone
@@ -199,12 +199,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
             className="font-sans text-sm sm:text-base lg:text-lg max-w-xl text-left leading-relaxed text-slate-600 dark:text-slate-300"
           />
 
-          {/* View Profile Action Button */}
+          {/* View Profile Action Button with Button-in-Button architecture */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="pt-4 sm:pt-6 flex items-center gap-3 w-full xs:w-auto"
+            className="pt-3 sm:pt-4 flex items-center gap-3 w-full xs:w-auto"
           >
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -217,11 +217,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
                 }
               }}
               id="hero-view-profile-btn"
-              className="py-2.5 px-5 sm:px-6 w-full xs:w-auto rounded-xl bg-[#E195AB] text-white font-sans font-semibold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-[#d68097] dark:hover:bg-[#E195AB]/90 transition-all cursor-pointer shadow-md dark:shadow-none group/btn"
+              className="py-2.5 pl-5 pr-2.5 sm:py-3 sm:pl-6 sm:pr-3 w-full xs:w-auto rounded-full bg-[#E195AB] text-white font-sans font-bold text-xs sm:text-sm tracking-wide uppercase flex items-center justify-between xs:justify-center gap-3 hover:bg-[#d68097] transition-all cursor-pointer shadow-sm hover:shadow group/btn"
             >
-              <User className="w-4 h-4 text-white" />
-              <span>View Profile </span>
-              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-white" />
+                <span>View Profile</span>
+              </div>
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover/btn:translate-x-0.5 shrink-0">
+                <ArrowRight className="w-3.5 h-3.5 text-white" />
+              </div>
             </motion.button>
           </motion.div>
         </motion.div>
@@ -229,4 +233,5 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenAboutModal }) =>
     </section>
   );
 };
+
 

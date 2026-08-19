@@ -116,11 +116,10 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinishLoading })
             filter: 'blur(8px)',
           }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 select-none bg-[#F2F9FF] dark:bg-slate-950 text-slate-800 dark:text-slate-100"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 select-none bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100"
         >
-          {/* Subtle Ambient Glows */}
-          <div className="absolute w-80 sm:w-96 h-80 sm:h-96 rounded-full blur-[100px] pointer-events-none bg-pink-200/40 dark:bg-pink-900/20" />
-          <div className="absolute -bottom-10 -right-10 w-72 h-72 rounded-full blur-[100px] pointer-events-none bg-amber-100/50 dark:bg-amber-900/10" />
+          {/* Subtle Ambient Radial Glow */}
+          <div className="absolute w-80 sm:w-96 h-80 sm:h-96 rounded-full blur-[120px] pointer-events-none bg-[#E195AB]/15 dark:bg-[#E195AB]/10" />
 
           {/* Central Minimalist Container */}
           <div className="relative z-10 flex flex-col items-center max-w-xs w-full text-center">
@@ -132,21 +131,21 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinishLoading })
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="mb-8 relative"
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 <span className="font-sans text-4xl sm:text-5xl font-black tracking-tight text-slate-800 dark:text-slate-100">
                   Encore
                 </span>
-                <span className="text-[#E195AB] font-black text-5xl leading-none animate-pulse">
+                <span className="text-[#E195AB] font-black text-5xl leading-none">
                   .
                 </span>
               </div>
             </motion.div>
 
             {/* Smooth Progress Bar */}
-            <div className="w-full space-y-3">
-              <div className="relative w-full h-2 rounded-full bg-[#FFCCE1]/40 dark:bg-slate-800 p-0.5 overflow-hidden">
+            <div className="w-full space-y-2.5">
+              <div className="relative w-full h-1.5 rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-[#FFCCE1] via-[#E195AB] to-[#E195AB]"
+                  className="h-full rounded-full bg-[#E195AB]"
                   style={{ width: `${displayProgress}%` }}
                   transition={{ ease: 'easeOut', duration: 0.1 }}
                 />

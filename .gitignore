@@ -12,3 +12,6 @@ README.md
 PRODUCT.md
 .env.example
 /assets/
+.claude/
+.playwright/
+*.tgz

@@ -4,14 +4,16 @@ html {
   scroll-behavior: smooth;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
   .font-sans {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
 
@@ -23,7 +25,7 @@ html {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-/* Touch manipulation optimization */
+/* Touch manipulation & precision interaction */
 button, a, input, select, textarea {
   touch-action: manipulation;
 }
@@ -35,7 +37,29 @@ button, a, input, select, textarea {
   transform: translateZ(0);
 }
 
-/* Hide scrollbars globally */
+/* Human-crafted surface elevation & double bezel styles */
+.surface-glass {
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(225, 149, 171, 0.25);
+}
+
+.dark .surface-glass {
+  background-color: rgba(15, 23, 42, 0.75);
+  border-color: rgba(51, 65, 85, 0.5);
+}
+
+/* Focus rings with accessible, tight glow */
+.focus-ring-accent {
+  outline: none;
+}
+.focus-ring-accent:focus-visible {
+  outline: 2px solid #E195AB;
+  outline-offset: 2px;
+}
+
+/* Hide scrollbars cleanly */
 ::-webkit-scrollbar {
   display: none;
   width: 0px;
@@ -43,8 +67,8 @@ button, a, input, select, textarea {
 }
 
 html, body, * {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @keyframes cursorBlink {
@@ -63,8 +87,8 @@ html, body, * {
 /* Smooth View Transition Cross-Fade Animation */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 450ms;
-  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   mix-blend-mode: normal;
 }
 
@@ -94,9 +118,10 @@ html, body, * {
   }
 }
 
-/* Smooth global color and background transitions */
+/* Smooth global background and color transitions */
 body {
-  transition: background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
+
