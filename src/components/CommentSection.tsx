@@ -505,8 +505,8 @@ export const CommentSection: React.FC = () => {
                     <span>Attach Photo</span>
                   </label>
                   {photoBase64 && (
-                    <div className="mt-3 relative inline-block">
-                      <img src={photoBase64} alt="Preview" className="h-16 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm" />
+                    <div className="relative inline-block">
+                      <img src={photoBase64} alt="Preview" draggable={false} onContextMenu={(e) => e.preventDefault()} className="h-16 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm select-none" />
                       <button
                         type="button"
                         onClick={() => {
@@ -568,7 +568,7 @@ export const CommentSection: React.FC = () => {
                   <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex gap-3 sm:gap-4 group">
                     {isAdminName(comment.username) ? (
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-950/70 flex items-center justify-center shrink-0 overflow-hidden border-2 border-indigo-200 dark:border-indigo-800/60">
-                        <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
+                        <img src="/assets/images/favicon.png" alt="Admin" draggable={false} onContextMenu={(e) => e.preventDefault()} className="w-full h-full object-cover select-none" />
                       </div>
                     ) : (
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-black text-sm sm:text-base flex items-center justify-center shrink-0 border border-transparent dark:border-indigo-800/40">
@@ -636,8 +636,10 @@ export const CommentSection: React.FC = () => {
                           <img 
                              src={comment.photoBase64} 
                              alt="Attached" 
+                             draggable={false}
+                             onContextMenu={(e) => e.preventDefault()}
                              onClick={() => setPreviewImage(comment.photoBase64)}
-                             className="max-h-40 sm:max-h-48 max-w-full rounded-xl border border-slate-200 dark:border-slate-700 object-cover shadow-sm cursor-pointer hover:opacity-90 hover:shadow-md transition-all duration-200"
+                             className="max-h-40 sm:max-h-48 max-w-full rounded-xl border border-slate-200 dark:border-slate-700 object-cover shadow-sm cursor-pointer hover:opacity-90 hover:shadow-md transition-all duration-200 select-none"
                           />
                         </div>
                       )}
@@ -704,7 +706,7 @@ export const CommentSection: React.FC = () => {
                         <div key={reply.id} className="bg-slate-50 dark:bg-slate-800/50 p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex gap-2.5 sm:gap-3">
                           {isAdminName(reply.username) ? (
                             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/70 flex items-center justify-center shrink-0 overflow-hidden border border-indigo-200 dark:border-indigo-800/60">
-                              <img src="/assets/images/favicon.png" alt="Admin" className="w-full h-full object-cover" />
+                              <img src="/assets/images/favicon.png" alt="Admin" draggable={false} onContextMenu={(e) => e.preventDefault()} className="w-full h-full object-cover select-none" />
                             </div>
                           ) : (
                             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-black text-xs sm:text-sm flex items-center justify-center shrink-0 border border-transparent dark:border-indigo-800/40">
@@ -766,8 +768,10 @@ export const CommentSection: React.FC = () => {
                                 <img 
                                    src={reply.photoBase64} 
                                    alt="Attached" 
+                                   draggable={false}
+                                   onContextMenu={(e) => e.preventDefault()}
                                    onClick={() => setPreviewImage(reply.photoBase64)}
-                                   className="max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm cursor-pointer hover:opacity-90 hover:shadow-md transition-all duration-200"
+                                   className="max-h-32 rounded-lg border border-slate-200 dark:border-slate-700 object-cover shadow-sm cursor-pointer hover:opacity-90 hover:shadow-md transition-all duration-200 select-none"
                                 />
                               </div>
                             )}
@@ -844,7 +848,9 @@ export const CommentSection: React.FC = () => {
                 <img
                   src={previewImage}
                   alt="Preview"
-                  className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10 select-none"
                 />
               </motion.div>
             </motion.div>
