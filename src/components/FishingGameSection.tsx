@@ -1148,6 +1148,19 @@ export const FishingGameSection: React.FC = () => {
   const waterHeight = Math.max(260, Math.floor(canvasHeight * 0.45));
   const waterSurfaceY = canvasHeight - waterHeight + 10;
 
+  // Exact trigonometric calculation for rod tip position in 800xcanvasHeight coordinates
+  const getRodTipPos = (angleDeg: number) => {
+    const pivotX = 129;
+    const pivotY = canvasHeight - waterHeight - 35;
+    const radius = 211.6837;
+    const baseAngleRad = -0.0804; // Math.atan2(-17, 211) ≈ -4.6067 deg
+    const angleRad = (angleDeg * Math.PI) / 180 + baseAngleRad;
+    return {
+      x: pivotX + radius * Math.cos(angleRad),
+      y: pivotY + radius * Math.sin(angleRad),
+    };
+  };
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -1216,7 +1229,6 @@ export const FishingGameSection: React.FC = () => {
   const containerRef = useRef<HTMLElement>(null);
   const gameCanvasRef = useRef<HTMLDivElement>(null);
   const rodTipRef = useRef<HTMLDivElement>(null);
-  const [rodTipPos, setRodTipPos] = useState({ x: 330, y: 310 });
 
   const powerRef = useRef(0);
   const powerDirRef = useRef(1);
@@ -1226,50 +1238,6 @@ export const FishingGameSection: React.FC = () => {
 
   const biteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const escapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Optimize: Sync real-time position of rod tip ONLY when actively moving to prevent idle layout thrashing/battery drain.
-  useEffect(() => {
-    let animId: number;
-    let lastX = -1;
-    let lastY = -1;
-    let isActive = true;
-
-    const updateRodTipPos = () => {
-      if (!isActive) return;
-
-      if (rodTipRef.current && gameCanvasRef.current) {
-        // Only compute if game state is actively changing the rod's physical position
-        if (['preparing', 'casting', 'reeling', 'biting'].includes(gameState) || lastX === -1) {
-          const tipRect = rodTipRef.current.getBoundingClientRect();
-          const canvasRect = gameCanvasRef.current.getBoundingClientRect();
-          
-          if (canvasRect.width > 0) {
-            const scaleX = canvasRect.width / 800;
-            const scaleY = canvasRect.height / canvasHeight;
-            const tipCenterX = (tipRect.left + tipRect.right) / 2;
-            const tipCenterY = (tipRect.top + tipRect.bottom) / 2;
-            
-            const x = (tipCenterX - canvasRect.left) / scaleX;
-            const y = (tipCenterY - canvasRect.top) / scaleY;
-            
-            // Only trigger React state update if position changed significantly (reduce re-renders)
-            if (Math.abs(x - lastX) > 0.5 || Math.abs(y - lastY) > 0.5) {
-              setRodTipPos({ x, y });
-              lastX = x;
-              lastY = y;
-            }
-          }
-        }
-      }
-      animId = requestAnimationFrame(updateRodTipPos);
-    };
-    
-    animId = requestAnimationFrame(updateRodTipPos);
-    return () => {
-      isActive = false;
-      cancelAnimationFrame(animId);
-    };
-  }, [canvasHeight, gameState]);
 
   const playSound = (type: FishingSoundType) => {
     playFishingSound(type, soundEnabled);
@@ -1341,8 +1309,9 @@ export const FishingGameSection: React.FC = () => {
     setGameState('casting');
     let progress = 0;
 
-    const startX = rodTipPos.x || 330;
-    const startY = rodTipPos.y || 310;
+    const startPos = getRodTipPos(-20);
+    const startX = startPos.x;
+    const startY = startPos.y;
 
     const animateCast = () => {
       progress += 0.045;
@@ -1573,6 +1542,8 @@ export const FishingGameSection: React.FC = () => {
   else if (gameState === 'biting') rodAngleDeg = -5;
   else if (gameState === 'reeling') rodAngleDeg = -30;
   else rodAngleDeg = -22;
+
+  const rodTipPos = getRodTipPos(rodAngleDeg);
 
   const currentEquippedRodItem = React.useMemo(() => 
     RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0], 
@@ -2288,7 +2259,7 @@ export const FishingGameSection: React.FC = () => {
 
             {/* Arm & Rod */}
             <div
-              className={`absolute bottom-[48px] left-[20px] origin-[4px_16px] transition-transform duration-200 ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
+              className={`absolute bottom-[48px] left-[20px] origin-[4px_16px] ${gameState === 'reeling' ? 'animate-rod-vibrate' : ''}`}
               style={{ transform: `rotate(${rodAngleDeg}deg)` }}
             >
               <div className="w-[20px] h-[8px] bg-amber-400 border-[2px] border-black" />
