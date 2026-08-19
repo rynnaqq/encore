@@ -1537,16 +1537,24 @@ export const FishingGameSection: React.FC = () => {
 
         setGameState('waiting');
 
-        // Bait bite wait factor
+        // Dynamic Randomized Fishing Wait Duration
         const activeBait = BAITS_DATABASE.find(b => b.id === equippedBait) || BAITS_DATABASE[0];
-        const biteWaitFactor = Math.max(0.4, 1 - activeBait.biteSpeedBonus * 0.5);
-        const waitTime = (Math.random() * 2200 + 1000) * biteWaitFactor;
+        const baitWaitFactor = Math.max(0.35, 1 - activeBait.biteSpeedBonus * 0.55);
+        const weatherWaitFactor = (weather === 'badai' || weather === 'kabut_mistis') ? 0.82 : weather === 'hujan' ? 0.90 : 1.0;
+        const perfectCastFactor = perfect ? 0.78 : 1.0;
+        
+        // Random wait duration between 1.1s and 5.8s depending on luck, bait, and weather
+        const randomBaseWait = Math.random() * 4200 + 1200;
+        const waitTime = randomBaseWait * baitWaitFactor * weatherWaitFactor * perfectCastFactor;
 
         biteTimeoutRef.current = setTimeout(() => {
           setGameState(prev => {
             if (prev === 'waiting') {
               playSound('bite');
               triggerSplash(targetX, waterSurfaceY);
+
+              // Randomized reaction escape window (950ms - 1500ms)
+              const reactionWindow = Math.floor(Math.random() * 550 + 950);
 
               escapeTimeoutRef.current = setTimeout(() => {
                 setGameState(curr => {
@@ -1558,7 +1566,7 @@ export const FishingGameSection: React.FC = () => {
                   }
                   return curr;
                 });
-              }, 1200);
+              }, reactionWindow);
               return 'biting';
             }
             return prev;
@@ -1618,7 +1626,9 @@ export const FishingGameSection: React.FC = () => {
       triggerSplash(bobberPos.x, bobberPos.y);
 
       const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
-      const pullIncrement = 15 * (1 + currentRod.reelSpeedBonus);
+      // Dynamic random tap pull momentum (-15% to +25% natural variance per tap)
+      const tapVariance = 1 + (Math.random() * 0.40 - 0.15);
+      const pullIncrement = 15 * (1 + currentRod.reelSpeedBonus) * tapVariance;
       reelProgressRef.current += pullIncrement;
 
       if (reelProgressRef.current >= 100) {
@@ -1701,16 +1711,20 @@ export const FishingGameSection: React.FC = () => {
     }
   };
 
-  // Hardcore reeling decay interval with rod strength bonus
+  // Hardcore fluctuating reeling decay with dynamic fish struggle surges
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (gameState === 'reeling' && fish) {
       const currentRod = RODS_DATABASE.find(r => r.id === equippedRod) || RODS_DATABASE[0];
       const rarityMultiplier = fish.rarity === 'Mitos' ? 1.55 : fish.rarity === 'Legendaris' ? 1.35 : fish.rarity === 'Sangat Langka' ? 1.20 : 1.0;
-      const decayRate = Math.max(0.65, (fish.difficulty * 1.30 * rarityMultiplier) * (1 - currentRod.strengthBonus * 0.45));
 
       interval = setInterval(() => {
-        reelProgressRef.current -= decayRate;
+        // Natural fish thrash simulation: surges (bursts of resistance) & brief pauses
+        const timeVal = Date.now() / 320;
+        const surgeFactor = 1 + Math.sin(timeVal) * 0.45 + (Math.random() * 0.35 - 0.15);
+        const dynamicDecayRate = Math.max(0.40, (fish.difficulty * 1.30 * rarityMultiplier * surgeFactor) * (1 - currentRod.strengthBonus * 0.45));
+
+        reelProgressRef.current -= dynamicDecayRate;
         if (reelProgressRef.current <= 0) {
           reelProgressRef.current = 0;
           playSound('escape');
