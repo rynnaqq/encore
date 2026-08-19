@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient, getSupabaseCredentials } from '../lib/supabaseClient';
 import { Trash2, Users, MessageSquare, Shield, KeyRound, UserPlus, Search, LogOut, CheckCircle2, AlertCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { useAuth, User } from '../context/AuthContext';
 
@@ -28,6 +28,7 @@ export const AdminPage: React.FC = () => {
   const [newRole, setNewRole] = useState<'user' | 'admin'>('user');
   const [userActionMsg, setUserActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Admin session authentication
   const isAdminAuthenticated = currentUser?.role === 'admin';
 
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -42,18 +43,65 @@ export const AdminPage: React.FC = () => {
     setIsLoadingComments(true);
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) {
-        setIsLoadingComments(false);
-        return;
+      let rawData: any[] | null = null;
+
+      // 1. Try Supabase SDK
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('comments')
+            .select('*')
+            .order('timestamp', { ascending: false });
+
+          if (!error && Array.isArray(data) && data.length > 0) {
+            rawData = data;
+          }
+        } catch (e) {
+          console.warn('Supabase SDK fetch failed in AdminPage:', e);
+        }
       }
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .order('timestamp', { ascending: false });
+
+      // 2. Try Direct REST API
+      if (!rawData || rawData.length === 0) {
+        try {
+          const { url, key } = getSupabaseCredentials();
+          if (url && key) {
+            const restRes = await fetch(`${url}/rest/v1/comments?select=*&order=timestamp.desc`, {
+              headers: {
+                apikey: key,
+                Authorization: `Bearer ${key}`
+              }
+            });
+            if (restRes.ok) {
+              const resData = await restRes.json();
+              if (Array.isArray(resData) && resData.length > 0) {
+                rawData = resData;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Direct REST fetch failed in AdminPage:', e);
+        }
+      }
+
+      // 3. Try local /api/comments
+      if (!rawData || rawData.length === 0) {
+        try {
+          const res = await fetch('/api/comments');
+          if (res.ok) {
+            const localData = await res.json();
+            if (Array.isArray(localData) && localData.length > 0) {
+              rawData = localData;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
         
-      if (data && !error && Array.isArray(data)) {
-        setComments(data.map((c: any) => ({
-          id: String(c.id),
+      if (rawData && Array.isArray(rawData)) {
+        setComments(rawData.map((c: any) => ({
+          id: String(c.id || Date.now()),
           username: String(c.username || 'Anonymous'),
           text: String(c.text || ''),
           photoBase64: c.photo_base64 || c.photoBase64 || null,
@@ -61,7 +109,7 @@ export const AdminPage: React.FC = () => {
         })));
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching comments in AdminPage:', error);
     } finally {
       setIsLoadingComments(false);
     }
@@ -78,17 +126,46 @@ export const AdminPage: React.FC = () => {
     
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) return;
-      
-      const { error } = await supabase
-        .from('comments')
-        .delete()
-        .eq('id', id);
-        
-      if (!error) {
+      const { url, key } = getSupabaseCredentials();
+      let success = false;
+
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('comments').delete().eq('id', id);
+          if (!error) success = true;
+        } catch (e) {
+          console.warn('Supabase SDK delete failed:', e);
+        }
+      }
+
+      if (!success && url && key) {
+        try {
+          const restRes = await fetch(`${url}/rest/v1/comments?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`
+            }
+          });
+          if (restRes.ok) success = true;
+        } catch (e) {
+          console.warn('Direct REST delete failed:', e);
+        }
+      }
+
+      if (!success) {
+        try {
+          const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
+          if (res.ok) success = true;
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (success) {
         setComments(comments.filter(c => c.id !== id));
       } else {
-        alert('Gagal menghapus komentar: ' + error.message);
+        alert('Gagal menghapus komentar. Silakan coba lagi.');
       }
     } catch (error) {
       console.error('Error deleting comment:', error);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Upload, Edit2, Trash2, X, Download, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient, getSupabaseCredentials } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName, GuestBadge } from './AdminBadge';
 
@@ -141,33 +141,68 @@ export const CommentSection: React.FC = () => {
   const fetchComments = async () => {
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) {
-        const res = await fetch('/api/comments');
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setComments(data.map((c: any) => ({
-              id: String(c.id),
-              username: String(c.username || 'Anonymous'),
-              text: String(c.text || ''),
-              photoBase64: c.photo_base64 || c.photoBase64 || null,
-              timestamp: typeof c.timestamp === 'number' ? c.timestamp : Number(c.timestamp) || Date.now()
-            })));
+      let rawData: any[] | null = null;
+
+      // 1. Try Supabase SDK
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('comments')
+            .select('*')
+            .order('timestamp', { ascending: true });
+
+          if (!error && Array.isArray(data) && data.length > 0) {
+            rawData = data;
+          } else if (error) {
+            console.warn('Supabase SDK fetch warning:', error);
           }
+        } catch (e) {
+          console.warn('Supabase SDK fetch failed:', e);
         }
-        setIsLoading(false);
-        return;
       }
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .order('timestamp', { ascending: true });
-        
-      if (error) {
-        console.error('Error fetching comments from Supabase:', error);
-      } else if (data && Array.isArray(data)) {
-        setComments(data.map((c: any) => ({
-          id: String(c.id),
+
+      // 2. Direct Supabase PostgREST REST API fallback
+      if (!rawData || rawData.length === 0) {
+        try {
+          const { url, key } = getSupabaseCredentials();
+          if (url && key) {
+            const restRes = await fetch(`${url}/rest/v1/comments?select=*&order=timestamp.asc`, {
+              method: 'GET',
+              headers: {
+                apikey: key,
+                Authorization: `Bearer ${key}`
+              }
+            });
+            if (restRes.ok) {
+              const resData = await restRes.json();
+              if (Array.isArray(resData) && resData.length > 0) {
+                rawData = resData;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Direct REST fetch failed:', e);
+        }
+      }
+
+      // 3. Fallback to local /api/comments
+      if (!rawData || rawData.length === 0) {
+        try {
+          const localRes = await fetch('/api/comments');
+          if (localRes.ok) {
+            const localData = await localRes.json();
+            if (Array.isArray(localData) && localData.length > 0) {
+              rawData = localData;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (rawData && Array.isArray(rawData)) {
+        setComments(rawData.map((c: any) => ({
+          id: String(c.id || Date.now()),
           username: String(c.username || 'Anonymous'),
           text: String(c.text || ''),
           photoBase64: c.photo_base64 || c.photoBase64 || null,
@@ -175,7 +210,7 @@ export const CommentSection: React.FC = () => {
         })));
       }
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error in fetchComments:', error);
     } finally {
       setIsLoading(false);
     }
@@ -242,28 +277,6 @@ export const CommentSection: React.FC = () => {
       const rootId = replyingToId ? resolveRootId(replyingToId) : null;
       const serializedText = serializeCommentText(text.trim(), false, replyingToId, replyingToUser);
 
-      if (!supabase) {
-        const res = await fetch('/api/comments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: loggedInUser.trim(), text: serializedText, photoBase64 })
-        });
-        if (res.ok) {
-          const created = await res.json();
-          setComments([...comments, created]);
-          setText('');
-          setPhotoBase64(null);
-          setReplyingToId(null);
-          setReplyingToUser(null);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          if (rootId) setExpandedReplies(prev => ({ ...prev, [rootId]: true }));
-        } else {
-          alert('Failed to post comment to local API.');
-        }
-        setIsSubmitting(false);
-        return;
-      }
-
       const newComment = {
         id: Date.now().toString(),
         username: loggedInUser.trim(),
@@ -271,13 +284,59 @@ export const CommentSection: React.FC = () => {
         photo_base64: photoBase64,
         timestamp: Date.now()
       };
-      
-      const { error } = await supabase
-        .from('comments')
-        .insert([newComment]);
-        
-      if (!error) {
-        setComments([...comments, {
+
+      let success = false;
+      const { url, key } = getSupabaseCredentials();
+
+      // 1. Try Supabase SDK
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('comments').insert([newComment]);
+          if (!error) {
+            success = true;
+          } else {
+            console.warn('Supabase SDK insert error:', error);
+          }
+        } catch (e) {
+          console.warn('Supabase SDK insert failed:', e);
+        }
+      }
+
+      // 2. Try Direct REST
+      if (!success && url && key) {
+        try {
+          const restRes = await fetch(`${url}/rest/v1/comments`, {
+            method: 'POST',
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify(newComment)
+          });
+          if (restRes.ok) success = true;
+        } catch (e) {
+          console.warn('Direct REST insert failed:', e);
+        }
+      }
+
+      // 3. Try Local API
+      if (!success) {
+        try {
+          const res = await fetch('/api/comments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: newComment.username, text: newComment.text, photoBase64 })
+          });
+          if (res.ok) success = true;
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (success) {
+        setComments(prev => [...prev, {
           id: newComment.id,
           username: newComment.username,
           text: newComment.text,
@@ -286,17 +345,14 @@ export const CommentSection: React.FC = () => {
         }]);
         setText('');
         setPhotoBase64(null);
-        
         if (rootId) {
           setExpandedReplies(prev => ({ ...prev, [rootId]: true }));
         }
-
         setReplyingToId(null);
         setReplyingToUser(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
-        console.error('Response failed:', error);
-        alert(`Failed to post comment. ${error.message}`);
+        alert('Failed to post comment. Please try again.');
       }
     } catch (error) {
       console.error('Error posting comment:', error);
@@ -312,31 +368,54 @@ export const CommentSection: React.FC = () => {
     
     try {
       const supabase = getSupabaseClient();
+      const { url, key } = getSupabaseCredentials();
       
       const comment = comments.find(c => c.id === id);
       if (!comment) return;
       const { isPinned, parentId, replyToUsername } = parseCommentText(comment.text);
       const finalString = serializeCommentText(editText.trim(), isPinned, parentId, replyToUsername);
 
-      if (!supabase) {
-        const res = await fetch(`/api/comments/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: finalString })
-        });
-        if (res.ok) {
-          setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
-          setEditingId(null);
+      let success = false;
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('comments').update({ text: finalString }).eq('id', id);
+          if (!error) success = true;
+        } catch (e) {
+          console.warn('Supabase SDK update failed:', e);
         }
-        return;
       }
 
-      const { error } = await supabase
-        .from('comments')
-        .update({ text: finalString })
-        .eq('id', id);
-        
-      if (!error) {
+      if (!success && url && key) {
+        try {
+          const restRes = await fetch(`${url}/rest/v1/comments?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: finalString })
+          });
+          if (restRes.ok) success = true;
+        } catch (e) {
+          console.warn('Direct REST update failed:', e);
+        }
+      }
+
+      if (!success) {
+        try {
+          const res = await fetch(`/api/comments/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: finalString })
+          });
+          if (res.ok) success = true;
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (success) {
         setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
         setEditingId(null);
       }
@@ -351,20 +430,43 @@ export const CommentSection: React.FC = () => {
     
     try {
       const supabase = getSupabaseClient();
-      if (!supabase) {
-        const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          setComments(comments.filter(c => c.id !== id));
+      const { url, key } = getSupabaseCredentials();
+      let success = false;
+
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('comments').delete().eq('id', id);
+          if (!error) success = true;
+        } catch (e) {
+          console.warn('Supabase SDK delete failed:', e);
         }
-        return;
       }
-      
-      const { error } = await supabase
-        .from('comments')
-        .delete()
-        .eq('id', id);
-        
-      if (!error) {
+
+      if (!success && url && key) {
+        try {
+          const restRes = await fetch(`${url}/rest/v1/comments?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`
+            }
+          });
+          if (restRes.ok) success = true;
+        } catch (e) {
+          console.warn('Direct REST delete failed:', e);
+        }
+      }
+
+      if (!success) {
+        try {
+          const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
+          if (res.ok) success = true;
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (success) {
         setComments(comments.filter(c => c.id !== id));
       }
     } catch (error) {
@@ -376,6 +478,7 @@ export const CommentSection: React.FC = () => {
   const handlePin = async (id: string) => {
     try {
       const supabase = getSupabaseClient();
+      const { url, key } = getSupabaseCredentials();
       
       const comment = comments.find(c => c.id === id);
       if (!comment) return;
@@ -383,24 +486,47 @@ export const CommentSection: React.FC = () => {
       const { isPinned, parentId, replyToUsername, text } = parseCommentText(comment.text);
       const finalString = serializeCommentText(text, !isPinned, parentId, replyToUsername);
 
-      if (!supabase) {
-        const res = await fetch(`/api/comments/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: finalString })
-        });
-        if (res.ok) {
-          setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
+      let success = false;
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('comments').update({ text: finalString }).eq('id', id);
+          if (!error) success = true;
+        } catch (e) {
+          console.warn('Supabase SDK pin update failed:', e);
         }
-        return;
       }
 
-      const { error } = await supabase
-        .from('comments')
-        .update({ text: finalString })
-        .eq('id', id);
-        
-      if (!error) {
+      if (!success && url && key) {
+        try {
+          const restRes = await fetch(`${url}/rest/v1/comments?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: finalString })
+          });
+          if (restRes.ok) success = true;
+        } catch (e) {
+          console.warn('Direct REST pin update failed:', e);
+        }
+      }
+
+      if (!success) {
+        try {
+          const res = await fetch(`/api/comments/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: finalString })
+          });
+          if (res.ok) success = true;
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (success) {
         setComments(comments.map(c => c.id === id ? { ...c, text: finalString } : c));
       }
     } catch (error) {
@@ -444,6 +570,10 @@ export const CommentSection: React.FC = () => {
       if (!a.isPinned && b.isPinned) return 1;
       return (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0);
     });
+
+  const visibleTopLevelComments = topLevelComments.length > 0
+    ? topLevelComments
+    : commentsWithMeta.slice().sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
 
   const repliesByRootId = commentsWithMeta
     .filter(c => Boolean(c.parentId))
@@ -675,8 +805,8 @@ export const CommentSection: React.FC = () => {
             </div>
           ) : (
             <AnimatePresence>
-              {topLevelComments.map((comment, index) => {
-                const threadReplies = repliesByRootId[comment.id] || [];
+              {visibleTopLevelComments.map((comment, index) => {
+                const threadReplies = repliesByRootId[String(comment.id)] || [];
                 
                 return (
                 <motion.div
