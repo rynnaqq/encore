@@ -16,11 +16,11 @@ interface Comment {
 }
 
 
-const parseCommentText = (rawText: string) => {
+const parseCommentText = (rawText: string | null | undefined) => {
   let isPinned = false;
   let parentId: string | null = null;
   let replyToUsername: string | null = null;
-  let text = rawText;
+  let text = typeof rawText === 'string' ? rawText : '';
 
   if (text.startsWith('[PINNED]:')) {
     isPinned = true;
@@ -54,7 +54,7 @@ const serializeCommentText = (text: string, isPinned: boolean, parentId: string 
 
 export const CommentSection: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const { currentUser, login, register, logout, openLoginModal } = useAuth();
+  const { currentUser, login, register, logout } = useAuth();
   
   const loggedInUser = currentUser?.username || '';
   const isAdmin = currentUser ? (currentUser.role === 'admin' || isAdminName(currentUser.username)) : false;
@@ -79,10 +79,63 @@ export const CommentSection: React.FC = () => {
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const toggleReplies = (id: string) => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleReplies = (id: string) => setExpandedReplies(prev => ({ ...prev, [id]: prev[id] === false ? true : false }));
 
   useEffect(() => {
     fetchComments();
+
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('public:comments_realtime_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as any;
+            if (newRow && newRow.id) {
+              setComments(prev => {
+                if (prev.some(c => String(c.id) === String(newRow.id))) return prev;
+                return [...prev, {
+                  id: String(newRow.id),
+                  username: String(newRow.username || 'Anonymous'),
+                  text: String(newRow.text || ''),
+                  photoBase64: newRow.photo_base64 || newRow.photoBase64 || null,
+                  timestamp: typeof newRow.timestamp === 'number' ? newRow.timestamp : Number(newRow.timestamp) || Date.now()
+                }];
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedRow = payload.new as any;
+            if (updatedRow && updatedRow.id) {
+              setComments(prev => prev.map(c => String(c.id) === String(updatedRow.id) ? {
+                id: String(updatedRow.id),
+                username: String(updatedRow.username || c.username),
+                text: String(updatedRow.text || c.text),
+                photoBase64: updatedRow.photo_base64 || updatedRow.photoBase64 || c.photoBase64,
+                timestamp: typeof updatedRow.timestamp === 'number' ? updatedRow.timestamp : Number(updatedRow.timestamp) || c.timestamp
+              } : c));
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as any;
+            if (oldRow && oldRow.id) {
+              setComments(prev => prev.filter(c => String(c.id) !== String(oldRow.id)));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    const pollInterval = setInterval(() => {
+      fetchComments();
+    }, 10000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const fetchComments = async () => {
@@ -92,7 +145,15 @@ export const CommentSection: React.FC = () => {
         const res = await fetch('/api/comments');
         if (res.ok) {
           const data = await res.json();
-          setComments(data);
+          if (Array.isArray(data)) {
+            setComments(data.map((c: any) => ({
+              id: String(c.id),
+              username: String(c.username || 'Anonymous'),
+              text: String(c.text || ''),
+              photoBase64: c.photo_base64 || c.photoBase64 || null,
+              timestamp: typeof c.timestamp === 'number' ? c.timestamp : Number(c.timestamp) || Date.now()
+            })));
+          }
         }
         setIsLoading(false);
         return;
@@ -103,14 +164,14 @@ export const CommentSection: React.FC = () => {
         .order('timestamp', { ascending: true });
         
       if (error) {
-        console.error('Error fetching comments:', error);
-      } else if (data) {
-        setComments(data.map(c => ({
-          id: c.id,
-          username: c.username,
-          text: c.text,
-          photoBase64: c.photo_base64,
-          timestamp: c.timestamp
+        console.error('Error fetching comments from Supabase:', error);
+      } else if (data && Array.isArray(data)) {
+        setComments(data.map((c: any) => ({
+          id: String(c.id),
+          username: String(c.username || 'Anonymous'),
+          text: String(c.text || ''),
+          photoBase64: c.photo_base64 || c.photoBase64 || null,
+          timestamp: typeof c.timestamp === 'number' ? c.timestamp : Number(c.timestamp) || Date.now()
         })));
       }
     } catch (error) {
@@ -353,18 +414,24 @@ export const CommentSection: React.FC = () => {
   };
 
 
+  const commentsMap = new Map(comments.map(c => [String(c.id), c]));
+
   const commentsWithMeta = comments.map(c => {
     const { isPinned, parentId, replyToUsername, text } = parseCommentText(c.text);
-    return { ...c, isPinned, parentId, replyToUsername, parsedText: text };
+    // If parentId is specified but doesn't exist in the database, keep it visible as top level comment
+    const validParentId = parentId && commentsMap.has(String(parentId)) ? String(parentId) : null;
+    return { ...c, id: String(c.id), isPinned, parentId: validParentId, rawParentId: parentId, replyToUsername, parsedText: text };
   });
 
   const resolveRootId = (commentId: string): string => {
-    let currentId = commentId;
-    let maxDepth = 10;
-    while (maxDepth > 0) {
-      const parent = commentsWithMeta.find(c => c.id === currentId);
+    let currentId = String(commentId);
+    let maxDepth = 15;
+    const visited = new Set<string>();
+    while (maxDepth > 0 && currentId && !visited.has(currentId)) {
+      visited.add(currentId);
+      const parent = commentsWithMeta.find(c => String(c.id) === currentId);
       if (!parent || !parent.parentId) break;
-      currentId = parent.parentId;
+      currentId = String(parent.parentId);
       maxDepth--;
     }
     return currentId;
@@ -375,19 +442,24 @@ export const CommentSection: React.FC = () => {
     .sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      return 0;
+      return (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0);
     });
 
   const repliesByRootId = commentsWithMeta
-    .filter(c => c.parentId)
+    .filter(c => Boolean(c.parentId))
     .reduce((acc, reply) => {
       const rootId = resolveRootId(reply.id);
-      if (rootId !== reply.id) {
+      if (rootId && rootId !== reply.id) {
         if (!acc[rootId]) acc[rootId] = [];
         acc[rootId].push(reply);
       }
       return acc;
     }, {} as Record<string, typeof commentsWithMeta>);
+
+  // Sort thread replies ascending by timestamp
+  Object.keys(repliesByRootId).forEach(rootId => {
+    repliesByRootId[rootId].sort((a, b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0));
+  });
 
   return (
     <section id="comments" className="py-20 relative bg-slate-50/50 dark:bg-slate-950/60 border-t border-slate-200/80 dark:border-slate-800/80">
@@ -741,16 +813,16 @@ export const CommentSection: React.FC = () => {
                     <div className="ml-4 sm:ml-8 pl-3 sm:pl-4">
                       <button 
                         onClick={() => toggleReplies(comment.id)}
-                        className="text-[#E195AB] hover:text-[#d68097] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-[#E195AB] hover:text-[#d68097] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer bg-[#E195AB]/10 hover:bg-[#E195AB]/15 px-2.5 py-1 rounded-lg border border-[#E195AB]/20"
                       >
-                        {expandedReplies[comment.id] ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        {expandedReplies[comment.id] ? 'Hide Replies' : `View ${threadReplies.length} ${threadReplies.length === 1 ? 'Reply' : 'Replies'}`}
+                        {expandedReplies[comment.id] !== false ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        <span>{expandedReplies[comment.id] !== false ? 'Sembunyikan Balasan' : `Lihat ${threadReplies.length} Balasan`}</span>
                       </button>
                     </div>
                   )}
 
                   {/* Replies List */}
-                  {threadReplies.length > 0 && expandedReplies[comment.id] && (
+                  {threadReplies.length > 0 && expandedReplies[comment.id] !== false && (
                     <div className="ml-3 sm:ml-8 pl-2.5 sm:pl-4 border-l-2 border-slate-200/80 dark:border-slate-800 space-y-2.5 mt-1">
                       {threadReplies.map(reply => (
                         <div key={reply.id} className="bg-slate-50/80 dark:bg-slate-800/40 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 flex gap-2.5 sm:gap-3">

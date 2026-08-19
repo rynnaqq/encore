@@ -51,13 +51,13 @@ export const AdminPage: React.FC = () => {
         .select('*')
         .order('timestamp', { ascending: false });
         
-      if (data && !error) {
+      if (data && !error && Array.isArray(data)) {
         setComments(data.map((c: any) => ({
-          id: c.id,
-          username: c.username,
-          text: c.text,
-          photoBase64: c.photo_base64,
-          timestamp: c.timestamp
+          id: String(c.id),
+          username: String(c.username || 'Anonymous'),
+          text: String(c.text || ''),
+          photoBase64: c.photo_base64 || c.photoBase64 || null,
+          timestamp: typeof c.timestamp === 'number' ? c.timestamp : Number(c.timestamp) || Date.now()
         })));
       }
     } catch (error) {
