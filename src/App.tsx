@@ -7,7 +7,7 @@ import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { CommentSection } from './components/CommentSection';
 import { AboutModal } from './components/AboutModal';
-import { ChangelogModal } from './components/ChangelogModal';
+import { BetaNoticeModal } from './components/ChangelogModal';
 import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
@@ -262,17 +262,17 @@ function AnimatedRoutes({
 function MainLayout({ isLoading }: { isLoading: boolean }) {
   const [activeSection, setActiveSection] = useState<string>('home');
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
-  const [isChangelogModalOpen, setIsChangelogModalOpen] = useState<boolean>(false);
+  const [isBetaNoticeModalOpen, setIsBetaNoticeModalOpen] = useState<boolean>(false);
   
   useEffect(() => {
     if (isLoading) return;
-    // Open changelog 1.5s after the website finishes loading
-    const t = setTimeout(() => setIsChangelogModalOpen(true), 1500);
+    // Open beta notice modal 1.5s after the website finishes loading
+    const t = setTimeout(() => setIsBetaNoticeModalOpen(true), 1500);
     return () => clearTimeout(t);
   }, [isLoading]);
 
-  const handleCloseChangelog = () => {
-    setIsChangelogModalOpen(false);
+  const handleCloseBetaNotice = () => {
+    setIsBetaNoticeModalOpen(false);
   };
   const location = useLocation();
 
@@ -343,9 +343,10 @@ function MainLayout({ isLoading }: { isLoading: boolean }) {
         onClose={handleCloseAboutModal}
       />
 
-      <ChangelogModal
-        isOpen={isChangelogModalOpen}
-        onClose={handleCloseChangelog}
+      {/* Pop-Up Game Beta Stage Notice Modal */}
+      <BetaNoticeModal
+        isOpen={isBetaNoticeModalOpen}
+        onClose={handleCloseBetaNotice}
       />
       {!isFullscreenGame && <Footer />}
     </motion.div>
