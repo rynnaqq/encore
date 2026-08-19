@@ -1846,6 +1846,21 @@ export const FishingGameSection: React.FC = () => {
             100% { transform: scale(2.6); opacity: 0; }
           }
 
+          @keyframes reelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          @keyframes sweetSpotPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(250,204,21,0.9)); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 16px rgba(234,179,8,1)); }
+          }
+
+          @keyframes alertStrobe {
+            0%, 100% { background-color: rgba(239, 68, 68, 0.95); }
+            50% { background-color: rgba(185, 28, 28, 0.95); }
+          }
+
           .animate-water {
             animation: waterWave 1.8s linear infinite;
           }
@@ -1867,6 +1882,12 @@ export const FishingGameSection: React.FC = () => {
           }
           .animate-shockwave {
             animation: shockwaveExpand 1.6s ease-out infinite;
+          }
+          .animate-reel-spin {
+            animation: reelSpin 0.35s linear infinite;
+          }
+          .animate-sweet-spot {
+            animation: sweetSpotPulse 1s ease-in-out infinite;
           }
         `}
       </style>
@@ -2131,31 +2152,62 @@ export const FishingGameSection: React.FC = () => {
                 initial={{ y: -40, opacity: 0, scale: 0.9 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: -40, opacity: 0, scale: 0.9 }}
-                className="bg-amber-100 p-3.5 sm:p-4 border-[4px] border-black w-[92%] max-w-[440px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none"
+                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none transition-all ${
+                  power >= 80 && power <= 95
+                    ? 'bg-gradient-to-b from-amber-100 to-yellow-200 ring-4 ring-yellow-400 animate-sweet-spot'
+                    : 'bg-amber-100'
+                }`}
               >
                 <div className="flex justify-between items-center mb-1.5 font-black text-xs text-slate-900">
                   <span className="flex items-center gap-1.5">
                     <Zap className="w-4 h-4 text-amber-500 fill-amber-400" />
                     <span>POWER LEMPARAN</span>
                   </span>
-                  <span className={`font-mono text-sm ${power >= 80 && power <= 95 ? 'text-amber-600 font-extrabold animate-pulse' : 'text-slate-800'}`}>
+                  <span className={`font-mono text-sm px-2 py-0.5 border-2 border-black rounded ${
+                    power >= 80 && power <= 95
+                      ? 'bg-yellow-400 text-slate-950 font-black shadow-sm'
+                      : power > 95
+                      ? 'bg-red-500 text-white font-black'
+                      : 'bg-slate-900 text-yellow-300'
+                  }`}>
                     {Math.round(power)}%
                   </span>
                 </div>
-                <div className="w-full h-[28px] bg-slate-950 border-[3px] border-black p-1 relative overflow-hidden rounded-sm">
-                  {/* Perfect Cast Sweet Spot Marker (80% - 95%) */}
-                  <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-400/40 border-x-2 border-yellow-300 z-10 flex items-center justify-center shadow-[0_0_10px_rgba(250,204,21,0.6)]">
-                    <span className="text-[7.5px] font-black text-yellow-300 tracking-tighter drop-shadow-[1px_1px_0_#000]">PERFECT</span>
+
+                {/* Track with Needle & Segmented Ticks */}
+                <div className="w-full h-[30px] bg-slate-950 border-[3px] border-black p-1 relative overflow-hidden rounded-sm">
+                  {/* Background Segment Ticks */}
+                  <div className="absolute inset-0 flex justify-between px-1 pointer-events-none opacity-25 z-0">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="w-[1px] h-full bg-white" />
+                    ))}
                   </div>
+
+                  {/* Perfect Cast Sweet Spot Zone (80% - 95%) */}
+                  <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-400/50 border-x-2 border-yellow-300 z-10 flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.8)] animate-pulse">
+                    <span className="text-[7.5px] font-black text-yellow-200 tracking-tighter drop-shadow-[1px_1px_0_#000]">PERFECT</span>
+                  </div>
+
+                  {/* Progress Fill Bar */}
                   <div
-                    className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-600 transition-all duration-75"
+                    className="h-full bg-gradient-to-r from-sky-400 via-amber-400 to-rose-600 transition-all duration-75 relative"
                     style={{ width: `${Math.max(0, Math.min(100, power))}%` }}
-                  />
+                  >
+                    {/* Glowing Leading Edge Needle */}
+                    <div className="absolute top-0 bottom-0 right-0 w-[3px] bg-white shadow-[0_0_8px_#fff]" />
+                  </div>
                 </div>
-                <div className="flex justify-between items-center mt-2 text-[8.5px] font-black text-slate-600">
-                  <span>TAP & TAHAN</span>
-                  <span className="text-amber-700">🎯 TARGET: 80% - 95% (+50 PTS)</span>
-                  <span>LEPAS UNTUK CAST</span>
+
+                <div className="flex justify-between items-center mt-2 text-[8.5px] font-black">
+                  <span className="text-slate-600">0% (LEMAH)</span>
+                  <span className={`px-2 py-0.5 rounded border border-black ${
+                    power >= 80 && power <= 95
+                      ? 'bg-amber-400 text-slate-950 font-black animate-pulse'
+                      : 'bg-amber-200/70 text-slate-800'
+                  }`}>
+                    {power < 35 ? '💤 PENGISIAN AWAL' : power < 80 ? '⚡ MENGISI TENAGA...' : power <= 95 ? '⭐ TARGET IDEAL! LEPAS SEKARANG! ⭐' : '🔥 OVERPOWER!'}
+                  </span>
+                  <span className="text-rose-700">100% (MAX)</span>
                 </div>
               </motion.div>
             )}
@@ -2166,38 +2218,59 @@ export const FishingGameSection: React.FC = () => {
                 initial={{ y: -40, opacity: 0, scale: 0.9 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: -40, opacity: 0, scale: 0.9 }}
-                className={`p-3.5 sm:p-4 border-[4px] border-black w-[92%] max-w-[440px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none transition-colors ${
+                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_rgba(0,0,0,1)] pointer-events-none transition-all ${
                   reelProgress < 28
                     ? 'bg-red-100 border-red-600 ring-4 ring-red-500 animate-pulse'
                     : reelProgress > 75
-                    ? 'bg-emerald-100 border-emerald-700'
+                    ? 'bg-emerald-100 border-emerald-700 ring-2 ring-emerald-400'
                     : 'bg-amber-100'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1.5 font-black text-xs">
-                  <span className={`flex items-center gap-1.5 ${
+                  {/* Animated Spinning Reel Spool Icon */}
+                  <span className={`flex items-center gap-2 ${
                     reelProgress < 28 ? 'text-red-700 animate-bounce' : reelProgress > 75 ? 'text-emerald-800' : 'text-blue-700'
                   }`}>
-                    <Sparkles className="w-4 h-4" />
-                    {reelProgress < 28 ? '⚠️ TEGANGAN KRITIS! IKAN MENARIK!' : reelProgress > 75 ? '✨ IKAN SUDAH DEKAT! TAHAN!' : '⚡ TARIK! TAP FAST BERULANG KALI!'}
+                    <div className="w-5 h-5 bg-slate-900 text-yellow-300 border-2 border-black rounded-full flex items-center justify-center text-xs animate-reel-spin shadow-sm">
+                      ⚙️
+                    </div>
+                    <span>
+                      {reelProgress < 28 ? '⚠️ TEGANGAN KRITIS! IKAN MENARIK!' : reelProgress > 75 ? '✨ IKAN SUDAH DEKAT! TAHAN!' : '⚡ TARIK! TAP FAST BERULANG KALI!'}
+                    </span>
                   </span>
-                  <span className="font-mono text-sm font-black">{Math.round(reelProgress)}%</span>
+                  <span className="font-mono text-sm font-black px-2 py-0.5 bg-slate-900 text-yellow-300 border-2 border-black rounded">
+                    {Math.round(reelProgress)}%
+                  </span>
                 </div>
-                <div className="w-full h-[28px] bg-slate-950 border-[3px] border-black p-1 relative rounded-sm">
+
+                <div className="w-full h-[30px] bg-slate-950 border-[3px] border-black p-1 relative rounded-sm overflow-hidden">
+                  {/* Dynamic Gradient Bar */}
                   <div
-                    className={`h-full transition-all duration-75 ${
+                    className={`h-full transition-all duration-75 relative ${
                       reelProgress < 28
-                        ? 'bg-gradient-to-r from-red-600 to-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
+                        ? 'bg-gradient-to-r from-red-600 to-rose-500 shadow-[0_0_15px_rgba(239,68,68,1)]'
                         : reelProgress > 75
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.8)]'
-                        : 'bg-gradient-to-r from-blue-600 to-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.6)]'
+                        ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 shadow-[0_0_15px_rgba(16,185,129,1)]'
+                        : 'bg-gradient-to-r from-blue-600 via-sky-400 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.8)]'
                     }`}
                     style={{ width: `${Math.max(0, Math.min(100, reelProgress))}%` }}
-                  />
+                  >
+                    <div className="absolute top-0 bottom-0 right-0 w-[3px] bg-white shadow-[0_0_8px_#fff]" />
+                  </div>
                 </div>
-                <p className="text-[8.5px] font-bold text-center mt-1.5 text-slate-700">
-                  Semakin langka ikan, semakin cepat tarikan kail terlepas jika berhenti men-tap!
-                </p>
+
+                <div className="flex justify-between items-center mt-1.5 text-[8.5px] font-black text-slate-700">
+                  <span className="flex items-center gap-1">
+                    <span>JARAK:</span>
+                    <strong className="text-blue-700">{Math.max(0, Math.round((100 - reelProgress) * 0.4))}m</strong>
+                  </span>
+                  <span className={`px-2 py-0.5 rounded border border-black text-[8px] ${
+                    reelProgress < 28 ? 'bg-red-500 text-white animate-pulse' : reelProgress > 75 ? 'bg-emerald-600 text-white' : 'bg-amber-300 text-slate-900'
+                  }`}>
+                    {reelProgress < 28 ? '⚠️ RESISTENSI TINGGI' : reelProgress > 75 ? '🟢 TANGKAPAN AMAN' : '🔵 MENARIK KAIL'}
+                  </span>
+                  <span>TAP TAP TAP! 🔥</span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
