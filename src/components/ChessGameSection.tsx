@@ -326,11 +326,24 @@ export const ChessGameSection: React.FC = () => {
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('chess_active_session');
           }
-          alert(err);
           if (window.location.search.includes('room=')) {
             const url = new URL(window.location.href);
             url.searchParams.delete('room');
             window.history.replaceState({}, '', url.pathname);
+          }
+          
+          // Fallback to Socket.io if Supabase fails
+          if (socket && isConnected) {
+            console.warn('Supabase Realtime failed, falling back to Socket.io multiplayer.');
+            if (isJoining) {
+              socket.emit('join_room', { roomId: code, player: playerProfile });
+            } else {
+              socket.emit('create_room', { roomId: code, player: playerProfile, ...opts });
+            }
+          } else {
+            alert(err);
+            setActiveRoom(null);
+            setYourSide(null);
           }
         },
         isJoining,
@@ -340,7 +353,7 @@ export const ChessGameSection: React.FC = () => {
         supabaseHandlerRef.current = handler;
       }
     },
-    [playerProfile, handleSupabaseRoomUpdate, handleSupabaseChatMessage]
+    [playerProfile, handleSupabaseRoomUpdate, handleSupabaseChatMessage, socket, isConnected]
   );
 
   // Promotion state
