@@ -1300,10 +1300,11 @@ export const FishingGameSection: React.FC = () => {
     if (reqRef.current) cancelAnimationFrame(reqRef.current);
     playSound('cast');
 
-    const perfect = power >= 80 && power <= 95;
+    const currentPower = Math.max(0, Math.min(100, powerRef.current));
+    const perfect = currentPower >= 80 && currentPower <= 95;
     setIsPerfectCast(perfect);
 
-    const targetX = 350 + (power / 100) * 380;
+    const targetX = 350 + (currentPower / 100) * 380;
     targetBobberXRef.current = targetX;
 
     setGameState('casting');
@@ -1873,7 +1874,7 @@ export const FishingGameSection: React.FC = () => {
                 initial={{ y: -30, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: -30, opacity: 0, scale: 0.95 }}
-                className={`p-3 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_#000] pointer-events-none transition-all ${
+                className={`p-3 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_#000] pointer-events-none transition-colors ${
                   power >= 80 && power <= 95
                     ? 'bg-amber-100 ring-4 ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.7)]'
                     : 'bg-amber-100'
@@ -1898,7 +1899,7 @@ export const FishingGameSection: React.FC = () => {
                 <div className="w-full h-[28px] sm:h-[32px] bg-slate-950 border-[3px] border-black p-0.5 relative overflow-hidden rounded-xs">
                   {/* Ticks */}
                   <div className="absolute inset-0 flex justify-between px-1.5 pointer-events-none opacity-25 z-0">
-                    {Array.from({ length: 10 }).map((_, i) => (
+                    {Array.from({ length: 11 }).map((_, i) => (
                       <div key={i} className="w-[1px] h-full bg-white" />
                     ))}
                   </div>
@@ -1908,14 +1909,16 @@ export const FishingGameSection: React.FC = () => {
                     <span className="text-[7.5px] font-black text-yellow-200 tracking-tighter drop-shadow-[1px_1px_0_#000]">PERFECT</span>
                   </div>
 
-                  {/* Fill */}
+                  {/* Realtime Fill (No transition lag for 1:1 precision) */}
                   <div
-                    className={`h-full transition-all duration-75 relative rounded-xs ${
+                    className={`h-full relative rounded-xs ${
                       power >= 96
                         ? 'bg-gradient-to-r from-sky-400 via-amber-400 to-red-600'
+                        : power >= 80
+                        ? 'bg-gradient-to-r from-sky-400 via-teal-300 to-amber-300'
                         : 'bg-gradient-to-r from-sky-400 via-amber-400 to-rose-600'
                     }`}
-                    style={{ width: `${Math.max(1, Math.min(100, power))}%` }}
+                    style={{ width: `${Math.max(0, Math.min(100, power))}%` }}
                   >
                     <div className="absolute top-0 bottom-0 right-0 w-[4px] bg-white shadow-[0_0_8px_#fff]" />
                   </div>
@@ -1942,7 +1945,7 @@ export const FishingGameSection: React.FC = () => {
                 initial={{ y: -30, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: -30, opacity: 0, scale: 0.95 }}
-                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_#000] pointer-events-none transition-all ${
+                className={`p-3.5 sm:p-4 border-[4px] border-black w-[94%] max-w-[460px] shadow-[6px_6px_0_0_#000] pointer-events-none transition-colors ${
                   reelProgress < 28
                     ? 'bg-red-100 border-red-600 ring-4 ring-red-500 animate-pulse'
                     : reelProgress > 75
@@ -1962,13 +1965,22 @@ export const FishingGameSection: React.FC = () => {
                     </span>
                   </span>
                   <span className="font-mono text-xs sm:text-sm font-black px-2 py-0.5 bg-slate-900 text-yellow-300 border-2 border-black rounded">
-                    {Math.round(reelProgress)}%
+                    {Math.round(Math.max(0, Math.min(100, reelProgress)))}%
                   </span>
                 </div>
 
-                <div className="w-full h-[28px] sm:h-[30px] bg-slate-950 border-[3px] border-black p-1 relative rounded-xs overflow-hidden">
+                <div className="w-full h-[28px] sm:h-[30px] bg-slate-950 border-[3px] border-black p-0.5 relative rounded-xs overflow-hidden">
+                  {/* Progress Milestone Ticks */}
+                  <div className="absolute inset-0 flex justify-between px-2 pointer-events-none opacity-20 z-0">
+                    <div className="w-[1px] h-full bg-white" />
+                    <div className="w-[1px] h-full bg-white" />
+                    <div className="w-[1px] h-full bg-white" />
+                    <div className="w-[1px] h-full bg-white" />
+                  </div>
+
+                  {/* Realtime Fill (No transition lag for 100% full precision) */}
                   <div
-                    className={`h-full transition-all duration-75 relative ${
+                    className={`h-full relative rounded-xs ${
                       reelProgress < 28
                         ? 'bg-gradient-to-r from-red-600 to-rose-500'
                         : reelProgress > 75
@@ -1977,7 +1989,7 @@ export const FishingGameSection: React.FC = () => {
                     }`}
                     style={{ width: `${Math.max(0, Math.min(100, reelProgress))}%` }}
                   >
-                    <div className="absolute top-0 bottom-0 right-0 w-[3px] bg-white shadow-[0_0_8px_#fff]" />
+                    <div className="absolute top-0 bottom-0 right-0 w-[4px] bg-white shadow-[0_0_8px_#fff]" />
                   </div>
                 </div>
 
