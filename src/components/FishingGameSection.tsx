@@ -321,45 +321,45 @@ const FishingJournal: React.FC<{
         className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100"
       >
         {/* Top Header Banner */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-amber-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-white font-sans">
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white font-sans">
                   Jurnal Spesies Samudra
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30">
-                  v2.0 Encyclopedia
+                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40">
+                  v2.0 Ensiklopedia
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium hidden sm:block">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium hidden sm:block mt-0.5">
                 Catatan tangkapan lengkap & koleksi fauna perairan Nusantara
               </p>
             </div>
           </div>
 
           {/* Search Box & Close Button */}
-          <div className="flex items-center gap-2">
-            <div className="relative hidden md:block w-48">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <div className="flex items-center gap-2.5">
+            <div className="relative hidden md:block w-56">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Cari spesies..."
+                placeholder="Cari nama / kelangkaan..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E195AB] transition-colors"
+                className="w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-9 pr-8 py-2 text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#E195AB] transition-colors"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -369,56 +369,56 @@ const FishingJournal: React.FC<{
                 playFishingSound('click', soundEnabled);
                 onClose();
               }}
-              className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
+              className="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
               aria-label="Tutup Jurnal"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Overview Stats & Telemetry Banner */}
-        <div className="bg-slate-950/60 border-b border-slate-800/80 p-3 sm:p-4 shrink-0 space-y-3">
+        <div className="bg-slate-950/60 border-b border-slate-800/80 p-3.5 sm:p-5 shrink-0 space-y-3.5">
           {/* 3 Summary Badges & Progress Metric */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                <Fish className="w-4 h-4 text-blue-400" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
+            <div className="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0">
+                <Fish className="w-5 h-5 text-blue-400" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Total Tangkapan</span>
-                <span className="text-sm sm:text-base font-black text-white font-mono">{caughtCount} ekor</span>
+                <span className="text-xs font-mono text-slate-400 uppercase font-bold tracking-wide block">Total Tangkapan</span>
+                <span className="text-base sm:text-lg font-black text-white font-mono">{caughtCount} ekor</span>
               </div>
             </div>
 
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                <Trophy className="w-4 h-4 text-amber-400" />
+            <div className="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5 text-amber-400" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Skor Total</span>
-                <span className="text-sm sm:text-base font-black text-amber-400 font-mono">{score.toLocaleString()}</span>
+                <span className="text-xs font-mono text-slate-400 uppercase font-bold tracking-wide block">Skor Total</span>
+                <span className="text-base sm:text-lg font-black text-amber-400 font-mono">{score.toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <Award className="w-4 h-4 text-emerald-400" />
+            <div className="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Spesies Koleksi</span>
-                <span className="text-sm sm:text-base font-black text-emerald-400 font-mono">
-                  {discoveredCount} <span className="text-xs text-slate-400 font-normal">/ {totalSpecies}</span>
+                <span className="text-xs font-mono text-slate-400 uppercase font-bold tracking-wide block">Spesies Koleksi</span>
+                <span className="text-base sm:text-lg font-black text-emerald-400 font-mono">
+                  {discoveredCount} <span className="text-xs sm:text-sm text-slate-400 font-medium">/ {totalSpecies}</span>
                 </span>
               </div>
             </div>
 
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex flex-col justify-center">
-              <div className="flex justify-between items-center text-[10px] font-mono font-bold mb-1">
-                <span className="text-slate-400 uppercase">Kelengkapan</span>
-                <span className="text-pink-400 font-bold">{completionPct}%</span>
+            <div className="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-3 flex flex-col justify-center">
+              <div className="flex justify-between items-center text-xs font-mono font-bold mb-1.5">
+                <span className="text-slate-300 uppercase tracking-wide">Kelengkapan</span>
+                <span className="text-pink-400 font-bold text-sm">{completionPct}%</span>
               </div>
-              <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden p-0.5 border border-slate-700/50">
+              <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700/60">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 via-[#E195AB] to-amber-400 rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${completionPct}%` }}
@@ -428,7 +428,7 @@ const FishingJournal: React.FC<{
           </div>
 
           {/* Rarity Tier Mini Progress Counters */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-[10px] font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-mono">
             {[
               { id: 'Biasa', label: '⚪ Biasa', ...rarityStats.Biasa },
               { id: 'Langka', label: '🔵 Langka', ...rarityStats.Langka },
@@ -444,14 +444,14 @@ const FishingJournal: React.FC<{
                     playFishingSound('click', soundEnabled);
                     setFilterRarity(filterRarity === tier.id ? 'all' : tier.id);
                   }}
-                  className={`px-2.5 py-1.5 rounded-xl border flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
+                  className={`px-3 py-2 rounded-xl border flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-slate-800 border-[#E195AB] text-white shadow-xs'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-slate-800 border-[#E195AB] text-white shadow-sm ring-1 ring-[#E195AB]/50'
+                      : 'bg-slate-900/70 border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
                   }`}
                 >
-                  <span className="font-semibold">{tier.label}</span>
-                  <span className={`font-bold ${tier.discovered === tier.total ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  <span className="font-bold">{tier.label}</span>
+                  <span className={`font-mono font-bold text-xs ${tier.discovered === tier.total ? 'text-emerald-400' : 'text-slate-300'}`}>
                     {tier.discovered}/{tier.total}
                   </span>
                 </button>
@@ -461,20 +461,20 @@ const FishingJournal: React.FC<{
         </div>
 
         {/* Mobile Search Bar & Status Filter */}
-        <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
           <div className="relative block md:hidden flex-1 min-w-[180px]">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Cari ikan..."
+              placeholder="Cari nama ikan..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-8 pr-7 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-8 py-1.5 text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none"
             />
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] font-mono">
-            <span className="text-slate-500 mr-1 hidden sm:inline">Status:</span>
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-mono">
+            <span className="text-slate-400 mr-1 hidden sm:inline font-bold">Status:</span>
             {[
               { id: 'all', label: 'Semua' },
               { id: 'discovered', label: '✓ Ditemukan' },
@@ -486,10 +486,10 @@ const FishingJournal: React.FC<{
                   playFishingSound('click', soundEnabled);
                   setStatusFilter(btn.id as any);
                 }}
-                className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-bold ${
                   statusFilter === btn.id
-                    ? 'bg-[#E195AB] text-white font-bold border-[#E195AB]'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border-slate-700/80'
+                    ? 'bg-[#E195AB] text-white border-[#E195AB] shadow-sm'
+                    : 'bg-slate-800/80 text-slate-300 hover:text-white border-slate-700/80'
                 }`}
               >
                 {btn.label}
@@ -499,24 +499,24 @@ const FishingJournal: React.FC<{
         </div>
 
         {/* Fish Cards Grid */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-5 min-h-[300px] custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 min-h-[300px] custom-scrollbar">
           {filteredFish.length === 0 ? (
-            <div className="py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
-              <Search className="w-8 h-8 text-slate-600 mb-1" />
-              <p className="text-sm font-semibold text-slate-400">Tidak ada spesies yang cocok dengan filter.</p>
+            <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center gap-2.5">
+              <Search className="w-10 h-10 text-slate-500 mb-1" />
+              <p className="text-base font-bold text-slate-300">Tidak ada spesies yang cocok dengan filter.</p>
               <button
                 onClick={() => {
                   setFilterRarity('all');
                   setStatusFilter('all');
                   setSearchQuery('');
                 }}
-                className="text-xs text-[#E195AB] hover:underline font-mono mt-1 cursor-pointer"
+                className="text-sm text-[#E195AB] hover:underline font-mono mt-1 cursor-pointer font-bold"
               >
                 Reset Semua Filter
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               {filteredFish.map((fishItem) => {
                 const isFound = discoveredSpecies.includes(fishItem.id);
                 const isSelected = selectedFish?.id === fishItem.id;
@@ -535,7 +535,7 @@ const FishingJournal: React.FC<{
                         setSelectedFish(fishItem);
                       }
                     }}
-                    className={`text-left p-3 rounded-2xl border transition-all relative flex flex-col justify-between overflow-hidden group ${
+                    className={`text-left p-3.5 rounded-2xl border transition-all relative flex flex-col justify-between overflow-hidden group ${
                       isFound
                         ? isSelected
                           ? 'border-[#E195AB] bg-slate-800/90 ring-2 ring-[#E195AB]/50 shadow-lg shadow-pink-500/10'
@@ -552,7 +552,7 @@ const FishingJournal: React.FC<{
                     {/* Top Tier Tag & Sparkle */}
                     <div className="flex items-center justify-between mb-2">
                       <span
-                        className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${
+                        className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${
                           isFound
                             ? isMythic
                               ? 'bg-rose-500/20 text-pink-300 border-pink-500/40'
@@ -562,8 +562,8 @@ const FishingJournal: React.FC<{
                               ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                               : fishItem.rarity === 'Langka'
                               ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                              : 'bg-slate-700/60 text-slate-300 border-slate-600'
-                            : 'bg-slate-800 text-slate-500 border-slate-700'
+                              : 'bg-slate-700/60 text-slate-200 border-slate-600'
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
                         }`}
                       >
                         {isFound ? fishItem.rarity : '???'}
@@ -571,19 +571,19 @@ const FishingJournal: React.FC<{
 
                       {isFound ? (
                         <div className="flex items-center gap-1">
-                          {isMythic && <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />}
-                          {isLegend && <Crown className="w-3.5 h-3.5 text-amber-400" />}
-                          <span className="text-[10px] font-mono font-bold text-amber-300">
+                          {isMythic && <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />}
+                          {isLegend && <Crown className="w-4 h-4 text-amber-400" />}
+                          <span className="text-xs font-mono font-bold text-amber-300">
                             🪙 {fishItem.coins}
                           </span>
                         </div>
                       ) : (
-                        <Lock className="w-3.5 h-3.5 text-slate-600" />
+                        <Lock className="w-4 h-4 text-slate-500" />
                       )}
                     </div>
 
                     {/* Fish Graphic Viewport Pedestal */}
-                    <div className={`h-20 rounded-xl flex items-center justify-center my-1.5 relative overflow-hidden transition-colors ${
+                    <div className={`h-22 rounded-xl flex items-center justify-center my-2 relative overflow-hidden transition-colors ${
                       isFound
                         ? isMythic
                           ? 'bg-gradient-to-b from-pink-950/30 to-purple-950/40 border border-pink-500/20'
@@ -594,10 +594,10 @@ const FishingJournal: React.FC<{
                     }`}>
                       {isFound ? (
                         <div className="transform transition-transform group-hover:scale-110 duration-200">
-                          <FishGraphic id={fishItem.id} size={48} />
+                          <FishGraphic id={fishItem.id} size={52} />
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center justify-center text-slate-700">
+                        <div className="flex flex-col items-center justify-center text-slate-600">
                           <span className="text-2xl font-black font-mono">?</span>
                         </div>
                       )}
@@ -605,13 +605,13 @@ const FishingJournal: React.FC<{
 
                     {/* Bottom Metadata */}
                     <div className="mt-1">
-                      <h4 className="text-xs sm:text-[13px] font-bold text-white truncate font-sans tracking-tight">
+                      <h4 className="text-sm sm:text-base font-bold text-white truncate font-sans tracking-tight">
                         {isFound ? fishItem.name : 'Spesies Rahasia'}
                       </h4>
-                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-1">
+                      <div className="flex items-center justify-between text-xs font-mono text-slate-300 mt-1">
                         <span>{isFound ? `+${fishItem.points} PTS` : 'Terkunci'}</span>
                         {isFound && (
-                          <span className="text-[#E195AB] font-semibold text-[9px] flex items-center gap-0.5">
+                          <span className="text-[#E195AB] font-bold text-xs flex items-center gap-0.5">
                             Detail 🔍
                           </span>
                         )}
@@ -632,20 +632,20 @@ const FishingJournal: React.FC<{
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="bg-slate-950/95 border-t border-slate-700/80 p-4 sm:p-5 shrink-0 relative shadow-2xl backdrop-blur-xl z-20"
+              className="bg-slate-950/95 border-t border-slate-700/80 p-4 sm:p-6 shrink-0 relative shadow-2xl backdrop-blur-xl z-20"
             >
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 {/* Left Pedestal Viewport */}
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/80 flex items-center justify-center shadow-inner shrink-0 overflow-hidden">
+                <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/80 flex items-center justify-center shadow-inner shrink-0 overflow-hidden">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(225,149,171,0.15),transparent_70%)]" />
                   <motion.div
                     animate={{ y: [0, -4, 0] }}
                     transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
                     className="relative z-10"
                   >
-                    <FishGraphic id={selectedFish.id} size={64} />
+                    <FishGraphic id={selectedFish.id} size={72} />
                   </motion.div>
-                  <span className="absolute bottom-1.5 left-2 text-[9px] font-mono text-slate-500 font-bold">
+                  <span className="absolute bottom-1.5 left-2.5 text-xs font-mono text-slate-400 font-bold">
                     #{selectedFish.id.toUpperCase()}
                   </span>
                 </div>
@@ -653,12 +653,12 @@ const FishingJournal: React.FC<{
                 {/* Center / Right Specimen Metadata */}
                 <div className="flex-1 min-w-0 text-left w-full">
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base sm:text-lg font-black text-white tracking-tight font-sans">
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight font-sans">
                         {selectedFish.name}
                       </h3>
                       <span
-                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border uppercase ${
+                        className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border uppercase ${
                           selectedFish.rarity === 'Mitos'
                             ? 'bg-rose-500/20 text-pink-300 border-pink-500/40'
                             : selectedFish.rarity === 'Legendaris'
@@ -667,35 +667,35 @@ const FishingJournal: React.FC<{
                             ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                             : selectedFish.rarity === 'Langka'
                             ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                            : 'bg-slate-800 text-slate-300 border-slate-700'
+                            : 'bg-slate-800 text-slate-200 border-slate-700'
                         }`}
                       >
                         {selectedFish.rarity}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs font-mono font-bold">
+                    <div className="flex items-center gap-3 text-sm font-mono font-bold">
                       <span className="text-amber-400">🪙 {selectedFish.coins} Koin</span>
                       <span className="text-blue-400">+{selectedFish.points} Poin</span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed mt-1 font-sans">
+                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed mt-1 font-sans">
                     {selectedFish.description}
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3 text-[11px] font-mono">
-                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3 text-xs sm:text-sm font-mono">
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between">
                       <span className="text-slate-400">Rentang Bobot</span>
                       <span className="text-white font-bold">{selectedFish.minWeight} - {selectedFish.maxWeight} kg</span>
                     </div>
-                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between">
                       <span className="text-slate-400">Agilitas Ikan</span>
                       <span className="text-pink-400 font-bold">{selectedFish.difficulty}x Speed</span>
                     </div>
-                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between col-span-2 sm:col-span-1">
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between col-span-2 sm:col-span-1">
                       <span className="text-slate-400">Kesulitan</span>
-                      <span className="text-amber-300 font-bold">
+                      <span className="text-amber-300 font-bold text-sm tracking-wider">
                         {'★'.repeat(Math.min(5, Math.ceil(selectedFish.difficulty / 1.6)))}
                       </span>
                     </div>
@@ -706,26 +706,26 @@ const FishingJournal: React.FC<{
                 <div className="flex sm:flex-col items-center justify-between gap-2 shrink-0 w-full sm:w-auto">
                   <button
                     onClick={() => setSelectedFish(null)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer self-end sm:self-auto"
+                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer self-end sm:self-auto"
                     title="Tutup Detail"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={handlePrevFish}
-                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-colors cursor-pointer active:scale-95"
                       title="Spesies Sebelumnya"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                       onClick={handleNextFish}
-                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-colors cursor-pointer active:scale-95"
                       title="Spesies Berikutnya"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -800,24 +800,24 @@ const FishingOddsModal: React.FC<{
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-500 to-cyan-400 p-0.5 shadow-md shadow-blue-500/20 shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-500 to-cyan-400 p-0.5 shadow-md shadow-blue-500/20 shrink-0">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-cyan-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-white font-sans">
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white font-sans">
                   Telemetri Probabilitas
                 </h2>
                 {adminOdds.enabled && (
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 animate-pulse flex items-center gap-1">
-                    <Crown className="w-3 h-3" /> GOD MODE ON
+                  <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 animate-pulse flex items-center gap-1">
+                    <Crown className="w-3.5 h-3.5" /> GOD MODE AKTIF
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
                 Peluang tangkapan berbasis kalkulasi joran, umpan, & cuaca
               </p>
             </div>
@@ -828,28 +828,28 @@ const FishingOddsModal: React.FC<{
               playFishingSound('click', soundEnabled);
               onClose();
             }}
-            className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
+            className="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
             aria-label="Tutup Odds"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Switcher (For Admins) */}
         {isAdmin && (
-          <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2 shrink-0">
+          <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2.5 shrink-0">
             <button
               onClick={() => {
                 playFishingSound('click', soundEnabled);
                 setActiveTab('odds');
               }}
-              className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 text-xs sm:text-sm font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 activeTab === 'odds'
-                  ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 shadow-xs'
-                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
+                  ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 shadow-sm'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
-              <BarChart3 className="w-3.5 h-3.5" />
+              <BarChart3 className="w-4 h-4" />
               <span>Status Probabilitas</span>
             </button>
             <button
@@ -857,13 +857,13 @@ const FishingOddsModal: React.FC<{
                 playFishingSound('click', soundEnabled);
                 setActiveTab('admin');
               }}
-              className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 text-xs sm:text-sm font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 activeTab === 'admin'
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-xs'
-                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <Crown className="w-4 h-4 text-amber-400" />
               <span>Admin God Mode</span>
             </button>
           </div>
@@ -874,37 +874,37 @@ const FishingOddsModal: React.FC<{
           {activeTab === 'odds' ? (
             <>
               {/* Active Buffs & Synergies Card */}
-              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
-                <div className="font-mono font-bold text-slate-400 text-[11px] flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="flex items-center gap-1.5 text-white">
-                    <Activity className="w-3.5 h-3.5 text-[#E195AB]" />
+              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+                <div className="font-mono font-bold text-slate-300 text-xs sm:text-sm flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <span className="flex items-center gap-2 text-white">
+                    <Activity className="w-4 h-4 text-[#E195AB]" />
                     FAKTOR SINERGI AKTIF
                   </span>
-                  <span className="text-cyan-400 uppercase font-mono">
+                  <span className="text-cyan-300 uppercase font-mono font-bold">
                     Cuaca: {weather === 'badai' ? '⛈️ Badai' : weather === 'kabut_mistis' ? '🌫️ Kabut Mistis' : weather === 'hujan' ? '🌧️ Hujan' : weather === 'berawan' ? '⛅ Berawan' : '☀️ Cerah'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span>{currentRod.icon}</span>
-                      <span className="text-slate-300 font-sans truncate">{currentRod.name}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm font-mono pt-1">
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">{currentRod.icon}</span>
+                      <span className="text-slate-200 font-sans font-semibold truncate">{currentRod.name}</span>
                     </div>
                     <span className="text-emerald-400 font-bold shrink-0">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
                   </div>
 
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span>{currentBait.icon}</span>
-                      <span className="text-slate-300 font-sans truncate">{currentBait.name}</span>
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">{currentBait.icon}</span>
+                      <span className="text-slate-200 font-sans font-semibold truncate">{currentBait.name}</span>
                     </div>
                     <span className="text-purple-400 font-bold shrink-0">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
                   </div>
                 </div>
 
                 {/* Weather Synergy Hint */}
-                <div className="text-[11px] text-slate-400 font-sans bg-slate-900/50 rounded-xl p-2 border border-slate-800/80">
+                <div className="text-xs sm:text-sm text-slate-300 font-sans bg-slate-900/50 rounded-xl p-2.5 border border-slate-800/80 leading-relaxed">
                   {weather === 'badai' && '⚡ Cuaca Badai memicu peningkatan +35% pada peluang Ikan Legendaris & Mitos!'}
                   {weather === 'kabut_mistis' && '🌌 Kabut Mistis memancarkan aura kosmik: +120% peluang Ikan Mitos Purba!'}
                   {weather === 'hujan' && '🌧️ Cuaca Hujan merangsang Ikan Epic (Sangat Langka) naik ke permukaan.'}
@@ -914,10 +914,10 @@ const FishingOddsModal: React.FC<{
               </div>
 
               {/* Rarity Tier Gauges */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-400">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs sm:text-sm font-mono font-bold text-slate-300">
                   <span>Distribusi Probabilitas Tangkapan:</span>
-                  <span>Total: 100%</span>
+                  <span className="text-slate-400">Total: 100%</span>
                 </div>
 
                 {[
@@ -926,7 +926,7 @@ const FishingOddsModal: React.FC<{
                     rate: rates.common,
                     gradient: 'from-slate-500 to-slate-400',
                     border: 'border-slate-700',
-                    badge: 'bg-slate-800 text-slate-300',
+                    badge: 'bg-slate-800 text-slate-200',
                   },
                   {
                     label: 'LANGKA (Rare)',
@@ -959,13 +959,13 @@ const FishingOddsModal: React.FC<{
                 ].map((tier, idx) => (
                   <div
                     key={idx}
-                    className={`bg-slate-950/70 border ${tier.border} rounded-2xl p-3 flex flex-col gap-1.5 shadow-sm`}
+                    className={`bg-slate-950/70 border ${tier.border} rounded-2xl p-3.5 flex flex-col gap-2 shadow-sm`}
                   >
-                    <div className="flex justify-between items-center text-xs font-mono font-bold">
-                      <span className={`px-2 py-0.5 rounded-md ${tier.badge} text-[11px]`}>{tier.label}</span>
-                      <span className="text-white text-sm font-black">{(tier.rate * 100).toFixed(1)}%</span>
+                    <div className="flex justify-between items-center text-xs sm:text-sm font-mono font-bold">
+                      <span className={`px-2.5 py-1 rounded-lg ${tier.badge}`}>{tier.label}</span>
+                      <span className="text-white text-sm sm:text-base font-black">{(tier.rate * 100).toFixed(1)}%</span>
                     </div>
-                    <div className="w-full bg-slate-900 h-2.5 rounded-full border border-slate-800 overflow-hidden p-0.5">
+                    <div className="w-full bg-slate-900 h-3 rounded-full border border-slate-800 overflow-hidden p-0.5">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(100, tier.rate * 100)}%` }}
@@ -978,12 +978,12 @@ const FishingOddsModal: React.FC<{
               </div>
 
               {/* Catch Projections */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-xs font-mono text-slate-300 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-slate-400">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-xs sm:text-sm font-mono text-slate-200 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2 text-slate-400 font-bold">
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                   <span>Estimasi per 100 lemparan:</span>
                 </div>
-                <div className="flex items-center gap-2 font-bold">
+                <div className="flex items-center gap-2.5 font-bold">
                   <span className="text-slate-400">~{Math.round(rates.common * 100)} Biasa</span>
                   <span className="text-sky-400">~{Math.round(rates.rare * 100)} Langka</span>
                   <span className="text-purple-400">~{Math.round(rates.epic * 100)} Epic</span>
@@ -997,11 +997,11 @@ const FishingOddsModal: React.FC<{
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/40 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-amber-500/5">
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-black text-amber-300 font-sans">
-                    <Crown className="w-4 h-4 fill-amber-300" />
+                  <div className="flex items-center gap-2 text-base font-black text-amber-300 font-sans">
+                    <Crown className="w-5 h-5 fill-amber-300" />
                     <span>Master Switch: God Mode Admin</span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1 font-mono">
+                  <p className="text-xs sm:text-sm text-slate-300 mt-1 font-mono">
                     {adminOdds.enabled
                       ? 'Status: Kustom Probabilitas AKTIF (Bypass standar)'
                       : 'Status: Probabilitas Standar Berjalan'}
@@ -1012,7 +1012,7 @@ const FishingOddsModal: React.FC<{
                     playFishingSound('upgrade', soundEnabled);
                     setAdminOdds((prev) => ({ ...prev, enabled: !prev.enabled }));
                   }}
-                  className={`px-4 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                  className={`px-4 py-2.5 text-xs sm:text-sm font-mono font-bold rounded-xl border transition-all cursor-pointer active:scale-95 ${
                     adminOdds.enabled
                       ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
                       : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
@@ -1024,38 +1024,38 @@ const FishingOddsModal: React.FC<{
 
               {/* Presets */}
               <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
-                <div className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
+                <div className="text-xs sm:text-sm font-mono font-bold text-slate-200 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-400" />
                   <span>PRESET ODDS INSTAN:</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm font-mono">
                   <button
                     onClick={() => applyPreset('god100')}
-                    className="p-2.5 rounded-xl bg-gradient-to-tr from-purple-900/60 to-pink-900/60 hover:from-purple-800 hover:to-pink-800 text-pink-200 border border-pink-500/40 transition-all font-bold cursor-pointer text-center"
+                    className="p-3 rounded-xl bg-gradient-to-tr from-purple-900/60 to-pink-900/60 hover:from-purple-800 hover:to-pink-800 text-pink-200 border border-pink-500/40 transition-all font-bold cursor-pointer text-center"
                   >
                     🌌 100% MITOS
                   </button>
                   <button
                     onClick={() => applyPreset('mythic50')}
-                    className="p-2.5 rounded-xl bg-gradient-to-tr from-rose-900/60 to-amber-900/60 hover:from-rose-800 hover:to-amber-800 text-amber-200 border border-amber-500/40 transition-all font-bold cursor-pointer text-center"
+                    className="p-3 rounded-xl bg-gradient-to-tr from-rose-900/60 to-amber-900/60 hover:from-rose-800 hover:to-amber-800 text-amber-200 border border-amber-500/40 transition-all font-bold cursor-pointer text-center"
                   >
                     ⚡ 50% MITOS
                   </button>
                   <button
                     onClick={() => applyPreset('allLegend')}
-                    className="p-2.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 transition-all font-bold cursor-pointer text-center"
+                    className="p-3 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 transition-all font-bold cursor-pointer text-center"
                   >
                     👑 ALL-LEGEND
                   </button>
                   <button
                     onClick={() => applyPreset('normal')}
-                    className="p-2.5 rounded-xl bg-sky-950/60 hover:bg-sky-900/60 text-sky-300 border border-sky-500/30 transition-all font-bold cursor-pointer text-center"
+                    className="p-3 rounded-xl bg-sky-950/60 hover:bg-sky-900/60 text-sky-300 border border-sky-500/30 transition-all font-bold cursor-pointer text-center"
                   >
                     🎲 NORMAL
                   </button>
                   <button
                     onClick={() => applyPreset('hardcore')}
-                    className="p-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 transition-all font-bold cursor-pointer text-center"
+                    className="p-3 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 transition-all font-bold cursor-pointer text-center"
                   >
                     💀 HARDCORE
                   </button>
@@ -1065,7 +1065,7 @@ const FishingOddsModal: React.FC<{
                         playFishingSound('upgrade', soundEnabled);
                         setCoins((c) => c + 10000);
                       }}
-                      className="p-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 transition-all font-bold cursor-pointer text-center"
+                      className="p-3 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 transition-all font-bold cursor-pointer text-center"
                     >
                       🪙 +10K KOIN
                     </button>
@@ -1157,23 +1157,23 @@ const FishingShopModal: React.FC<{
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-white font-sans">
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white font-sans">
                   Toko Alat Pancing
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30">
+                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40">
                   Angler's Emporium
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
                 Tingkatkan joran & stok umpan sakral untuk memburu ikan purba
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {/* Wallet Chip */}
-            <div className="bg-amber-400/10 border border-amber-400/30 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 font-mono font-bold text-xs text-amber-300 shadow-xs">
+            <div className="bg-amber-400/15 border border-amber-400/40 px-3.5 py-1.5 rounded-2xl flex items-center gap-2 font-mono font-bold text-sm text-amber-300 shadow-sm">
               <Coins className="w-4 h-4 text-amber-400" />
               <span>{coins.toLocaleString()}</span>
             </div>
@@ -1183,25 +1183,25 @@ const FishingShopModal: React.FC<{
                 playFishingSound('click', soundEnabled);
                 onClose();
               }}
-              className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
+              className="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
               aria-label="Tutup Toko"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Category Switcher Tabs */}
-        <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2 shrink-0">
+        <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2.5 shrink-0">
           <button
             onClick={() => {
               playFishingSound('click', soundEnabled);
               setTab('rods');
             }}
-            className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
               tab === 'rods'
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-xs'
-                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200'
             }`}
           >
             <span>🎣</span> <span>JORAN PANCING (RODS)</span>
@@ -1211,10 +1211,10 @@ const FishingShopModal: React.FC<{
               playFishingSound('click', soundEnabled);
               setTab('baits');
             }}
-            className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
               tab === 'baits'
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-xs'
-                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-sm'
+                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200'
             }`}
           >
             <span>🪱</span> <span>UMPAN SPESIAL (BAITS)</span>
@@ -1222,7 +1222,7 @@ const FishingShopModal: React.FC<{
         </div>
 
         {/* Items List */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 custom-scrollbar">
           {tab === 'rods' ? (
             RODS_DATABASE.map((rod) => {
               const isOwned = ownedRods.includes(rod.id);
@@ -1232,7 +1232,7 @@ const FishingShopModal: React.FC<{
               return (
                 <div
                   key={rod.id}
-                  className={`bg-slate-950/70 border rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 transition-all relative overflow-hidden ${
+                  className={`bg-slate-950/70 border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all relative overflow-hidden ${
                     isEquipped
                       ? 'border-blue-500/60 bg-blue-950/20 ring-1 ring-blue-500/40 shadow-md'
                       : isOwned
@@ -1240,9 +1240,9 @@ const FishingShopModal: React.FC<{
                       : 'border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-start sm:items-center gap-3.5">
+                  <div className="flex items-start sm:items-center gap-4">
                     <div
-                      className="w-14 h-14 rounded-2xl border flex items-center justify-center text-3xl shrink-0 shadow-inner"
+                      className="w-16 h-16 rounded-2xl border flex items-center justify-center text-3xl shrink-0 shadow-inner"
                       style={{
                         backgroundColor: rod.color + '20',
                         borderColor: rod.color + '60',
@@ -1252,31 +1252,31 @@ const FishingShopModal: React.FC<{
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm sm:text-base font-black text-white font-sans tracking-tight">
+                      <div className="flex items-center gap-2.5">
+                        <h4 className="text-base sm:text-lg font-black text-white font-sans tracking-tight">
                           {rod.name}
                         </h4>
                         {isEquipped && (
-                          <span className="bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-blue-500/40">
+                          <span className="bg-blue-500/20 text-blue-300 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-500/40">
                             DIGUNAKAN
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed font-sans">
+                      <p className="text-xs sm:text-sm text-slate-300 mt-0.5 leading-relaxed font-sans">
                         {rod.description}
                       </p>
 
                       {/* Stat Meters */}
-                      <div className="grid grid-cols-3 gap-2 mt-2 text-[10px] font-mono">
-                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 flex items-center justify-between">
+                      <div className="grid grid-cols-3 gap-2.5 mt-2.5 text-xs font-mono">
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
                           <span className="text-slate-400">Tarik</span>
                           <span className="text-cyan-400 font-bold">+{Math.round(rod.reelSpeedBonus * 100)}%</span>
                         </div>
-                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 flex items-center justify-between">
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
                           <span className="text-slate-400">Kuat</span>
                           <span className="text-emerald-400 font-bold">+{Math.round(rod.strengthBonus * 100)}%</span>
                         </div>
-                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 flex items-center justify-between">
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
                           <span className="text-slate-400">Hoki</span>
                           <span className="text-amber-400 font-bold">+{Math.round(rod.luckBonus * 100)}%</span>
                         </div>
@@ -1285,9 +1285,9 @@ const FishingShopModal: React.FC<{
                   </div>
 
                   {/* Price & Action Button */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2.5 shrink-0 border-t sm:border-t-0 border-slate-800 pt-2.5 sm:pt-0">
                     {!isOwned && (
-                      <span className="text-sm font-mono font-black text-amber-400">
+                      <span className="text-base font-mono font-black text-amber-400">
                         🪙 {rod.price.toLocaleString()}
                       </span>
                     )}
@@ -1295,7 +1295,7 @@ const FishingShopModal: React.FC<{
                     {isEquipped ? (
                       <button
                         disabled
-                        className="bg-blue-600/30 text-blue-300 text-xs font-mono font-bold px-4 py-2 rounded-xl border border-blue-500/40 cursor-default"
+                        className="bg-blue-600/30 text-blue-300 text-xs sm:text-sm font-mono font-bold px-4 py-2 rounded-xl border border-blue-500/40 cursor-default"
                       >
                         ✓ DIGUNAKAN
                       </button>
@@ -1305,7 +1305,7 @@ const FishingShopModal: React.FC<{
                           playFishingSound('click', soundEnabled);
                           setEquippedRod(rod.id);
                         }}
-                        className="bg-slate-800 hover:bg-sky-500 hover:text-white text-sky-300 text-xs font-mono font-bold px-4 py-2 rounded-xl border border-slate-700 hover:border-sky-400 transition-all cursor-pointer active:scale-95"
+                        className="bg-slate-800 hover:bg-sky-500 hover:text-white text-sky-300 text-xs sm:text-sm font-mono font-bold px-4 py-2 rounded-xl border border-slate-700 hover:border-sky-400 transition-all cursor-pointer active:scale-95"
                       >
                         GUNAKAN
                       </button>
@@ -1313,7 +1313,7 @@ const FishingShopModal: React.FC<{
                       <button
                         onClick={() => handleBuyRod(rod)}
                         disabled={!canAfford}
-                        className={`text-xs font-mono font-bold px-4 py-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                        className={`text-xs sm:text-sm font-mono font-bold px-4 py-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
                           canAfford
                             ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 border-amber-300 shadow-md shadow-amber-500/10'
                             : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
@@ -1336,43 +1336,43 @@ const FishingShopModal: React.FC<{
               return (
                 <div
                   key={bait.id}
-                  className={`bg-slate-950/70 border rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 transition-all relative overflow-hidden ${
+                  className={`bg-slate-950/70 border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all relative overflow-hidden ${
                     isEquipped
                       ? 'border-purple-500/60 bg-purple-950/20 ring-1 ring-purple-500/40 shadow-md'
                       : 'border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shrink-0 shadow-inner">
+                  <div className="flex items-start sm:items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shrink-0 shadow-inner">
                       {bait.icon}
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm sm:text-base font-black text-white font-sans tracking-tight">
+                      <div className="flex items-center gap-2.5">
+                        <h4 className="text-base sm:text-lg font-black text-white font-sans tracking-tight">
                           {bait.name}
                         </h4>
                         {isEquipped && (
-                          <span className="bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-purple-500/40">
+                          <span className="bg-purple-500/20 text-purple-300 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border border-purple-500/40">
                             AKTIF
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed font-sans">
+                      <p className="text-xs sm:text-sm text-slate-300 mt-0.5 leading-relaxed font-sans">
                         {bait.description}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-2 mt-2 text-[10px] font-mono">
-                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-slate-400">
-                          Tersisa: <strong className="text-white">{count}</strong> {bait.id !== 'worm' ? 'biji' : ''}
+                      <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs font-mono">
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300">
+                          Tersisa: <strong className="text-white font-bold">{count}</strong> {bait.id !== 'worm' ? 'biji' : ''}
                         </div>
                         {bait.rareBonus > 0 && (
-                          <div className="bg-sky-950/60 border border-sky-500/30 rounded-lg px-2 py-1 text-sky-300 font-bold">
+                          <div className="bg-sky-950/60 border border-sky-500/30 rounded-xl px-3 py-1.5 text-sky-300 font-bold">
                             +{Math.round(bait.rareBonus * 100)}% Langka
                           </div>
                         )}
                         {bait.mythicBonus > 0 && (
-                          <div className="bg-pink-950/60 border border-pink-500/30 rounded-lg px-2 py-1 text-pink-300 font-bold">
+                          <div className="bg-pink-950/60 border border-pink-500/30 rounded-xl px-3 py-1.5 text-pink-300 font-bold">
                             +{Math.round(bait.mythicBonus * 100)}% Mitos
                           </div>
                         )}
@@ -1381,20 +1381,20 @@ const FishingShopModal: React.FC<{
                   </div>
 
                   {/* Price & Action Buttons */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2.5 shrink-0 border-t sm:border-t-0 border-slate-800 pt-2.5 sm:pt-0">
                     {bait.price > 0 && (
-                      <span className="text-xs font-mono font-black text-amber-400">
+                      <span className="text-sm font-mono font-black text-amber-400">
                         🪙 {bait.price} / 5x
                       </span>
                     )}
 
                     <div className="flex items-center gap-2">
                       {bait.price > 0 && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleBuyBait(bait, 1)}
                             disabled={!canAfford5x}
-                            className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                            className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
                               canAfford5x
                                 ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 border-amber-300'
                                 : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
@@ -1406,7 +1406,7 @@ const FishingShopModal: React.FC<{
                           <button
                             onClick={() => handleBuyBait(bait, 4)}
                             disabled={!canAfford20x}
-                            className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                            className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
                               canAfford20x
                                 ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-400'
                                 : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
@@ -1425,14 +1425,14 @@ const FishingShopModal: React.FC<{
                             setEquippedBait(bait.id);
                           }}
                           disabled={bait.id !== 'worm' && (baitCounts[bait.id] || 0) <= 0}
-                          className="bg-slate-800 hover:bg-purple-500 hover:text-white disabled:bg-slate-800 disabled:text-slate-500 text-purple-300 text-xs font-mono font-bold px-3.5 py-1.5 rounded-xl border border-slate-700 hover:border-purple-400 transition-all cursor-pointer active:scale-95"
+                          className="bg-slate-800 hover:bg-purple-500 hover:text-white disabled:bg-slate-800 disabled:text-slate-500 text-purple-300 text-xs sm:text-sm font-mono font-bold px-4 py-2 rounded-xl border border-slate-700 hover:border-purple-400 transition-all cursor-pointer active:scale-95"
                         >
                           PAKAI
                         </button>
                       ) : (
                         <button
                           disabled
-                          className="bg-purple-600/30 text-purple-300 text-xs font-mono font-bold px-3.5 py-1.5 rounded-xl border border-purple-500/40 cursor-default"
+                          className="bg-purple-600/30 text-purple-300 text-xs sm:text-sm font-mono font-bold px-4 py-2 rounded-xl border border-purple-500/40 cursor-default"
                         >
                           ✓ AKTIF
                         </button>
@@ -2211,10 +2211,10 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 navigate('/');
               }}
-              className="bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-slate-700/80 backdrop-blur-xl px-3.5 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer font-sans font-bold text-xs"
+              className="bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-slate-700/80 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer font-sans font-bold text-xs sm:text-sm"
               title="Kembali ke Portofolio Utama"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#E195AB]" />
+              <ArrowLeft className="w-4 h-4 text-[#E195AB]" />
               <span>Beranda</span>
             </button>
 
@@ -2230,7 +2230,7 @@ export const FishingGameSection: React.FC = () => {
                   triggerFloatingText('MANUAL WAKTU AKTIF', 400, 200, '#facc15');
                 }
               }}
-              className={`border backdrop-blur-xl px-3 py-1.5 rounded-2xl flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
+              className={`border backdrop-blur-xl px-3.5 py-1.5 rounded-2xl flex items-center gap-2.5 shadow-lg transition-all cursor-pointer ${
                 isRealtimeJakarta
                   ? 'bg-sky-950/70 border-sky-500/50 text-sky-200'
                   : 'bg-slate-900/85 border-slate-700/80 text-slate-200 hover:bg-slate-800'
@@ -2238,11 +2238,11 @@ export const FishingGameSection: React.FC = () => {
               title="Toggle Auto Waktu Realtime Jakarta / Manual"
             >
               <Compass className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '12s' }} />
-              <div className="flex flex-col text-left leading-none">
-                <span className="text-[10px] sm:text-[11px] font-mono font-bold text-white">
-                  {jakartaClock.timeString} <span className="text-[9px] text-cyan-400">WIB</span>
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-xs sm:text-sm font-mono font-bold text-white">
+                  {jakartaClock.timeString} <span className="text-[10px] text-cyan-400">WIB</span>
                 </span>
-                <span className="text-[8px] text-slate-400 font-mono font-semibold uppercase mt-0.5">
+                <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono font-semibold uppercase">
                   {isRealtimeJakarta ? `AUTO • ${timeOfDay}` : `MANUAL • ${timeOfDay}`}
                 </span>
               </div>
@@ -2257,7 +2257,7 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 setIsShopOpen(true);
               }}
-              className="bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 backdrop-blur-xl px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer font-mono font-bold text-xs"
+              className="bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 backdrop-blur-xl px-3.5 py-2 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer font-mono font-bold text-xs sm:text-sm"
               title="Buka Toko Alat Pancing"
             >
               <Coins className="w-4 h-4 text-amber-400" />
@@ -2287,7 +2287,7 @@ export const FishingGameSection: React.FC = () => {
             >
               <BookOpen className="w-4 h-4" />
               {discoveredSpecies.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-mono font-bold px-1.5 py-0.2 rounded-full border border-slate-900 shadow-sm">
+                <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full border border-slate-900 shadow-sm">
                   {discoveredSpecies.length}
                 </span>
               )}
@@ -2330,7 +2330,7 @@ export const FishingGameSection: React.FC = () => {
                 {weather === 'badai' && '⛈️'}
                 {weather === 'kabut_mistis' && '🌫️'}
               </span>
-              <span className="capitalize hidden md:inline text-[11px] text-slate-300 font-sans">
+              <span className="capitalize hidden md:inline text-xs text-slate-200 font-sans font-semibold">
                 {weather === 'kabut_mistis' ? 'Mistis' : weather}
               </span>
             </button>
@@ -2363,9 +2363,9 @@ export const FishingGameSection: React.FC = () => {
 
         {/* Row 2: Live Telemetry Bar (Score, Fish, Rod & Bait, Combo) */}
         <div className="flex justify-end pointer-events-auto">
-          <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/70 rounded-2xl px-4 py-2 flex items-center gap-3 sm:gap-4 shadow-xl text-[10px] sm:text-xs font-mono font-bold text-slate-200 flex-wrap">
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/70 rounded-2xl px-4 py-2 flex items-center gap-3 sm:gap-4 shadow-xl text-xs sm:text-sm font-mono font-bold text-slate-200 flex-wrap">
             <div className="flex items-center gap-1.5">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <Trophy className="w-4 h-4 text-amber-400" />
               <span>PTS: <strong className="text-amber-400">{score.toLocaleString()}</strong></span>
             </div>
             <span className="text-slate-600">|</span>
@@ -2373,12 +2373,12 @@ export const FishingGameSection: React.FC = () => {
               <span>IKAN: <strong className="text-emerald-400">{caughtCount}</strong></span>
             </div>
             <span className="text-slate-600">|</span>
-            <div className="flex items-center gap-1 text-slate-300">
+            <div className="flex items-center gap-1.5 text-slate-200">
               <span>{currentEquippedRodItem.icon}</span>
               <span className="hidden sm:inline font-sans">{currentEquippedRodItem.name.split(' ')[1]}</span>
             </div>
             <span className="text-slate-600">|</span>
-            <div className="flex items-center gap-1 text-purple-300">
+            <div className="flex items-center gap-1.5 text-purple-300">
               <span>{currentEquippedBaitItem.icon}</span>
               <span>{equippedBait !== 'worm' ? `(${baitCounts[equippedBait] || 0})` : '∞'}</span>
             </div>
@@ -2409,12 +2409,12 @@ export const FishingGameSection: React.FC = () => {
                     : 'bg-amber-100'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1.5 font-black text-[11px] sm:text-xs text-slate-900">
+                <div className="flex justify-between items-center mb-1.5 font-black text-xs sm:text-sm text-slate-900">
                   <span className="flex items-center gap-1.5">
                     <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
                     <span>TENAGA LEMPARAN</span>
                   </span>
-                  <span className={`font-mono text-xs sm:text-sm px-2 py-0.5 border-2 border-black rounded ${
+                  <span className={`font-mono text-sm sm:text-base px-2.5 py-0.5 border-2 border-black rounded ${
                     power >= 80 && power <= 95
                       ? 'bg-yellow-400 text-slate-950 font-black shadow-xs animate-pulse'
                       : power > 95
@@ -2435,7 +2435,7 @@ export const FishingGameSection: React.FC = () => {
 
                   {/* Sweet Spot */}
                   <div className="absolute top-0 bottom-0 left-[80%] w-[15%] bg-yellow-400/50 border-x-2 border-yellow-300 z-10 flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.8)] animate-pulse">
-                    <span className="text-[7.5px] font-black text-yellow-200 tracking-tighter drop-shadow-[1px_1px_0_#000]">PERFECT</span>
+                    <span className="text-[10px] sm:text-xs font-black text-yellow-200 tracking-tighter drop-shadow-[1px_1px_0_#000]">PERFECT</span>
                   </div>
 
                   {/* Realtime Fill (No transition lag for 1:1 precision) */}
@@ -2453,16 +2453,16 @@ export const FishingGameSection: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-2 text-[8px] sm:text-[8.5px] font-black">
+                <div className="flex justify-between items-center mt-2 text-xs font-black">
                   <span className="text-slate-600">0%</span>
-                  <span className={`px-2 py-0.5 rounded border border-black ${
+                  <span className={`px-2.5 py-0.5 rounded border border-black ${
                     power >= 80 && power <= 95
                       ? 'bg-amber-400 text-slate-950 font-black animate-pulse'
                       : 'bg-amber-200/80 text-slate-800'
                   }`}>
                     {power < 35 ? '💤 MENGISI TENAGA...' : power < 80 ? '⚡ TERUS ISI...' : power <= 95 ? '⭐ TARGET IDEAL! LEPAS SEKARANG! ⭐' : '🔥 MAX OVERPOWER!'}
                   </span>
-                  <span className="text-rose-700">100%</span>
+                  <span className="text-rose-700 font-bold">100%</span>
                 </div>
               </motion.div>
             )}
@@ -2482,18 +2482,18 @@ export const FishingGameSection: React.FC = () => {
                     : 'bg-amber-100'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1.5 font-black text-xs">
+                <div className="flex justify-between items-center mb-1.5 font-black text-xs sm:text-sm">
                   <span className={`flex items-center gap-2 ${
                     reelProgress < 28 ? 'text-red-700 animate-bounce' : reelProgress > 75 ? 'text-emerald-800' : 'text-blue-700'
                   }`}>
                     <div className="w-5 h-5 bg-slate-900 text-yellow-300 border-2 border-black rounded-full flex items-center justify-center text-xs animate-reel-spin shadow-xs">
                       ⚙️
                     </div>
-                    <span className="text-[10px] sm:text-xs">
+                    <span className="text-xs sm:text-sm">
                       {reelProgress < 28 ? '⚠️ TEGANGAN KRITIS! IKAN MENARIK!' : reelProgress > 75 ? '✨ IKAN DEKAT! TAHAN!' : '⚡ TARIK! TAP CEPAT BERULANG KALI!'}
                     </span>
                   </span>
-                  <span className="font-mono text-xs sm:text-sm font-black px-2 py-0.5 bg-slate-900 text-yellow-300 border-2 border-black rounded">
+                  <span className="font-mono text-sm sm:text-base font-black px-2.5 py-0.5 bg-slate-900 text-yellow-300 border-2 border-black rounded">
                     {Math.round(Math.max(0, Math.min(100, reelProgress)))}%
                   </span>
                 </div>
@@ -2522,17 +2522,17 @@ export const FishingGameSection: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-1.5 text-[8px] sm:text-[8.5px] font-black text-slate-700">
+                <div className="flex justify-between items-center mt-1.5 text-xs font-black text-slate-800">
                   <span className="flex items-center gap-1">
                     <span>JARAK:</span>
-                    <strong className="text-blue-700">{Math.max(0, Math.round((100 - reelProgress) * 0.4))}m</strong>
+                    <strong className="text-blue-800">{Math.max(0, Math.round((100 - reelProgress) * 0.4))}m</strong>
                   </span>
-                  <span className={`px-2 py-0.5 rounded border border-black text-[7.5px] sm:text-[8px] ${
+                  <span className={`px-2.5 py-0.5 rounded border border-black text-xs ${
                     reelProgress < 28 ? 'bg-red-500 text-white animate-pulse' : reelProgress > 75 ? 'bg-emerald-600 text-white' : 'bg-amber-300 text-slate-900'
                   }`}>
                     {reelProgress < 28 ? '⚠️ RESISTENSI TINGGI' : reelProgress > 75 ? '🟢 TANGKAPAN AMAN' : '🔵 MENARIK KAIL'}
                   </span>
-                  <span>TAP TAP TAP! 🔥</span>
+                  <span className="font-bold">TAP TAP TAP! 🔥</span>
                 </div>
               </motion.div>
             )}
@@ -3023,10 +3023,10 @@ export const FishingGameSection: React.FC = () => {
                       exit={{ scale: 0 }}
                       className="absolute bottom-[35px] left-1/2 -translate-x-1/2 flex flex-col items-center z-30"
                     >
-                      <div className="bg-red-600 text-yellow-300 font-black text-[28px] px-3 py-1 border-[3px] border-black shadow-[4px_4px_0_0_#000] animate-pulse">
+                      <div className="bg-red-600 text-yellow-300 font-black text-3xl px-3.5 py-1 border-[3px] border-black shadow-[4px_4px_0_0_#000] animate-pulse leading-none">
                         !
                       </div>
-                      <div className="text-[9px] font-bold text-white bg-black px-2 py-0.5 mt-1 border border-white whitespace-nowrap">
+                      <div className="text-xs font-black text-white bg-black px-2.5 py-1 mt-1.5 border border-white whitespace-nowrap shadow-md">
                         TAP SEKARANG!
                       </div>
                     </motion.div>
@@ -3127,32 +3127,32 @@ export const FishingGameSection: React.FC = () => {
               }}
             >
               <div className="bg-amber-100 border-[6px] border-black p-6 sm:p-8 shadow-[10px_10px_0_0_#000] text-center max-w-[520px] w-full relative mt-4">
-                <div className="bg-blue-600 text-white border-[4px] border-black py-2.5 px-6 -mt-11 mx-auto inline-block shadow-[4px_4px_0_0_#000]">
-                  <h1 className="text-[18px] sm:text-[22px] font-black tracking-wider text-yellow-300 drop-shadow-[2px_2px_0_#000]">
+                <div className="bg-blue-600 text-white border-[4px] border-black py-3 px-6 -mt-11 mx-auto inline-block shadow-[4px_4px_0_0_#000]">
+                  <h1 className="text-xl sm:text-2xl font-black tracking-wider text-yellow-300 drop-shadow-[2px_2px_0_#000]">
                     ENCORE FISHING PRO
                   </h1>
                 </div>
 
-                <div className="mt-5 space-y-2 text-[9.5px] font-bold text-slate-800 text-left bg-amber-50 p-3.5 border-[3px] border-black leading-relaxed">
-                  <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">1</span>
-                    <span>Tahan layar untuk mengisi Tenaga lemparan.</span>
+                <div className="mt-5 space-y-2.5 text-xs sm:text-sm font-bold text-slate-800 text-left bg-amber-50 p-4 border-[3px] border-black leading-relaxed">
+                  <p className="flex items-center gap-2.5">
+                    <span className="bg-amber-800 text-white px-2.5 py-0.5 text-xs font-mono font-bold">1</span>
+                    <span>Tahan layar untuk mengisi Tenaga lemparan kail.</span>
                   </p>
-                  <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">2</span>
+                  <p className="flex items-center gap-2.5">
+                    <span className="bg-amber-800 text-white px-2.5 py-0.5 text-xs font-mono font-bold">2</span>
                     <span>Lepas di zona <strong className="text-amber-800">PERFECT (80-95%)</strong> untuk strike cepat.</span>
                   </p>
-                  <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">3</span>
-                    <span>Saat tanda (<span className="text-red-600 font-black text-sm">!</span>) muncul, segera TAP layar!</span>
+                  <p className="flex items-center gap-2.5">
+                    <span className="bg-amber-800 text-white px-2.5 py-0.5 text-xs font-mono font-bold">3</span>
+                    <span>Saat tanda seru (<span className="text-red-600 font-black text-base">!</span>) muncul, segera TAP layar!</span>
                   </p>
-                  <p className="flex items-center gap-2">
-                    <span className="bg-amber-800 text-white px-2 py-0.5 text-[8.5px]">4</span>
+                  <p className="flex items-center gap-2.5">
+                    <span className="bg-amber-800 text-white px-2.5 py-0.5 text-xs font-mono font-bold">4</span>
                     <span>TAP cepat berulang kali untuk menarik ikan ke perahu.</span>
                   </p>
                 </div>
 
-                <div className="mt-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs py-3 border-[4px] border-black shadow-[4px_4px_0_0_#000] animate-pulse cursor-pointer">
+                <div className="mt-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm sm:text-base py-3.5 border-[4px] border-black shadow-[4px_4px_0_0_#000] animate-pulse cursor-pointer">
                   KLIK / TAP UNTUK MEMULAI
                 </div>
               </div>
@@ -3223,7 +3223,7 @@ export const FishingGameSection: React.FC = () => {
                     : fish.rarity === 'Legendaris'
                     ? 'border-amber-500 shadow-[0_0_50px_rgba(234,179,8,0.8),10px_10px_0_0_#000]'
                     : 'border-black shadow-[10px_10px_0_0_#000]'
-                } p-5 sm:p-6 w-full max-w-[440px] text-slate-900 text-center relative z-10 flex flex-col max-h-[580px] overflow-hidden`}
+                } p-5 sm:p-6 w-full max-w-[460px] text-slate-900 text-center relative z-10 flex flex-col max-h-[580px] overflow-hidden`}
               >
                 <div className="relative z-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar pb-1">
                   {/* Grand Banner */}
@@ -3236,7 +3236,7 @@ export const FishingGameSection: React.FC = () => {
                         : 'bg-emerald-600 text-white'
                     }`}
                   >
-                    <h2 className="text-[12px] sm:text-[14px] font-black text-yellow-300 flex items-center justify-center gap-1.5 tracking-wide">
+                    <h2 className="text-sm sm:text-base font-black text-yellow-300 flex items-center justify-center gap-1.5 tracking-wide font-sans">
                       {fish.rarity === 'Mitos' ? (
                         <>⭐ 👑 MAHA MITOS DEWA SAMUDRA! 👑 ⭐</>
                       ) : fish.rarity === 'Legendaris' ? (
@@ -3250,7 +3250,7 @@ export const FishingGameSection: React.FC = () => {
                   {/* Showcase Pedestal */}
                   <div className="flex justify-center my-2">
                     <div
-                      className={`w-[130px] h-[130px] border-[4px] ${
+                      className={`w-[140px] h-[140px] border-[4px] ${
                         fish.rarity === 'Mitos'
                           ? 'border-purple-600 bg-gradient-to-tr from-slate-950 via-purple-950 to-indigo-950 shadow-[0_0_35px_rgba(168,85,247,0.9)]'
                           : fish.rarity === 'Legendaris'
@@ -3263,32 +3263,32 @@ export const FishingGameSection: React.FC = () => {
                         transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                         className="relative z-10"
                       >
-                        <FishGraphic id={fish.id} size={105} />
+                        <FishGraphic id={fish.id} size={110} />
                       </motion.div>
                     </div>
                   </div>
 
                   {/* Stats & Details */}
-                  <div className="space-y-1.5 mb-2.5">
-                    <h3 className="text-[14px] sm:text-[16px] font-black text-slate-900">{fish.name}</h3>
+                  <div className="space-y-2 mb-2.5">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 font-sans">{fish.name}</h3>
                     <div
-                      className="inline-block px-3 py-0.5 text-slate-900 border-[2px] border-black text-[9px] font-black uppercase tracking-wider"
+                      className="inline-block px-3.5 py-0.5 text-slate-900 border-[2px] border-black text-xs font-black uppercase tracking-wider"
                       style={{ backgroundColor: fish.badgeBg }}
                     >
-                      RARITY: {fish.rarity}
+                      KELANGKAAN: {fish.rarity}
                     </div>
-                    <p className="text-[9.5px] text-slate-700 italic px-2 mt-0.5 leading-snug">{fish.description}</p>
+                    <p className="text-xs sm:text-sm text-slate-700 font-medium px-2 mt-0.5 leading-snug">{fish.description}</p>
 
-                    <div className="flex justify-center gap-3 mt-2 text-[9.5px] font-bold bg-amber-200/80 p-2 border-[2px] border-black">
-                      <span>BERAT: <strong className="text-blue-700">{fishStats.weight} kg</strong></span>
-                      <span>PANJANG: <strong className="text-blue-700">{fishStats.length} cm</strong></span>
+                    <div className="flex justify-center gap-4 mt-2 text-xs sm:text-sm font-bold bg-amber-200/80 p-2.5 border-[2px] border-black font-mono">
+                      <span>BERAT: <strong className="text-blue-800">{fishStats.weight} kg</strong></span>
+                      <span>PANJANG: <strong className="text-blue-800">{fishStats.length} cm</strong></span>
                     </div>
 
-                    <div className="flex justify-center items-center gap-3 mt-2 text-[9.5px] font-black">
-                      <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 border border-emerald-800 shadow-xs">
+                    <div className="flex justify-center items-center gap-3 mt-2 text-xs sm:text-sm font-mono font-black">
+                      <span className="text-emerald-900 bg-emerald-100 px-3 py-1 border border-emerald-800 shadow-xs">
                         + {fish.points} PTS
                       </span>
-                      <span className="text-amber-900 bg-amber-200 px-2 py-0.5 border border-amber-800 shadow-xs">
+                      <span className="text-amber-950 bg-amber-200 px-3 py-1 border border-amber-800 shadow-xs">
                         🪙 +{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} KOIN
                       </span>
                     </div>
@@ -3296,7 +3296,7 @@ export const FishingGameSection: React.FC = () => {
 
                   {/* Actions */}
                   {!caughtActionUnlocked ? (
-                    <div className="mt-3 py-2.5 px-4 bg-slate-900 border-[3px] border-amber-400 text-yellow-300 text-[9.5px] font-black tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.5)]">
+                    <div className="mt-3 py-3 px-4 bg-slate-900 border-[3px] border-amber-400 text-yellow-300 text-xs sm:text-sm font-black tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.5)]">
                       <Sparkles className="w-4 h-4 animate-spin text-amber-400" />
                       <span className="animate-pulse">✨ MEMBUKA HASIL TANGKAPAN...</span>
                     </div>
@@ -3304,13 +3304,13 @@ export const FishingGameSection: React.FC = () => {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mt-2 p-3 bg-red-950 border-[3px] border-red-500 text-white space-y-2 shadow-[0_0_25px_rgba(239,68,68,0.7)]"
+                      className="mt-2 p-3.5 bg-red-950 border-[3px] border-red-500 text-white space-y-2.5 shadow-[0_0_25px_rgba(239,68,68,0.7)]"
                     >
-                      <div className="flex items-center justify-center gap-1.5 text-red-400 text-[10.5px] font-black">
+                      <div className="flex items-center justify-center gap-1.5 text-red-300 text-xs sm:text-sm font-black">
                         <Shield className="w-4 h-4 text-amber-400" />
                         <span>KONFIRMASI JUAL IKAN LANGKA</span>
                       </div>
-                      <p className="text-[8.5px] text-slate-200 leading-snug">
+                      <p className="text-xs text-slate-200 leading-snug">
                         Ikan <strong>{fish.name}</strong> ({fish.rarity}) sangat bernilai. Yakin ingin menjualnya seharga <strong>+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))} 🪙</strong>?
                       </p>
                       <div className="flex gap-2 pt-1">
@@ -3320,7 +3320,7 @@ export const FishingGameSection: React.FC = () => {
                             playSound('click');
                             setSellConfirmation(false);
                           }}
-                          className="flex-1 py-2 bg-amber-400 text-slate-950 border-[2px] border-black font-black text-[9px] hover:bg-amber-300 shadow-[2px_2px_0_0_#000] cursor-pointer"
+                          className="flex-1 py-2.5 bg-amber-400 text-slate-950 border-[2px] border-black font-black text-xs hover:bg-amber-300 shadow-[2px_2px_0_0_#000] cursor-pointer"
                         >
                           BATAL (SIMPAN)
                         </button>
@@ -3333,7 +3333,7 @@ export const FishingGameSection: React.FC = () => {
                             triggerFloatingText(`+${extraCoins} 🪙 DIJUAL!`, bobberPos.x, bobberPos.y - 60, '#facc15');
                             setGameState('idle');
                           }}
-                          className="flex-1 py-2 bg-red-600 text-white border-[2px] border-black font-black text-[9px] hover:bg-red-500 shadow-[2px_2px_0_0_#000] cursor-pointer"
+                          className="flex-1 py-2.5 bg-red-600 text-white border-[2px] border-black font-black text-xs hover:bg-red-500 shadow-[2px_2px_0_0_#000] cursor-pointer"
                         >
                           TETAP JUAL
                         </button>
@@ -3351,7 +3351,7 @@ export const FishingGameSection: React.FC = () => {
                           playSound('click');
                           setGameState('idle');
                         }}
-                        className="flex-1 py-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 border-[3px] border-black font-black text-xs hover:brightness-110 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5"
+                        className="flex-1 py-3 px-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 border-[3px] border-black font-black text-xs sm:text-sm hover:brightness-110 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5"
                       >
                         <Check className="w-4 h-4 text-emerald-800" />
                         <span>SIMPAN KE JURNAL</span>
@@ -3371,9 +3371,9 @@ export const FishingGameSection: React.FC = () => {
                             setGameState('idle');
                           }
                         }}
-                        className="py-3 px-3 sm:px-4 bg-emerald-600 text-white border-[3px] border-black font-black text-xs hover:bg-emerald-500 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer flex items-center gap-1"
+                        className="py-3 px-3 sm:px-4 bg-emerald-600 text-white border-[3px] border-black font-black text-xs sm:text-sm hover:bg-emerald-500 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer flex items-center gap-1.5"
                       >
-                        <Coins className="w-3.5 h-3.5 text-yellow-300" />
+                        <Coins className="w-4 h-4 text-yellow-300" />
                         <span>JUAL (+{Math.round(fish.coins * (equippedRod === 'cosmic' ? 2.0 : equippedRod === 'gold' ? 1.5 : 1))}🪙)</span>
                       </button>
                     </motion.div>
@@ -3392,18 +3392,18 @@ export const FishingGameSection: React.FC = () => {
               className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4 select-none"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="bg-red-700 border-[5px] border-black p-5 sm:p-6 w-full max-w-[400px] text-white shadow-[8px_8px_0_0_#000] text-center relative">
-                <h2 className="text-[18px] font-black mb-3 text-yellow-300 drop-shadow-[2px_2px_0_#000]">
+              <div className="bg-red-700 border-[5px] border-black p-5 sm:p-6 w-full max-w-[420px] text-white shadow-[8px_8px_0_0_#000] text-center relative">
+                <h2 className="text-xl sm:text-2xl font-black mb-3 text-yellow-300 drop-shadow-[2px_2px_0_#000] font-sans">
                   IKAN LEPAS...
                 </h2>
 
                 <div className="flex justify-center my-3">
-                  <div className="w-[80px] h-[80px] border-[3px] border-black bg-slate-900 flex items-center justify-center shadow-sm">
-                    <AlertCircle className="w-[45px] h-[45px] text-amber-400" />
+                  <div className="w-[85px] h-[85px] border-[3px] border-black bg-slate-900 flex items-center justify-center shadow-sm">
+                    <AlertCircle className="w-[50px] h-[50px] text-amber-400" />
                   </div>
                 </div>
 
-                <div className="text-[9.5px] font-bold bg-red-900/90 p-2.5 border-[2px] border-black mb-4 leading-relaxed">
+                <div className="text-xs sm:text-sm font-bold bg-red-900/90 p-3 border-[2px] border-black mb-4 leading-relaxed font-sans">
                   {escapeReason === 'early' && 'Terlalu Cepat! Kamu menarik kail sebelum ikan menggigit.'}
                   {escapeReason === 'missed' && 'Terlalu Lambat! Ikan keburu kabur memakan umpan.'}
                   {escapeReason === 'failed' && 'Tenaga Ikan Terlalu Kuat! Tarikanmu kalah kencang.'}
@@ -3415,7 +3415,7 @@ export const FishingGameSection: React.FC = () => {
                     playSound('click');
                     setGameState('idle');
                   }}
-                  className="w-full py-3 bg-white text-slate-900 border-[3px] border-black font-black text-xs hover:bg-slate-100 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer"
+                  className="w-full py-3.5 bg-white text-slate-900 border-[3px] border-black font-black text-sm hover:bg-slate-100 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer font-sans"
                 >
                   COBA LAGI
                 </button>
