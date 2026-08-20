@@ -310,15 +310,21 @@ const FishingJournal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 font-sans select-none overflow-y-auto"
-      onPointerDown={(e) => e.stopPropagation()}
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) {
+          playFishingSound('click', soundEnabled);
+          onClose();
+        }
+      }}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 15 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 12 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100"
+        onPointerDown={(e) => e.stopPropagation()}
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100 my-auto"
       >
         {/* Top Header Banner */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-3 shrink-0">
@@ -788,15 +794,21 @@ const FishingOddsModal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 font-sans select-none overflow-y-auto"
-      onPointerDown={(e) => e.stopPropagation()}
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) {
+          playFishingSound('click', soundEnabled);
+          onClose();
+        }
+      }}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 15 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 12 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[88vh] overflow-hidden text-slate-100"
+        onPointerDown={(e) => e.stopPropagation()}
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[85vh] overflow-hidden text-slate-100 my-auto"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between shrink-0">
@@ -1138,15 +1150,21 @@ const FishingShopModal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 font-sans select-none overflow-y-auto"
-      onPointerDown={(e) => e.stopPropagation()}
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) {
+          playFishingSound('click', soundEnabled);
+          onClose();
+        }
+      }}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 15 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 12 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[88vh] overflow-hidden text-slate-100"
+        onPointerDown={(e) => e.stopPropagation()}
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[85vh] overflow-hidden text-slate-100 my-auto"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between shrink-0">
@@ -1529,9 +1547,33 @@ export const FishingGameSection: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<string[]>([]);
-  const [isJournalOpen, setIsJournalOpen] = useState(false);
-  const [isOddsOpen, setIsOddsOpen] = useState(false);
-  const [isShopOpen, setIsShopOpen] = useState(false);
+  
+  // Mutually Exclusive Modal System (Prevents stacked/overlapping modals)
+  type FishingModalType = 'journal' | 'shop' | 'odds' | null;
+  const [activeModal, setActiveModal] = useState<FishingModalType>(null);
+  const isJournalOpen = activeModal === 'journal';
+  const isOddsOpen = activeModal === 'odds';
+  const isShopOpen = activeModal === 'shop';
+
+  const toggleModal = (modal: 'journal' | 'shop' | 'odds') => {
+    setActiveModal((prev) => (prev === modal ? null : modal));
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+  };
+
+  // Keyboard shortcut: Escape to close whichever modal is active
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const [isScreenShaking, setIsScreenShaking] = useState(false);
   const [caughtActionUnlocked, setCaughtActionUnlocked] = useState(false);
   const [sellConfirmation, setSellConfirmation] = useState(false);
@@ -1784,6 +1826,7 @@ export const FishingGameSection: React.FC = () => {
   };
 
   const startPreparing = () => {
+    setActiveModal(null);
     setHasStarted(true);
     setGameState('preparing');
     setPower(0);
@@ -2201,7 +2244,7 @@ export const FishingGameSection: React.FC = () => {
       </style>
 
       {/* ================= TOP ARCADE HUD & CONTROL DECK ================= */}
-      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-[200] flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-[400] flex flex-col gap-2 pointer-events-none">
         {/* Row 1: Primary Navigation, Live Jakarta Time & Control Cluster */}
         <div className="flex justify-between items-center gap-2 flex-wrap sm:flex-nowrap">
           {/* Left: Home / Back & Live Jakarta Clock */}
@@ -2251,14 +2294,18 @@ export const FishingGameSection: React.FC = () => {
 
           {/* Right: Arcade Control Deck */}
           <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
-            {/* Coins Counter */}
+            {/* Coins Counter (Opens/Toggles Shop) */}
             <button
               onClick={() => {
                 playSound('click');
-                setIsShopOpen(true);
+                toggleModal('shop');
               }}
-              className="bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 backdrop-blur-xl px-3.5 py-2 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer font-mono font-bold text-xs sm:text-sm"
-              title="Buka Toko Alat Pancing"
+              className={`bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border backdrop-blur-xl px-3.5 py-2 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer font-mono font-bold text-xs sm:text-sm ${
+                activeModal === 'shop'
+                  ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-amber-500/20'
+                  : 'border-amber-400/40'
+              }`}
+              title="Buka / Tutup Toko Alat Pancing"
             >
               <Coins className="w-4 h-4 text-amber-400" />
               <span>{coins.toLocaleString()}</span>
@@ -2268,9 +2315,13 @@ export const FishingGameSection: React.FC = () => {
             <button
               onClick={() => {
                 playSound('click');
-                setIsShopOpen(true);
+                toggleModal('shop');
               }}
-              className="bg-slate-900/85 hover:bg-slate-800 text-amber-400 border border-slate-700/80 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer"
+              className={`border backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer ${
+                activeModal === 'shop'
+                  ? 'bg-amber-500/30 text-amber-300 border-amber-400 ring-2 ring-amber-400/50 shadow-amber-500/20'
+                  : 'bg-slate-900/85 hover:bg-slate-800 text-amber-400 border-slate-700/80'
+              }`}
               title="Toko Joran & Umpan"
             >
               <ShoppingBag className="w-4 h-4" />
@@ -2280,9 +2331,13 @@ export const FishingGameSection: React.FC = () => {
             <button
               onClick={() => {
                 playFishingSound('page', soundEnabled);
-                setIsJournalOpen(true);
+                toggleModal('journal');
               }}
-              className="bg-slate-900/85 hover:bg-slate-800 text-blue-400 border border-slate-700/80 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer relative"
+              className={`border backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer relative ${
+                activeModal === 'journal'
+                  ? 'bg-blue-500/30 text-blue-300 border-blue-400 ring-2 ring-blue-400/50 shadow-blue-500/20'
+                  : 'bg-slate-900/85 hover:bg-slate-800 text-blue-400 border-slate-700/80'
+              }`}
               title="Jurnal Spesies Ikan"
             >
               <BookOpen className="w-4 h-4" />
@@ -2297,10 +2352,12 @@ export const FishingGameSection: React.FC = () => {
             <button
               onClick={() => {
                 playSound('click');
-                setIsOddsOpen(true);
+                toggleModal('odds');
               }}
               className={`p-2.5 rounded-2xl backdrop-blur-xl border shadow-lg active:scale-95 transition-all cursor-pointer ${
-                adminOdds.enabled && isAdmin
+                activeModal === 'odds'
+                  ? 'bg-cyan-500/30 text-cyan-300 border-cyan-400 ring-2 ring-cyan-400/50 shadow-cyan-500/20'
+                  : adminOdds.enabled && isAdmin
                   ? 'bg-amber-400/30 text-amber-300 border-amber-400 ring-2 ring-amber-400/40 animate-pulse'
                   : 'bg-slate-900/85 hover:bg-slate-800 text-cyan-400 border-slate-700/80'
               }`}
@@ -3076,7 +3133,7 @@ export const FishingGameSection: React.FC = () => {
               caughtCount={caughtCount}
               discoveredSpecies={discoveredSpecies}
               soundEnabled={soundEnabled}
-              onClose={() => setIsJournalOpen(false)}
+              onClose={closeModal}
             />
           )}
 
@@ -3090,7 +3147,7 @@ export const FishingGameSection: React.FC = () => {
               setAdminOdds={setAdminOdds}
               setCoins={setCoins}
               soundEnabled={soundEnabled}
-              onClose={() => setIsOddsOpen(false)}
+              onClose={closeModal}
             />
           )}
 
@@ -3108,7 +3165,7 @@ export const FishingGameSection: React.FC = () => {
               baitCounts={baitCounts}
               setBaitCounts={setBaitCounts}
               soundEnabled={soundEnabled}
-              onClose={() => setIsShopOpen(false)}
+              onClose={closeModal}
             />
           )}
 
