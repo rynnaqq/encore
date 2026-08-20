@@ -5,7 +5,8 @@ import {
   Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins,
   ShoppingBag, BarChart3, CloudRain, Zap, Check, Shield, Crown,
   Sliders, Cloud, RefreshCw, Compass, HelpCircle, ChevronLeft, ChevronRight,
-  Fish, Award, Info
+  Fish, Award, Info, Search, Lock, Star, Eye, Filter, CheckCircle2,
+  TrendingUp, Activity, Layers, Package
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -218,7 +219,7 @@ const getRandomFish = (
 };
 
 /* =========================================================================
-   COMPONENTS: FISHING JOURNAL (SPECIES LOG & STATS)
+   COMPONENTS: FISHING JOURNAL (SPECIES LOG & SPECIMEN ENCYCLOPEDIA)
    ========================================================================= */
 const FishingJournal: React.FC<{
   score: number;
@@ -228,204 +229,517 @@ const FishingJournal: React.FC<{
   onClose: () => void;
 }> = ({ score, caughtCount, discoveredSpecies, soundEnabled = true, onClose }) => {
   const [filterRarity, setFilterRarity] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'discovered' | 'locked'>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFish, setSelectedFish] = useState<FishType | null>(null);
 
-  const filteredFish = FISH_DATABASE.filter(f => {
-    if (filterRarity === 'all') return true;
-    return f.rarity === filterRarity;
+  const totalSpecies = FISH_DATABASE.length;
+  const discoveredCount = discoveredSpecies.length;
+  const completionPct = Math.round((discoveredCount / totalSpecies) * 100);
+
+  // Rarity counters
+  const rarityStats = {
+    Biasa: {
+      total: FISH_DATABASE.filter((f) => f.rarity === 'Biasa').length,
+      discovered: FISH_DATABASE.filter((f) => f.rarity === 'Biasa' && discoveredSpecies.includes(f.id)).length,
+      color: 'from-slate-500 to-slate-600',
+      badgeBg: 'bg-slate-700/80 text-slate-200 border-slate-600',
+    },
+    Langka: {
+      total: FISH_DATABASE.filter((f) => f.rarity === 'Langka').length,
+      discovered: FISH_DATABASE.filter((f) => f.rarity === 'Langka' && discoveredSpecies.includes(f.id)).length,
+      color: 'from-sky-500 to-blue-600',
+      badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    },
+    'Sangat Langka': {
+      total: FISH_DATABASE.filter((f) => f.rarity === 'Sangat Langka').length,
+      discovered: FISH_DATABASE.filter((f) => f.rarity === 'Sangat Langka' && discoveredSpecies.includes(f.id)).length,
+      color: 'from-purple-500 to-indigo-600',
+      badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    },
+    Legendaris: {
+      total: FISH_DATABASE.filter((f) => f.rarity === 'Legendaris').length,
+      discovered: FISH_DATABASE.filter((f) => f.rarity === 'Legendaris' && discoveredSpecies.includes(f.id)).length,
+      color: 'from-amber-400 to-yellow-600',
+      badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    },
+    Mitos: {
+      total: FISH_DATABASE.filter((f) => f.rarity === 'Mitos').length,
+      discovered: FISH_DATABASE.filter((f) => f.rarity === 'Mitos' && discoveredSpecies.includes(f.id)).length,
+      color: 'from-rose-500 via-pink-500 to-indigo-500',
+      badgeBg: 'bg-gradient-to-r from-rose-500/20 to-purple-500/20 text-pink-300 border-pink-500/40',
+    },
+  };
+
+  const filteredFish = FISH_DATABASE.filter((f) => {
+    const isFound = discoveredSpecies.includes(f.id);
+    if (filterRarity !== 'all' && f.rarity !== filterRarity) return false;
+    if (statusFilter === 'discovered' && !isFound) return false;
+    if (statusFilter === 'locked' && isFound) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = f.name.toLowerCase().includes(q);
+      const matchRarity = f.rarity.toLowerCase().includes(q);
+      const matchDesc = f.description.toLowerCase().includes(q);
+      if (!matchName && !matchRarity && !matchDesc) return false;
+    }
+    return true;
   });
 
-  const completionPct = Math.round((discoveredSpecies.length / FISH_DATABASE.length) * 100);
+  // Discovered species list for navigation in inspector
+  const discoveredList = FISH_DATABASE.filter((f) => discoveredSpecies.includes(f.id));
+
+  const handleNextFish = () => {
+    if (!selectedFish || discoveredList.length <= 1) return;
+    const currentIndex = discoveredList.findIndex((f) => f.id === selectedFish.id);
+    const nextIndex = (currentIndex + 1) % discoveredList.length;
+    playFishingSound('page', soundEnabled);
+    setSelectedFish(discoveredList[nextIndex]);
+  };
+
+  const handlePrevFish = () => {
+    if (!selectedFish || discoveredList.length <= 1) return;
+    const currentIndex = discoveredList.findIndex((f) => f.id === selectedFish.id);
+    const prevIndex = (currentIndex - 1 + discoveredList.length) % discoveredList.length;
+    playFishingSound('page', soundEnabled);
+    setSelectedFish(discoveredList[prevIndex]);
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/85 z-[300] p-2 sm:p-4 font-mono select-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 font-sans select-none overflow-y-auto"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-[#fefce8] border-[5px] border-black p-4 sm:p-6 w-full max-w-[760px] shadow-[10px_10px_0_0_#000] relative max-h-[90vh] flex flex-col rounded-sm overflow-hidden">
-        {/* Top Header */}
-        <div className="flex items-center justify-between border-b-[3px] border-black pb-3 mb-3 pr-8">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-amber-400 border-[2px] border-black flex items-center justify-center shadow-xs">
-              <BookOpen className="w-4 h-4 text-slate-950" />
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 15 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 12 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100"
+      >
+        {/* Top Header Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
+              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-amber-400" />
+              </div>
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-950 tracking-wider">JURNAL IKAN SAMUDRA</h2>
-              <p className="text-[9px] text-slate-600 font-bold">Koleksi & Ensiklopedia Spesies Air</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black tracking-tight text-white font-sans">
+                  Jurnal Spesies Samudra
+                </h2>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30">
+                  v2.0 Encyclopedia
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium hidden sm:block">
+                Catatan tangkapan lengkap & koleksi fauna perairan Nusantara
+              </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              playFishingSound('click', soundEnabled);
-              onClose();
-            }}
-            className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_#000] active:translate-y-0.5 cursor-pointer z-10"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
 
-        {/* Overview Stats Bar */}
-        <div className="grid grid-cols-3 gap-2 bg-amber-100/90 border-[3px] border-black p-2.5 mb-3 text-center shadow-xs">
-          <div className="border-r-[2px] border-black/20 pr-1">
-            <span className="text-[8px] text-slate-500 uppercase font-black block">Tangkapan</span>
-            <span className="text-sm sm:text-base font-black text-slate-900">{caughtCount}</span>
-          </div>
-          <div className="border-r-[2px] border-black/20 pr-1">
-            <span className="text-[8px] text-slate-500 uppercase font-black block">Skor Total</span>
-            <span className="text-sm sm:text-base font-black text-blue-700">{score}</span>
-          </div>
-          <div>
-            <span className="text-[8px] text-slate-500 uppercase font-black block">Koleksi ({completionPct}%)</span>
-            <span className="text-sm sm:text-base font-black text-emerald-700">
-              {discoveredSpecies.length}/{FISH_DATABASE.length}
-            </span>
-          </div>
-        </div>
+          {/* Search Box & Close Button */}
+          <div className="flex items-center gap-2">
+            <div className="relative hidden md:block w-48">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Cari spesies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#E195AB] transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-950 border-[2px] border-black h-3 mb-3 p-0.5 rounded-xs overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-yellow-300 transition-all duration-300 rounded-xs"
-            style={{ width: `${completionPct}%` }}
-          />
-        </div>
-
-        {/* Rarity Filter Tabs */}
-        <div className="flex gap-1 overflow-x-auto pb-1 mb-2.5 custom-scrollbar text-[8.5px] font-black">
-          {[
-            { id: 'all', label: 'SEMUA' },
-            { id: 'Biasa', label: 'BIASA' },
-            { id: 'Langka', label: 'LANGKA' },
-            { id: 'Sangat Langka', label: 'EPIC' },
-            { id: 'Legendaris', label: 'LEGENDARIS' },
-            { id: 'Mitos', label: 'MITOS' },
-          ].map(tab => (
             <button
-              key={tab.id}
               onClick={() => {
                 playFishingSound('click', soundEnabled);
-                setFilterRarity(tab.id);
+                onClose();
               }}
-              className={`px-2.5 py-1 border-[2px] border-black shrink-0 transition-all cursor-pointer ${
-                filterRarity === tab.id
-                  ? 'bg-slate-950 text-yellow-300 shadow-[2px_2px_0_0_#000]'
-                  : 'bg-white text-slate-700 hover:bg-amber-100'
-              }`}
+              className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
+              aria-label="Tutup Jurnal"
             >
-              {tab.label}
+              <X className="w-4 h-4" />
             </button>
-          ))}
+          </div>
+        </div>
+
+        {/* Overview Stats & Telemetry Banner */}
+        <div className="bg-slate-950/60 border-b border-slate-800/80 p-3 sm:p-4 shrink-0 space-y-3">
+          {/* 3 Summary Badges & Progress Metric */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                <Fish className="w-4 h-4 text-blue-400" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Total Tangkapan</span>
+                <span className="text-sm sm:text-base font-black text-white font-mono">{caughtCount} ekor</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                <Trophy className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Skor Total</span>
+                <span className="text-sm sm:text-base font-black text-amber-400 font-mono">{score.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold block">Spesies Koleksi</span>
+                <span className="text-sm sm:text-base font-black text-emerald-400 font-mono">
+                  {discoveredCount} <span className="text-xs text-slate-400 font-normal">/ {totalSpecies}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-2.5 flex flex-col justify-center">
+              <div className="flex justify-between items-center text-[10px] font-mono font-bold mb-1">
+                <span className="text-slate-400 uppercase">Kelengkapan</span>
+                <span className="text-pink-400 font-bold">{completionPct}%</span>
+              </div>
+              <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden p-0.5 border border-slate-700/50">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 via-[#E195AB] to-amber-400 rounded-full transition-all duration-500 shadow-sm"
+                  style={{ width: `${completionPct}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Rarity Tier Mini Progress Counters */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-[10px] font-mono">
+            {[
+              { id: 'Biasa', label: '⚪ Biasa', ...rarityStats.Biasa },
+              { id: 'Langka', label: '🔵 Langka', ...rarityStats.Langka },
+              { id: 'Sangat Langka', label: '🟣 Epic', ...rarityStats['Sangat Langka'] },
+              { id: 'Legendaris', label: '👑 Legend', ...rarityStats.Legendaris },
+              { id: 'Mitos', label: '⭐ Mitos', ...rarityStats.Mitos },
+            ].map((tier) => {
+              const isSelected = filterRarity === tier.id;
+              return (
+                <button
+                  key={tier.id}
+                  onClick={() => {
+                    playFishingSound('click', soundEnabled);
+                    setFilterRarity(filterRarity === tier.id ? 'all' : tier.id);
+                  }}
+                  className={`px-2.5 py-1.5 rounded-xl border flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-slate-800 border-[#E195AB] text-white shadow-xs'
+                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="font-semibold">{tier.label}</span>
+                  <span className={`font-bold ${tier.discovered === tier.total ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    {tier.discovered}/{tier.total}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Search Bar & Status Filter */}
+        <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div className="relative block md:hidden flex-1 min-w-[180px]">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Cari ikan..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-8 pr-7 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-1 text-[11px] font-mono">
+            <span className="text-slate-500 mr-1 hidden sm:inline">Status:</span>
+            {[
+              { id: 'all', label: 'Semua' },
+              { id: 'discovered', label: '✓ Ditemukan' },
+              { id: 'locked', label: '🔒 Terkunci' },
+            ].map((btn) => (
+              <button
+                key={btn.id}
+                onClick={() => {
+                  playFishingSound('click', soundEnabled);
+                  setStatusFilter(btn.id as any);
+                }}
+                className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                  statusFilter === btn.id
+                    ? 'bg-[#E195AB] text-white font-bold border-[#E195AB]'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border-slate-700/80'
+                }`}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Fish Cards Grid */}
-        <div className="flex-1 overflow-y-auto min-h-0 pr-1 grid grid-cols-2 sm:grid-cols-3 gap-2 custom-scrollbar pb-2">
-          {filteredFish.map((fishItem) => {
-            const isFound = discoveredSpecies.includes(fishItem.id);
-            const isSelected = selectedFish?.id === fishItem.id;
-            return (
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 min-h-[300px] custom-scrollbar">
+          {filteredFish.length === 0 ? (
+            <div className="py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
+              <Search className="w-8 h-8 text-slate-600 mb-1" />
+              <p className="text-sm font-semibold text-slate-400">Tidak ada spesies yang cocok dengan filter.</p>
               <button
-                key={fishItem.id}
                 onClick={() => {
-                  if (isFound) {
-                    playFishingSound('click', soundEnabled);
-                    setSelectedFish(isSelected ? null : fishItem);
-                  }
+                  setFilterRarity('all');
+                  setStatusFilter('all');
+                  setSearchQuery('');
                 }}
-                className={`text-left p-2 border-[2px] ${
-                  isFound
-                    ? isSelected
-                      ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500 shadow-md'
-                      : fishItem.rarity === 'Mitos'
-                      ? 'border-purple-600 bg-gradient-to-br from-purple-50 via-amber-50 to-white shadow-xs'
-                      : fishItem.rarity === 'Legendaris'
-                      ? 'border-amber-500 bg-amber-50/70 shadow-xs'
-                      : 'border-black bg-white shadow-xs'
-                    : 'border-slate-300 bg-slate-100 opacity-60 cursor-not-allowed'
-                } flex flex-col justify-between transition-transform active:scale-[0.98]`}
+                className="text-xs text-[#E195AB] hover:underline font-mono mt-1 cursor-pointer"
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span
-                    className="text-[7.5px] font-black px-1.5 py-0.5 border border-black uppercase"
-                    style={{ backgroundColor: isFound ? fishItem.badgeBg : '#cbd5e1' }}
-                  >
-                    {isFound ? fishItem.rarity : '???'}
-                  </span>
-                  {isFound && fishItem.rarity === 'Mitos' && (
-                    <span className="text-[10px] animate-pulse">👑</span>
-                  )}
-                </div>
-
-                <div className="h-16 flex items-center justify-center my-1 bg-amber-50/50 border border-black/10">
-                  {isFound ? (
-                    <FishGraphic id={fishItem.id} size={42} />
-                  ) : (
-                    <span className="text-xl text-slate-400 font-black">?</span>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="text-[10px] sm:text-[11px] font-black text-slate-900 truncate">
-                    {isFound ? fishItem.name : 'Belum Ditemukan'}
-                  </h4>
-                  <div className="flex justify-between items-center text-[8px] text-slate-600 mt-0.5 font-bold">
-                    <span>{isFound ? `+${fishItem.points} PTS` : '---'}</span>
-                    <span>{isFound ? `🪙 ${fishItem.coins}` : '---'}</span>
-                  </div>
-                </div>
+                Reset Semua Filter
               </button>
-            );
-          })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+              {filteredFish.map((fishItem) => {
+                const isFound = discoveredSpecies.includes(fishItem.id);
+                const isSelected = selectedFish?.id === fishItem.id;
+                const isMythic = fishItem.rarity === 'Mitos';
+                const isLegend = fishItem.rarity === 'Legendaris';
+                const isEpic = fishItem.rarity === 'Sangat Langka';
+
+                return (
+                  <motion.button
+                    key={fishItem.id}
+                    whileHover={isFound ? { scale: 1.02, y: -2 } : {}}
+                    whileTap={isFound ? { scale: 0.98 } : {}}
+                    onClick={() => {
+                      if (isFound) {
+                        playFishingSound('page', soundEnabled);
+                        setSelectedFish(fishItem);
+                      }
+                    }}
+                    className={`text-left p-3 rounded-2xl border transition-all relative flex flex-col justify-between overflow-hidden group ${
+                      isFound
+                        ? isSelected
+                          ? 'border-[#E195AB] bg-slate-800/90 ring-2 ring-[#E195AB]/50 shadow-lg shadow-pink-500/10'
+                          : isMythic
+                          ? 'border-pink-500/60 bg-gradient-to-b from-slate-900 via-slate-800/80 to-pink-950/20 hover:border-pink-400 shadow-md shadow-pink-500/5'
+                          : isLegend
+                          ? 'border-amber-500/60 bg-gradient-to-b from-slate-900 via-slate-800/80 to-amber-950/20 hover:border-amber-400 shadow-md shadow-amber-500/5'
+                          : isEpic
+                          ? 'border-purple-500/50 bg-slate-850 hover:border-purple-400 shadow-sm'
+                          : 'border-slate-700/80 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-600'
+                        : 'border-slate-800/60 bg-slate-950/40 opacity-55 cursor-not-allowed'
+                    }`}
+                  >
+                    {/* Top Tier Tag & Sparkle */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${
+                          isFound
+                            ? isMythic
+                              ? 'bg-rose-500/20 text-pink-300 border-pink-500/40'
+                              : isLegend
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              : isEpic
+                              ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                              : fishItem.rarity === 'Langka'
+                              ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                              : 'bg-slate-700/60 text-slate-300 border-slate-600'
+                            : 'bg-slate-800 text-slate-500 border-slate-700'
+                        }`}
+                      >
+                        {isFound ? fishItem.rarity : '???'}
+                      </span>
+
+                      {isFound ? (
+                        <div className="flex items-center gap-1">
+                          {isMythic && <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />}
+                          {isLegend && <Crown className="w-3.5 h-3.5 text-amber-400" />}
+                          <span className="text-[10px] font-mono font-bold text-amber-300">
+                            🪙 {fishItem.coins}
+                          </span>
+                        </div>
+                      ) : (
+                        <Lock className="w-3.5 h-3.5 text-slate-600" />
+                      )}
+                    </div>
+
+                    {/* Fish Graphic Viewport Pedestal */}
+                    <div className={`h-20 rounded-xl flex items-center justify-center my-1.5 relative overflow-hidden transition-colors ${
+                      isFound
+                        ? isMythic
+                          ? 'bg-gradient-to-b from-pink-950/30 to-purple-950/40 border border-pink-500/20'
+                          : isLegend
+                          ? 'bg-gradient-to-b from-amber-950/30 to-yellow-950/40 border border-amber-500/20'
+                          : 'bg-slate-950/60 border border-slate-800/80'
+                        : 'bg-slate-950/30 border border-slate-900'
+                    }`}>
+                      {isFound ? (
+                        <div className="transform transition-transform group-hover:scale-110 duration-200">
+                          <FishGraphic id={fishItem.id} size={48} />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-700">
+                          <span className="text-2xl font-black font-mono">?</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Metadata */}
+                    <div className="mt-1">
+                      <h4 className="text-xs sm:text-[13px] font-bold text-white truncate font-sans tracking-tight">
+                        {isFound ? fishItem.name : 'Spesies Rahasia'}
+                      </h4>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-1">
+                        <span>{isFound ? `+${fishItem.points} PTS` : 'Terkunci'}</span>
+                        {isFound && (
+                          <span className="text-[#E195AB] font-semibold text-[9px] flex items-center gap-0.5">
+                            Detail 🔍
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Selected Fish Inspector Drawer */}
+        {/* Expansive Specimen Dossier / Inspection Modal Drawer */}
         <AnimatePresence>
           {selectedFish && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-amber-100 border-[3px] border-black p-2.5 mt-2 flex items-center gap-3 overflow-hidden shrink-0"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="bg-slate-950/95 border-t border-slate-700/80 p-4 sm:p-5 shrink-0 relative shadow-2xl backdrop-blur-xl z-20"
             >
-              <div className="w-12 h-12 bg-white border-[2px] border-black flex items-center justify-center shrink-0">
-                <FishGraphic id={selectedFish.id} size={36} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h5 className="text-[11px] font-black text-slate-950 truncate">{selectedFish.name}</h5>
-                  <span
-                    className="text-[7.5px] font-black px-1.5 py-0.2 border border-black"
-                    style={{ backgroundColor: selectedFish.badgeBg }}
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                {/* Left Pedestal Viewport */}
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/80 flex items-center justify-center shadow-inner shrink-0 overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(225,149,171,0.15),transparent_70%)]" />
+                  <motion.div
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+                    className="relative z-10"
                   >
-                    {selectedFish.rarity}
+                    <FishGraphic id={selectedFish.id} size={64} />
+                  </motion.div>
+                  <span className="absolute bottom-1.5 left-2 text-[9px] font-mono text-slate-500 font-bold">
+                    #{selectedFish.id.toUpperCase()}
                   </span>
                 </div>
-                <p className="text-[8.5px] text-slate-700 leading-tight mt-0.5 line-clamp-2">{selectedFish.description}</p>
-                <div className="flex gap-2 text-[8px] text-slate-600 font-bold mt-1">
-                  <span>Bobot Alami: {selectedFish.minWeight}-{selectedFish.maxWeight} kg</span>
-                  <span>|</span>
-                  <span>Kesulitan: {selectedFish.difficulty}x</span>
+
+                {/* Center / Right Specimen Metadata */}
+                <div className="flex-1 min-w-0 text-left w-full">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-black text-white tracking-tight font-sans">
+                        {selectedFish.name}
+                      </h3>
+                      <span
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border uppercase ${
+                          selectedFish.rarity === 'Mitos'
+                            ? 'bg-rose-500/20 text-pink-300 border-pink-500/40'
+                            : selectedFish.rarity === 'Legendaris'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            : selectedFish.rarity === 'Sangat Langka'
+                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                            : selectedFish.rarity === 'Langka'
+                            ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                            : 'bg-slate-800 text-slate-300 border-slate-700'
+                        }`}
+                      >
+                        {selectedFish.rarity}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs font-mono font-bold">
+                      <span className="text-amber-400">🪙 {selectedFish.coins} Koin</span>
+                      <span className="text-blue-400">+{selectedFish.points} Poin</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed mt-1 font-sans">
+                    {selectedFish.description}
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3 text-[11px] font-mono">
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                      <span className="text-slate-400">Rentang Bobot</span>
+                      <span className="text-white font-bold">{selectedFish.minWeight} - {selectedFish.maxWeight} kg</span>
+                    </div>
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                      <span className="text-slate-400">Agilitas Ikan</span>
+                      <span className="text-pink-400 font-bold">{selectedFish.difficulty}x Speed</span>
+                    </div>
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between col-span-2 sm:col-span-1">
+                      <span className="text-slate-400">Kesulitan</span>
+                      <span className="text-amber-300 font-bold">
+                        {'★'.repeat(Math.min(5, Math.ceil(selectedFish.difficulty / 1.6)))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Action Navigation Deck */}
+                <div className="flex sm:flex-col items-center justify-between gap-2 shrink-0 w-full sm:w-auto">
+                  <button
+                    onClick={() => setSelectedFish(null)}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer self-end sm:self-auto"
+                    title="Tutup Detail"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={handlePrevFish}
+                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors cursor-pointer"
+                      title="Spesies Sebelumnya"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleNextFish}
+                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors cursor-pointer"
+                      title="Spesies Berikutnya"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedFish(null)}
-                className="bg-slate-300 hover:bg-slate-400 p-1 border border-black text-slate-800 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
 
 /* =========================================================================
-   COMPONENTS: FISHING ODDS & PROBABILITY MODAL + ADMIN GOD MODE
+   COMPONENTS: FISHING ODDS & PROBABILITY TELEMETRY + ADMIN GOD MODE
    ========================================================================= */
 const FishingOddsModal: React.FC<{
   equippedRod: string;
@@ -471,195 +785,303 @@ const FishingOddsModal: React.FC<{
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono select-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 font-sans select-none overflow-y-auto"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-amber-100 border-[5px] border-black p-4 sm:p-6 w-full max-w-[520px] shadow-[10px_10px_0_0_#000] relative flex flex-col max-h-[88vh] overflow-y-auto custom-scrollbar">
-        <button
-          onClick={() => {
-            playFishingSound('click', soundEnabled);
-            onClose();
-          }}
-          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer z-10"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 15 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 12 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[88vh] overflow-hidden text-slate-100"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b-[3px] border-black pb-2.5 mb-3 pr-8">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-blue-600 text-white border-[2px] border-black flex items-center justify-center shadow-xs">
-              <BarChart3 className="w-4 h-4" />
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-500 to-cyan-400 p-0.5 shadow-md shadow-blue-500/20 shrink-0">
+              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-cyan-400" />
+              </div>
             </div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900">PROBABILITAS & ODDS</h2>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black tracking-tight text-white font-sans">
+                  Telemetri Probabilitas
+                </h2>
+                {adminOdds.enabled && (
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 animate-pulse flex items-center gap-1">
+                    <Crown className="w-3 h-3" /> GOD MODE ON
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Peluang tangkapan berbasis kalkulasi joran, umpan, & cuaca
+              </p>
+            </div>
           </div>
-          {adminOdds.enabled && (
-            <span className="bg-amber-400 text-slate-950 text-[8.5px] font-black px-2 py-0.5 border border-black shadow-xs animate-pulse">
-              👑 GOD MODE ON
-            </span>
-          )}
+
+          <button
+            onClick={() => {
+              playFishingSound('click', soundEnabled);
+              onClose();
+            }}
+            className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
+            aria-label="Tutup Odds"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Tab Switcher */}
+        {/* Tab Switcher (For Admins) */}
         {isAdmin && (
-          <div className="flex gap-2 mb-3">
+          <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2 shrink-0">
             <button
               onClick={() => {
                 playFishingSound('click', soundEnabled);
                 setActiveTab('odds');
               }}
-              className={`flex-1 py-1.5 text-xs font-black border-[3px] border-black transition-all cursor-pointer ${
-                activeTab === 'odds' ? 'bg-blue-600 text-white shadow-[2px_2px_0_0_#000]' : 'bg-white text-slate-700 hover:bg-amber-50'
+              className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'odds'
+                  ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 shadow-xs'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
               }`}
             >
-              📊 STATUS SAAT INI
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Status Probabilitas</span>
             </button>
             <button
               onClick={() => {
                 playFishingSound('click', soundEnabled);
                 setActiveTab('admin');
               }}
-              className={`flex-1 py-1.5 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                activeTab === 'admin' ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 shadow-[2px_2px_0_0_#000]' : 'bg-amber-200 text-amber-950 hover:bg-amber-300'
+              className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'admin'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-xs'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
               }`}
             >
-              <Crown className="w-3.5 h-3.5 fill-slate-950" />
-              <span>ADMIN GOD MODE</span>
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin God Mode</span>
             </button>
           </div>
         )}
 
-        {activeTab === 'odds' ? (
-          <>
-            {/* Active Buffs */}
-            <div className="bg-white border-[3px] border-black p-2.5 mb-3 space-y-1.5 text-[9.5px]">
-              <div className="font-black text-slate-700 text-[10.5px] mb-1 flex items-center justify-between border-b border-black/10 pb-1">
-                <span>BUFF & FAKTOR AKTIF:</span>
-                <span className="text-slate-500 uppercase font-bold">Cuaca: {weather.toUpperCase()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-600">Joran: {currentRod.icon} {currentRod.name}</span>
-                <span className="text-emerald-700 font-black">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-600">Umpan: {currentBait.icon} {currentBait.name}</span>
-                <span className="text-purple-700 font-black">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
-              </div>
-            </div>
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
+          {activeTab === 'odds' ? (
+            <>
+              {/* Active Buffs & Synergies Card */}
+              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
+                <div className="font-mono font-bold text-slate-400 text-[11px] flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="flex items-center gap-1.5 text-white">
+                    <Activity className="w-3.5 h-3.5 text-[#E195AB]" />
+                    FAKTOR SINERGI AKTIF
+                  </span>
+                  <span className="text-cyan-400 uppercase font-mono">
+                    Cuaca: {weather === 'badai' ? '⛈️ Badai' : weather === 'kabut_mistis' ? '🌫️ Kabut Mistis' : weather === 'hujan' ? '🌧️ Hujan' : weather === 'berawan' ? '⛅ Berawan' : '☀️ Cerah'}
+                  </span>
+                </div>
 
-            {/* Rates Visual Bars */}
-            <div className="space-y-2 mb-3">
-              {[
-                { label: 'BIASA (Common)', rate: rates.common, color: 'bg-slate-400', border: 'border-black', text: 'text-slate-800' },
-                { label: 'LANGKA (Rare)', rate: rates.rare, color: 'bg-blue-500', border: 'border-blue-700', text: 'text-blue-900' },
-                { label: 'EPIC (Sangat Langka)', rate: rates.epic, color: 'bg-purple-500', border: 'border-purple-700', text: 'text-purple-900' },
-                { label: '👑 LEGENDARIS', rate: rates.legendary, color: 'bg-amber-400', border: 'border-amber-600', text: 'text-amber-950' },
-                { label: '⭐ MITOS / DEWA', rate: rates.mythic, color: 'bg-rose-500', border: 'border-rose-700', text: 'text-rose-950' },
-              ].map((tier, idx) => (
-                <div key={idx} className={`bg-white border-[2px] ${tier.border} p-2 flex flex-col gap-1 shadow-xs`}>
-                  <div className="flex justify-between items-center text-[10px] font-black">
-                    <span className={tier.text}>{tier.label}</span>
-                    <span className="font-mono">{(tier.rate * 100).toFixed(1)}%</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span>{currentRod.icon}</span>
+                      <span className="text-slate-300 font-sans truncate">{currentRod.name}</span>
+                    </div>
+                    <span className="text-emerald-400 font-bold shrink-0">+{Math.round(currentRod.luckBonus * 100)}% Hoki</span>
                   </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-xs border border-black/20 overflow-hidden">
-                    <div className={`h-full ${tier.color}`} style={{ width: `${Math.min(100, tier.rate * 100)}%` }} />
+
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span>{currentBait.icon}</span>
+                      <span className="text-slate-300 font-sans truncate">{currentBait.name}</span>
+                    </div>
+                    <span className="text-purple-400 font-bold shrink-0">+{Math.round(currentBait.mythicBonus * 100)}% Mitos</span>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            <p className="text-[9px] text-slate-600 italic text-center">
-              *Tingkatkan joran dan umpan di Toko untuk memperbesar peluang tangkapan dewa.
-            </p>
-          </>
-        ) : (
-          /* Admin God Mode */
-          <div className="space-y-3">
-            <div className="bg-slate-900 text-white border-[3px] border-amber-400 p-3 flex items-center justify-between shadow-md">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs font-black text-yellow-300">
-                  <Crown className="w-4 h-4 fill-yellow-300" />
-                  <span>KONTROL ODDS KHUSUS ADMIN</span>
+                {/* Weather Synergy Hint */}
+                <div className="text-[11px] text-slate-400 font-sans bg-slate-900/50 rounded-xl p-2 border border-slate-800/80">
+                  {weather === 'badai' && '⚡ Cuaca Badai memicu peningkatan +35% pada peluang Ikan Legendaris & Mitos!'}
+                  {weather === 'kabut_mistis' && '🌌 Kabut Mistis memancarkan aura kosmik: +120% peluang Ikan Mitos Purba!'}
+                  {weather === 'hujan' && '🌧️ Cuaca Hujan merangsang Ikan Epic (Sangat Langka) naik ke permukaan.'}
+                  {weather === 'berawan' && '⛅ Cuaca Berawan seimbang untuk semua jenis spesies air.'}
+                  {weather === 'cerah' && '☀️ Cuaca Cerah memberikan visibilitas tinggi & tarikan joran optimal.'}
                 </div>
-                <p className="text-[9px] text-slate-300 mt-0.5">
-                  {adminOdds.enabled ? 'Status: Kustom Odds AKTIF' : 'Status: Probabilitas Standar'}
-                </p>
               </div>
-              <button
-                onClick={() => {
-                  playFishingSound('click', soundEnabled);
-                  setAdminOdds((prev) => ({ ...prev, enabled: !prev.enabled }));
-                }}
-                className={`px-3 py-1.5 text-xs font-black border-[2px] border-black transition-all cursor-pointer ${
-                  adminOdds.enabled ? 'bg-emerald-500 text-slate-950 shadow-[2px_2px_0_0_#fff]' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-              >
-                {adminOdds.enabled ? '✓ AKTIF' : 'NONAKTIF'}
-              </button>
-            </div>
 
-            {/* Presets */}
-            <div className="bg-white border-[3px] border-black p-2.5 space-y-2">
-              <div className="text-[10px] font-black text-slate-900 flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-amber-600" />
-                <span>PRESET CEPAT:</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9px]">
-                <button
-                  onClick={() => applyPreset('god100')}
-                  className="bg-purple-600 hover:bg-purple-500 text-white font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
-                >
-                  🌌 100% MITOS
-                </button>
-                <button
-                  onClick={() => applyPreset('mythic50')}
-                  className="bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
-                >
-                  ⚡ 50% MITOS
-                </button>
-                <button
-                  onClick={() => applyPreset('allLegend')}
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
-                >
-                  👑 ALL-LEGEND
-                </button>
-                <button
-                  onClick={() => applyPreset('normal')}
-                  className="bg-sky-500 hover:bg-sky-400 text-white font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
-                >
-                  🎲 NORMAL
-                </button>
-                <button
-                  onClick={() => applyPreset('hardcore')}
-                  className="bg-rose-900 hover:bg-rose-800 text-rose-100 font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
-                >
-                  💀 HARDCORE
-                </button>
-                {setCoins && (
-                  <button
-                    onClick={() => {
-                      playFishingSound('upgrade', soundEnabled);
-                      setCoins((c) => c + 10000);
-                    }}
-                    className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black py-1.5 px-2 border-[2px] border-black cursor-pointer text-center"
+              {/* Rarity Tier Gauges */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-400">
+                  <span>Distribusi Probabilitas Tangkapan:</span>
+                  <span>Total: 100%</span>
+                </div>
+
+                {[
+                  {
+                    label: 'BIASA (Common)',
+                    rate: rates.common,
+                    gradient: 'from-slate-500 to-slate-400',
+                    border: 'border-slate-700',
+                    badge: 'bg-slate-800 text-slate-300',
+                  },
+                  {
+                    label: 'LANGKA (Rare)',
+                    rate: rates.rare,
+                    gradient: 'from-sky-500 to-blue-500',
+                    border: 'border-sky-500/40',
+                    badge: 'bg-sky-500/20 text-sky-300',
+                  },
+                  {
+                    label: 'EPIC (Sangat Langka)',
+                    rate: rates.epic,
+                    gradient: 'from-purple-500 to-indigo-500',
+                    border: 'border-purple-500/40',
+                    badge: 'bg-purple-500/20 text-purple-300',
+                  },
+                  {
+                    label: '👑 LEGENDARIS',
+                    rate: rates.legendary,
+                    gradient: 'from-amber-400 to-yellow-500',
+                    border: 'border-amber-500/40',
+                    badge: 'bg-amber-500/20 text-amber-300',
+                  },
+                  {
+                    label: '⭐ MITOS / DEWA',
+                    rate: rates.mythic,
+                    gradient: 'from-rose-500 via-pink-500 to-purple-500',
+                    border: 'border-pink-500/40',
+                    badge: 'bg-gradient-to-r from-rose-500/20 to-purple-500/20 text-pink-300 animate-pulse',
+                  },
+                ].map((tier, idx) => (
+                  <div
+                    key={idx}
+                    className={`bg-slate-950/70 border ${tier.border} rounded-2xl p-3 flex flex-col gap-1.5 shadow-sm`}
                   >
-                    🪙 +10K KOIN
+                    <div className="flex justify-between items-center text-xs font-mono font-bold">
+                      <span className={`px-2 py-0.5 rounded-md ${tier.badge} text-[11px]`}>{tier.label}</span>
+                      <span className="text-white text-sm font-black">{(tier.rate * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-900 h-2.5 rounded-full border border-slate-800 overflow-hidden p-0.5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, tier.rate * 100)}%` }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        className={`h-full bg-gradient-to-r ${tier.gradient} rounded-full shadow-xs`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Catch Projections */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-xs font-mono text-slate-300 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <span>Estimasi per 100 lemparan:</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span className="text-slate-400">~{Math.round(rates.common * 100)} Biasa</span>
+                  <span className="text-sky-400">~{Math.round(rates.rare * 100)} Langka</span>
+                  <span className="text-purple-400">~{Math.round(rates.epic * 100)} Epic</span>
+                  <span className="text-amber-400">~{(rates.legendary * 100).toFixed(1)} Leg</span>
+                  <span className="text-pink-400">~{(rates.mythic * 100).toFixed(1)} Mitos</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Admin God Mode Console */
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/40 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-amber-500/5">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-black text-amber-300 font-sans">
+                    <Crown className="w-4 h-4 fill-amber-300" />
+                    <span>Master Switch: God Mode Admin</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1 font-mono">
+                    {adminOdds.enabled
+                      ? 'Status: Kustom Probabilitas AKTIF (Bypass standar)'
+                      : 'Status: Probabilitas Standar Berjalan'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    playFishingSound('upgrade', soundEnabled);
+                    setAdminOdds((prev) => ({ ...prev, enabled: !prev.enabled }));
+                  }}
+                  className={`px-4 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                    adminOdds.enabled
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
+                      : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                  }`}
+                >
+                  {adminOdds.enabled ? '✓ AKTIF' : 'NONAKTIF'}
+                </button>
+              </div>
+
+              {/* Presets */}
+              <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <span>PRESET ODDS INSTAN:</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+                  <button
+                    onClick={() => applyPreset('god100')}
+                    className="p-2.5 rounded-xl bg-gradient-to-tr from-purple-900/60 to-pink-900/60 hover:from-purple-800 hover:to-pink-800 text-pink-200 border border-pink-500/40 transition-all font-bold cursor-pointer text-center"
+                  >
+                    🌌 100% MITOS
                   </button>
-                )}
+                  <button
+                    onClick={() => applyPreset('mythic50')}
+                    className="p-2.5 rounded-xl bg-gradient-to-tr from-rose-900/60 to-amber-900/60 hover:from-rose-800 hover:to-amber-800 text-amber-200 border border-amber-500/40 transition-all font-bold cursor-pointer text-center"
+                  >
+                    ⚡ 50% MITOS
+                  </button>
+                  <button
+                    onClick={() => applyPreset('allLegend')}
+                    className="p-2.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 transition-all font-bold cursor-pointer text-center"
+                  >
+                    👑 ALL-LEGEND
+                  </button>
+                  <button
+                    onClick={() => applyPreset('normal')}
+                    className="p-2.5 rounded-xl bg-sky-950/60 hover:bg-sky-900/60 text-sky-300 border border-sky-500/30 transition-all font-bold cursor-pointer text-center"
+                  >
+                    🎲 NORMAL
+                  </button>
+                  <button
+                    onClick={() => applyPreset('hardcore')}
+                    className="p-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 transition-all font-bold cursor-pointer text-center"
+                  >
+                    💀 HARDCORE
+                  </button>
+                  {setCoins && (
+                    <button
+                      onClick={() => {
+                        playFishingSound('upgrade', soundEnabled);
+                        setCoins((c) => c + 10000);
+                      }}
+                      className="p-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 transition-all font-bold cursor-pointer text-center"
+                    >
+                      🪙 +10K KOIN
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </motion.div>
     </motion.div>
   );
 };
 
 /* =========================================================================
-   COMPONENTS: FISHING SHOP MODAL (RODS & BAITS)
+   COMPONENTS: FISHING SHOP MODAL (RODS & SPECIAL BAITS)
    ========================================================================= */
 const FishingShopModal: React.FC<{
   coins: number;
@@ -693,84 +1115,116 @@ const FishingShopModal: React.FC<{
   const handleBuyRod = (rod: RodItem) => {
     if (coins < rod.price) return;
     playFishingSound('upgrade', soundEnabled);
-    setCoins(c => c - rod.price);
-    setOwnedRods(prev => [...prev, rod.id]);
+    setCoins((c) => c - rod.price);
+    setOwnedRods((prev) => [...prev, rod.id]);
     setEquippedRod(rod.id);
   };
 
-  const handleBuyBait = (bait: BaitItem) => {
-    if (coins < bait.price) return;
+  const handleBuyBait = (bait: BaitItem, multiplier = 1) => {
+    const cost = bait.price * multiplier;
+    const amount = 5 * multiplier;
+    if (coins < cost) return;
     playFishingSound('upgrade', soundEnabled);
-    setCoins(c => c - bait.price);
-    setBaitCounts(prev => ({
+    setCoins((c) => c - cost);
+    setBaitCounts((prev) => ({
       ...prev,
-      [bait.id]: (prev[bait.id] || 0) + 5,
+      [bait.id]: (prev[bait.id] || 0) + amount,
     }));
     setEquippedBait(bait.id);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-[320] p-3 sm:p-4 font-mono select-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 font-sans select-none overflow-y-auto"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-amber-100 border-[5px] border-black p-4 sm:p-6 w-full max-w-[580px] shadow-[10px_10px_0_0_#000] relative flex flex-col max-h-[88vh]">
-        <button
-          onClick={() => {
-            playFishingSound('click', soundEnabled);
-            onClose();
-          }}
-          className="absolute top-3 right-3 bg-red-600 text-white border-[3px] border-black p-1 hover:bg-red-500 shadow-[2px_2px_0_0_#000] active:scale-95 z-10 cursor-pointer"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 15 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 12 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[88vh] overflow-hidden text-slate-100"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b-[3px] border-black pb-2.5 mb-3 pr-8">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-amber-400 border-[2px] border-black flex items-center justify-center shadow-xs">
-              <ShoppingBag className="w-4 h-4 text-slate-950" />
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
+              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                <ShoppingBag className="w-5 h-5 text-amber-400" />
+              </div>
             </div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900">TOKO ALAT PANCING</h2>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black tracking-tight text-white font-sans">
+                  Toko Alat Pancing
+                </h2>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30">
+                  Angler's Emporium
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Tingkatkan joran & stok umpan sakral untuk memburu ikan purba
+              </p>
+            </div>
           </div>
-          <div className="bg-amber-300 border-[2px] border-black px-2.5 py-1 flex items-center gap-1 font-black text-xs text-amber-950 shadow-xs">
-            <span>🪙 {coins}</span>
+
+          <div className="flex items-center gap-2">
+            {/* Wallet Chip */}
+            <div className="bg-amber-400/10 border border-amber-400/30 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 font-mono font-bold text-xs text-amber-300 shadow-xs">
+              <Coins className="w-4 h-4 text-amber-400" />
+              <span>{coins.toLocaleString()}</span>
+            </div>
+
+            <button
+              onClick={() => {
+                playFishingSound('click', soundEnabled);
+                onClose();
+              }}
+              className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
+              aria-label="Tutup Toko"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-3">
+        {/* Category Switcher Tabs */}
+        <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2 shrink-0">
           <button
             onClick={() => {
               playFishingSound('click', soundEnabled);
               setTab('rods');
             }}
-            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              tab === 'rods' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_#000]' : 'bg-white text-slate-600 hover:bg-amber-50'
+            className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              tab === 'rods'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-xs'
+                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
             }`}
           >
-            <span>🎣</span> <span>JORAN PANCING</span>
+            <span>🎣</span> <span>JORAN PANCING (RODS)</span>
           </button>
           <button
             onClick={() => {
               playFishingSound('click', soundEnabled);
               setTab('baits');
             }}
-            className={`flex-1 py-2 text-xs font-black border-[3px] border-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-              tab === 'baits' ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0_0_#000]' : 'bg-white text-slate-600 hover:bg-amber-50'
+            className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              tab === 'baits'
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-xs'
+                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800'
             }`}
           >
-            <span>🪱</span> <span>UMPAN IKAN</span>
+            <span>🪱</span> <span>UMPAN SPESIAL (BAITS)</span>
           </button>
         </div>
 
         {/* Items List */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 custom-scrollbar">
           {tab === 'rods' ? (
-            RODS_DATABASE.map(rod => {
+            RODS_DATABASE.map((rod) => {
               const isOwned = ownedRods.includes(rod.id);
               const isEquipped = equippedRod === rod.id;
               const canAfford = coins >= rod.price;
@@ -778,39 +1232,70 @@ const FishingShopModal: React.FC<{
               return (
                 <div
                   key={rod.id}
-                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
-                    isEquipped ? 'ring-2 ring-blue-600 bg-blue-50/60' : ''
+                  className={`bg-slate-950/70 border rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 transition-all relative overflow-hidden ${
+                    isEquipped
+                      ? 'border-blue-500/60 bg-blue-950/20 ring-1 ring-blue-500/40 shadow-md'
+                      : isOwned
+                      ? 'border-slate-700/80 hover:border-slate-600'
+                      : 'border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start sm:items-center gap-3.5">
                     <div
-                      className="w-12 h-12 border-[2px] border-black flex items-center justify-center text-2xl shrink-0 shadow-xs"
-                      style={{ backgroundColor: rod.color + '25' }}
+                      className="w-14 h-14 rounded-2xl border flex items-center justify-center text-3xl shrink-0 shadow-inner"
+                      style={{
+                        backgroundColor: rod.color + '20',
+                        borderColor: rod.color + '60',
+                      }}
                     >
                       {rod.icon}
                     </div>
-                    <div>
+
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs sm:text-sm font-black text-slate-900">{rod.name}</h4>
+                        <h4 className="text-sm sm:text-base font-black text-white font-sans tracking-tight">
+                          {rod.name}
+                        </h4>
                         {isEquipped && (
-                          <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 border border-black">
-                            DIPAKAI
+                          <span className="bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-blue-500/40">
+                            DIGUNAKAN
                           </span>
                         )}
                       </div>
-                      <p className="text-[9px] sm:text-[10px] text-slate-600 mt-0.5 leading-snug">{rod.description}</p>
+                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed font-sans">
+                        {rod.description}
+                      </p>
+
+                      {/* Stat Meters */}
+                      <div className="grid grid-cols-3 gap-2 mt-2 text-[10px] font-mono">
+                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 flex items-center justify-between">
+                          <span className="text-slate-400">Tarik</span>
+                          <span className="text-cyan-400 font-bold">+{Math.round(rod.reelSpeedBonus * 100)}%</span>
+                        </div>
+                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 flex items-center justify-between">
+                          <span className="text-slate-400">Kuat</span>
+                          <span className="text-emerald-400 font-bold">+{Math.round(rod.strengthBonus * 100)}%</span>
+                        </div>
+                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 flex items-center justify-between">
+                          <span className="text-slate-400">Hoki</span>
+                          <span className="text-amber-400 font-bold">+{Math.round(rod.luckBonus * 100)}%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+                  {/* Price & Action Button */}
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
                     {!isOwned && (
-                      <span className="text-xs font-black text-amber-800">🪙 {rod.price}</span>
+                      <span className="text-sm font-mono font-black text-amber-400">
+                        🪙 {rod.price.toLocaleString()}
+                      </span>
                     )}
 
                     {isEquipped ? (
                       <button
                         disabled
-                        className="bg-emerald-600 text-white text-[10px] font-black px-3 py-1.5 border-[2px] border-black opacity-90 cursor-default"
+                        className="bg-blue-600/30 text-blue-300 text-xs font-mono font-bold px-4 py-2 rounded-xl border border-blue-500/40 cursor-default"
                       >
                         ✓ DIGUNAKAN
                       </button>
@@ -820,7 +1305,7 @@ const FishingShopModal: React.FC<{
                           playFishingSound('click', soundEnabled);
                           setEquippedRod(rod.id);
                         }}
-                        className="bg-sky-400 hover:bg-sky-300 text-slate-900 text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer"
+                        className="bg-slate-800 hover:bg-sky-500 hover:text-white text-sky-300 text-xs font-mono font-bold px-4 py-2 rounded-xl border border-slate-700 hover:border-sky-400 transition-all cursor-pointer active:scale-95"
                       >
                         GUNAKAN
                       </button>
@@ -828,13 +1313,13 @@ const FishingShopModal: React.FC<{
                       <button
                         onClick={() => handleBuyRod(rod)}
                         disabled={!canAfford}
-                        className={`text-[10px] font-black px-3 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer ${
+                        className={`text-xs font-mono font-bold px-4 py-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
                           canAfford
-                            ? 'bg-amber-400 hover:bg-amber-300 text-slate-900'
-                            : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                            ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 border-amber-300 shadow-md shadow-amber-500/10'
+                            : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
                         }`}
                       >
-                        BELI
+                        {canAfford ? 'BELI JORAN' : `Kurang ${rod.price - coins}`}
                       </button>
                     )}
                   </div>
@@ -842,56 +1327,95 @@ const FishingShopModal: React.FC<{
               );
             })
           ) : (
-            BAITS_DATABASE.map(bait => {
+            BAITS_DATABASE.map((bait) => {
               const isEquipped = equippedBait === bait.id;
-              const count = bait.id === 'worm' ? '∞' : (baitCounts[bait.id] || 0);
-              const canAfford = coins >= bait.price;
+              const count = bait.id === 'worm' ? '∞' : baitCounts[bait.id] || 0;
+              const canAfford5x = coins >= bait.price;
+              const canAfford20x = coins >= bait.price * 4;
 
               return (
                 <div
                   key={bait.id}
-                  className={`bg-white border-[3px] border-black p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
-                    isEquipped ? 'ring-2 ring-purple-600 bg-purple-50/60' : ''
+                  className={`bg-slate-950/70 border rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 transition-all relative overflow-hidden ${
+                    isEquipped
+                      ? 'border-purple-500/60 bg-purple-950/20 ring-1 ring-purple-500/40 shadow-md'
+                      : 'border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-50 border-[2px] border-black flex items-center justify-center text-2xl shrink-0 shadow-xs">
+                  <div className="flex items-start sm:items-center gap-3.5">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shrink-0 shadow-inner">
                       {bait.icon}
                     </div>
-                    <div>
+
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs sm:text-sm font-black text-slate-900">{bait.name}</h4>
+                        <h4 className="text-sm sm:text-base font-black text-white font-sans tracking-tight">
+                          {bait.name}
+                        </h4>
                         {isEquipped && (
-                          <span className="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 border border-black">
+                          <span className="bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-purple-500/40">
                             AKTIF
                           </span>
                         )}
                       </div>
-                      <p className="text-[9px] sm:text-[10px] text-slate-600 mt-0.5 leading-snug">{bait.description}</p>
-                      <div className="text-[9px] font-bold text-slate-500 mt-1">
-                        Stok: <span className="text-blue-700 font-black">{count}</span> {bait.id !== 'worm' ? 'biji' : ''}
+                      <p className="text-xs text-slate-300 mt-0.5 leading-relaxed font-sans">
+                        {bait.description}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-[10px] font-mono">
+                        <div className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-slate-400">
+                          Tersisa: <strong className="text-white">{count}</strong> {bait.id !== 'worm' ? 'biji' : ''}
+                        </div>
+                        {bait.rareBonus > 0 && (
+                          <div className="bg-sky-950/60 border border-sky-500/30 rounded-lg px-2 py-1 text-sky-300 font-bold">
+                            +{Math.round(bait.rareBonus * 100)}% Langka
+                          </div>
+                        )}
+                        {bait.mythicBonus > 0 && (
+                          <div className="bg-pink-950/60 border border-pink-500/30 rounded-lg px-2 py-1 text-pink-300 font-bold">
+                            +{Math.round(bait.mythicBonus * 100)}% Mitos
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+                  {/* Price & Action Buttons */}
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
                     {bait.price > 0 && (
-                      <span className="text-xs font-black text-amber-800">🪙 {bait.price} / 5x</span>
+                      <span className="text-xs font-mono font-black text-amber-400">
+                        🪙 {bait.price} / 5x
+                      </span>
                     )}
 
-                    <div className="flex gap-1.5">
+                    <div className="flex items-center gap-2">
                       {bait.price > 0 && (
-                        <button
-                          onClick={() => handleBuyBait(bait)}
-                          disabled={!canAfford}
-                          className={`text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer ${
-                            canAfford
-                              ? 'bg-amber-400 hover:bg-amber-300 text-slate-900'
-                              : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                          }`}
-                        >
-                          BELI (5x)
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleBuyBait(bait, 1)}
+                            disabled={!canAfford5x}
+                            className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                              canAfford5x
+                                ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 border-amber-300'
+                                : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
+                            }`}
+                            title="Beli 5 Biji Umpan"
+                          >
+                            +5x
+                          </button>
+                          <button
+                            onClick={() => handleBuyBait(bait, 4)}
+                            disabled={!canAfford20x}
+                            className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                              canAfford20x
+                                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-400'
+                                : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
+                            }`}
+                            title="Beli 20 Biji Umpan (Grosir)"
+                          >
+                            +20x
+                          </button>
+                        </div>
                       )}
 
                       {!isEquipped ? (
@@ -901,14 +1425,14 @@ const FishingShopModal: React.FC<{
                             setEquippedBait(bait.id);
                           }}
                           disabled={bait.id !== 'worm' && (baitCounts[bait.id] || 0) <= 0}
-                          className="bg-sky-400 hover:bg-sky-300 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none text-slate-900 text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black shadow-[2px_2px_0_0_#000] active:scale-95 cursor-pointer"
+                          className="bg-slate-800 hover:bg-purple-500 hover:text-white disabled:bg-slate-800 disabled:text-slate-500 text-purple-300 text-xs font-mono font-bold px-3.5 py-1.5 rounded-xl border border-slate-700 hover:border-purple-400 transition-all cursor-pointer active:scale-95"
                         >
                           PAKAI
                         </button>
                       ) : (
                         <button
                           disabled
-                          className="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1.5 border-[2px] border-black opacity-90 cursor-default"
+                          className="bg-purple-600/30 text-purple-300 text-xs font-mono font-bold px-3.5 py-1.5 rounded-xl border border-purple-500/40 cursor-default"
                         >
                           ✓ AKTIF
                         </button>
@@ -920,7 +1444,7 @@ const FishingShopModal: React.FC<{
             })
           )}
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
@@ -1687,11 +2211,11 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 navigate('/');
               }}
-              className="bg-amber-300 hover:bg-amber-200 text-slate-950 border-[3px] border-black px-3 py-1.5 flex items-center gap-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer font-black text-[9px] sm:text-[10px]"
+              className="bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-slate-700/80 backdrop-blur-xl px-3.5 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer font-sans font-bold text-xs"
               title="Kembali ke Portofolio Utama"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>HOME</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-[#E195AB]" />
+              <span>Beranda</span>
             </button>
 
             {/* Jakarta Live Clock Pill */}
@@ -1706,19 +2230,19 @@ export const FishingGameSection: React.FC = () => {
                   triggerFloatingText('MANUAL WAKTU AKTIF', 400, 200, '#facc15');
                 }
               }}
-              className={`border-[3px] border-black px-2.5 py-1 flex items-center gap-1.5 shadow-[3px_3px_0_0_#000] transition-all cursor-pointer ${
+              className={`border backdrop-blur-xl px-3 py-1.5 rounded-2xl flex items-center gap-2 shadow-lg transition-all cursor-pointer ${
                 isRealtimeJakarta
-                  ? 'bg-sky-200 text-slate-950'
-                  : 'bg-amber-100 text-slate-700 hover:bg-amber-200'
+                  ? 'bg-sky-950/70 border-sky-500/50 text-sky-200'
+                  : 'bg-slate-900/85 border-slate-700/80 text-slate-200 hover:bg-slate-800'
               }`}
               title="Toggle Auto Waktu Realtime Jakarta / Manual"
             >
-              <Compass className="w-3.5 h-3.5 text-blue-900 animate-spin" style={{ animationDuration: '12s' }} />
+              <Compass className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '12s' }} />
               <div className="flex flex-col text-left leading-none">
-                <span className="text-[8.5px] sm:text-[9px] font-black text-slate-900">
-                  {jakartaClock.timeString} <span className="text-[7.5px] text-blue-900">WIB</span>
+                <span className="text-[10px] sm:text-[11px] font-mono font-bold text-white">
+                  {jakartaClock.timeString} <span className="text-[9px] text-cyan-400">WIB</span>
                 </span>
-                <span className="text-[7px] text-slate-600 font-bold uppercase mt-0.5">
+                <span className="text-[8px] text-slate-400 font-mono font-semibold uppercase mt-0.5">
                   {isRealtimeJakarta ? `AUTO • ${timeOfDay}` : `MANUAL • ${timeOfDay}`}
                 </span>
               </div>
@@ -1733,11 +2257,11 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 setIsShopOpen(true);
               }}
-              className="bg-amber-300 hover:bg-amber-200 text-slate-950 border-[3px] border-black px-2.5 py-1.5 flex items-center gap-1 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer font-black text-[9px] sm:text-[10px]"
+              className="bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 backdrop-blur-xl px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer font-mono font-bold text-xs"
               title="Buka Toko Alat Pancing"
             >
-              <Coins className="w-3.5 h-3.5 text-amber-900" />
-              <span>{coins}</span>
+              <Coins className="w-4 h-4 text-amber-400" />
+              <span>{coins.toLocaleString()}</span>
             </button>
 
             {/* Shop Button */}
@@ -1746,10 +2270,10 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 setIsShopOpen(true);
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer"
+              className="bg-slate-900/85 hover:bg-slate-800 text-amber-400 border border-slate-700/80 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer"
               title="Toko Joran & Umpan"
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-amber-900" />
+              <ShoppingBag className="w-4 h-4" />
             </button>
 
             {/* Species Journal */}
@@ -1758,12 +2282,12 @@ export const FishingGameSection: React.FC = () => {
                 playFishingSound('page', soundEnabled);
                 setIsJournalOpen(true);
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer relative"
-              title="Jurnal Ikan"
+              className="bg-slate-900/85 hover:bg-slate-800 text-blue-400 border border-slate-700/80 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer relative"
+              title="Jurnal Spesies Ikan"
             >
-              <BookOpen className="w-3.5 h-3.5 text-blue-800" />
+              <BookOpen className="w-4 h-4" />
               {discoveredSpecies.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-emerald-600 text-white text-[7px] font-black px-1 rounded-full border border-black">
+                <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-mono font-bold px-1.5 py-0.2 rounded-full border border-slate-900 shadow-sm">
                   {discoveredSpecies.length}
                 </span>
               )}
@@ -1775,12 +2299,14 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 setIsOddsOpen(true);
               }}
-              className={`border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer ${
-                adminOdds.enabled && isAdmin ? 'bg-amber-400 text-slate-950 ring-2 ring-yellow-400 animate-pulse' : 'bg-amber-100 hover:bg-amber-200 text-slate-950'
+              className={`p-2.5 rounded-2xl backdrop-blur-xl border shadow-lg active:scale-95 transition-all cursor-pointer ${
+                adminOdds.enabled && isAdmin
+                  ? 'bg-amber-400/30 text-amber-300 border-amber-400 ring-2 ring-amber-400/40 animate-pulse'
+                  : 'bg-slate-900/85 hover:bg-slate-800 text-cyan-400 border-slate-700/80'
               }`}
-              title="Peluang Ikan (Drop Rates)"
+              title="Peluang Ikan (Drop Rates & Odds)"
             >
-              <BarChart3 className="w-3.5 h-3.5 text-blue-700" />
+              <BarChart3 className="w-4 h-4" />
             </button>
 
             {/* Weather Switcher */}
@@ -1794,7 +2320,7 @@ export const FishingGameSection: React.FC = () => {
                 setIsAutoWeather(false);
                 triggerFloatingText(`CUACA: ${nextW.toUpperCase()}`, 400, 200, '#38bdf8');
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black px-2 py-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer text-xs flex items-center gap-1"
+              className="bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-slate-700/80 backdrop-blur-xl px-3 py-2 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer text-xs font-mono flex items-center gap-1.5"
               title="Ganti Cuaca Samudra"
             >
               <span>
@@ -1804,6 +2330,9 @@ export const FishingGameSection: React.FC = () => {
                 {weather === 'badai' && '⛈️'}
                 {weather === 'kabut_mistis' && '🌫️'}
               </span>
+              <span className="capitalize hidden md:inline text-[11px] text-slate-300 font-sans">
+                {weather === 'kabut_mistis' ? 'Mistis' : weather}
+              </span>
             </button>
 
             {/* Audio Toggle */}
@@ -1812,10 +2341,10 @@ export const FishingGameSection: React.FC = () => {
                 if (!soundEnabled) playFishingSound('click', true);
                 setSoundEnabled(!soundEnabled);
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer"
-              title="Toggle Suara"
+              className="bg-slate-900/85 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer"
+              title="Toggle Suara Audio"
             >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-slate-900" /> : <VolumeX className="w-3.5 h-3.5 text-red-600" />}
+              {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-rose-400" />}
             </button>
 
             {/* Fullscreen */}
@@ -1824,40 +2353,40 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 toggleFullscreen();
               }}
-              className="bg-amber-100 hover:bg-amber-200 text-slate-950 border-[3px] border-black p-1.5 shadow-[3px_3px_0_0_#000] active:translate-y-0.5 cursor-pointer hidden sm:block"
+              className="bg-slate-900/85 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg active:scale-95 transition-all cursor-pointer hidden sm:flex items-center justify-center"
               title={isFullscreen ? "Keluar Fullscreen" : "Layar Penuh"}
             >
-              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
         {/* Row 2: Live Telemetry Bar (Score, Fish, Rod & Bait, Combo) */}
         <div className="flex justify-end pointer-events-auto">
-          <div className="bg-amber-100 text-slate-950 border-[3px] border-black px-3 py-1.5 flex items-center gap-2 sm:gap-3 shadow-[3px_3px_0_0_#000] text-[8.5px] sm:text-[9.5px] font-black flex-wrap">
-            <div className="flex items-center gap-1">
-              <Trophy className="w-3.5 h-3.5 text-amber-600" />
-              <span>PTS: <strong className="text-blue-700">{score}</strong></span>
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/70 rounded-2xl px-4 py-2 flex items-center gap-3 sm:gap-4 shadow-xl text-[10px] sm:text-xs font-mono font-bold text-slate-200 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <span>PTS: <strong className="text-amber-400">{score.toLocaleString()}</strong></span>
             </div>
-            <span className="text-slate-400">|</span>
+            <span className="text-slate-600">|</span>
             <div>
-              <span>IKAN: <strong className="text-emerald-700">{caughtCount}</strong></span>
+              <span>IKAN: <strong className="text-emerald-400">{caughtCount}</strong></span>
             </div>
-            <span className="text-slate-400">|</span>
-            <div className="flex items-center gap-1 text-slate-800">
+            <span className="text-slate-600">|</span>
+            <div className="flex items-center gap-1 text-slate-300">
               <span>{currentEquippedRodItem.icon}</span>
-              <span className="hidden sm:inline">{currentEquippedRodItem.name.split(' ')[1]}</span>
+              <span className="hidden sm:inline font-sans">{currentEquippedRodItem.name.split(' ')[1]}</span>
             </div>
-            <span className="text-slate-400">|</span>
-            <div className="flex items-center gap-1 text-purple-800">
+            <span className="text-slate-600">|</span>
+            <div className="flex items-center gap-1 text-purple-300">
               <span>{currentEquippedBaitItem.icon}</span>
               <span>{equippedBait !== 'worm' ? `(${baitCounts[equippedBait] || 0})` : '∞'}</span>
             </div>
             {combo > 1 && (
               <>
-                <span className="text-slate-400">|</span>
-                <span className="text-rose-600 animate-pulse flex items-center gap-0.5">
-                  🔥 x{combo}
+                <span className="text-slate-600">|</span>
+                <span className="text-pink-400 animate-pulse flex items-center gap-1">
+                  🔥 x{combo} Combo
                 </span>
               </>
             )}
