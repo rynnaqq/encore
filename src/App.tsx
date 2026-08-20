@@ -272,36 +272,31 @@ function MainLayout({ isLoading }: { isLoading: boolean }) {
     }
   }, [location]);
 
-  // Active section scroll observer
+  // Active section observer using IntersectionObserver (zero layout thrashing & 60fps)
   useEffect(() => {
     if (location.pathname !== '/') return;
     
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const sections = ['home', 'about'];
-          const scrollPosition = window.scrollY + 200;
-
-          for (const sectionId of sections) {
-            const element = document.getElementById(sectionId);
-            if (element) {
-              const top = element.offsetTop;
-              const height = element.offsetHeight;
-              if (scrollPosition >= top && scrollPosition < top + height) {
-                setActiveSection((prev) => prev !== sectionId ? sectionId : prev);
-                break;
-              }
-            }
+    const sections = ['home', 'about'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
           }
-          ticking = false;
         });
-        ticking = true;
+      },
+      {
+        rootMargin: '-25% 0px -55% 0px',
+        threshold: 0,
       }
-    };
+    );
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
   }, [location.pathname]);
 
   const isFullscreenGame = location.pathname === '/fishing';

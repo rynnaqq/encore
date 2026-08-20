@@ -113,7 +113,8 @@ async function startServer() {
 
   const PORT = 3000;
 
-  app.use(express.json({ limit: "10mb" }));
+  // Protect against memory exhaustion DoS by limiting JSON payload size
+  app.use(express.json({ limit: "2mb" }));
 
   // Health check API
   app.get('/api/health', (req, res) => {
@@ -225,39 +226,41 @@ async function startServer() {
     let currentRoomId: string | null = null;
     let playerProfile: PlayerInfo | null = null;
 
-    // Helper to get valid player profile
+    // Helper to get valid player profile, strictly enforcing socket.id for connection security
     const getSafePlayer = (p?: Partial<PlayerInfo>): PlayerInfo => {
-      const pId = p?.id || playerProfile?.id || `usr_${socket.id}`;
+      const cleanName = typeof p?.name === 'string' ? sanitizeInput(p.name, 30) : (playerProfile?.name || 'Player 1');
+      const cleanCountry = typeof p?.country === 'string' ? sanitizeInput(p.country, 4) : (playerProfile?.country || 'US');
+      const cleanFlag = typeof p?.flag === 'string' ? sanitizeInput(p.flag, 8) : (playerProfile?.flag || '🇺🇸');
+      const cleanRating = typeof p?.rating === 'number' && p.rating >= 0 && p.rating <= 4000 ? Math.floor(p.rating) : (playerProfile?.rating || 1200);
+
       return {
-        id: pId,
-        name: p?.name || playerProfile?.name || 'Player 1',
-        country: p?.country || playerProfile?.country || 'US',
-        flag: p?.flag || playerProfile?.flag || '🇺🇸',
-        rating: p?.rating || playerProfile?.rating || 1200,
+        id: socket.id, // Strictly bind to socket.id to prevent identity spoofing & session hijacking
+        name: cleanName || 'Player 1',
+        country: cleanCountry || 'US',
+        flag: cleanFlag || '🇺🇸',
+        rating: cleanRating,
       };
     };
 
     const isPlayerWhite = (room: RoomState): boolean => {
-      const pid = playerProfile?.id;
-      return Boolean(room.whitePlayer && (room.whitePlayer.id === socket.id || (pid && room.whitePlayer.id === pid)));
+      return Boolean(room.whitePlayer && room.whitePlayer.id === socket.id);
     };
 
     const isPlayerBlack = (room: RoomState): boolean => {
-      const pid = playerProfile?.id;
-      return Boolean(room.blackPlayer && (room.blackPlayer.id === socket.id || (pid && room.blackPlayer.id === pid)));
+      return Boolean(room.blackPlayer && room.blackPlayer.id === socket.id);
     };
 
     // Update profile listener
-    socket.on('update_profile', (profile: PlayerInfo) => {
-      if (profile && profile.name) {
-        playerProfile = profile;
+    socket.on('update_profile', (profile: Partial<PlayerInfo>) => {
+      if (profile && typeof profile === 'object') {
+        playerProfile = getSafePlayer(profile);
         if (currentRoomId) {
           const room = rooms.get(currentRoomId);
           if (room) {
-            if (isPlayerWhite(room) || room.whitePlayer?.id === profile.id) {
-              room.whitePlayer = { ...profile };
-            } else if (isPlayerBlack(room) || room.blackPlayer?.id === profile.id) {
-              room.blackPlayer = { ...profile };
+            if (isPlayerWhite(room)) {
+              room.whitePlayer = { ...playerProfile };
+            } else if (isPlayerBlack(room)) {
+              room.blackPlayer = { ...playerProfile };
             }
             io.to(currentRoomId).emit('room_updated', sanitizeRoomForClient(room));
             io.emit('lobby_room_updated');
@@ -945,14 +948,18 @@ async function startServer() {
       if (!room || !room.isStarted || room.winnerId) return;
       
       const currentPlayer = room.players[room.currentPlayerIndex];
-      if (currentPlayer.id !== socket.id) return; // not this player's turn
+      if (!currentPlayer || currentPlayer.id !== socket.id) return; // not this player's turn
 
-      currentPlayer.position = payload.newPosition;
-      if (payload.logMessage) {
-        room.logs.push(payload.logMessage);
+      // Validate position bounds (1 to 100)
+      const targetPos = Math.max(1, Math.min(100, Math.floor(Number(payload?.newPosition) || 1)));
+      currentPlayer.position = targetPos;
+
+      if (payload?.logMessage && typeof payload.logMessage === 'string') {
+        room.logs.push(sanitizeInput(payload.logMessage, 150));
       }
+      if (room.logs.length > 50) room.logs.shift();
       
-      if (payload.isWinner) {
+      if (targetPos >= 100 || payload?.isWinner) {
         room.winnerId = socket.id;
         room.logs.push(`${currentPlayer.name} wins!`);
       } else {
@@ -1011,15 +1018,24 @@ async function startServer() {
 
   
 
-  // --- Comments API (Asynchronous & Sanitized) ---
+  // --- Comments API (Asynchronous, Mutex Locked & Sanitized) ---
 
   const COMMENTS_FILE = path.join(process.cwd(), 'comments.json');
   
+  // In-memory Mutex to prevent TOCTOU file race conditions
+  let commentsFileLock: Promise<any> = Promise.resolve();
+  const withCommentsLock = <T>(action: () => Promise<T>): Promise<T> => {
+    const nextLock = commentsFileLock.then(action, action);
+    commentsFileLock = nextLock.then(() => {}, () => {});
+    return nextLock;
+  };
+
   const readComments = async (): Promise<any[]> => {
     try {
       if (fs.existsSync(COMMENTS_FILE)) {
         const data = await fs.promises.readFile(COMMENTS_FILE, 'utf8');
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
       }
     } catch (e) {
       console.error('Error reading comments.json:', e);
@@ -1037,17 +1053,35 @@ async function startServer() {
     }
   };
 
+  // Strict HTML Entity Sanitizer to eliminate Stored XSS
   const sanitizeInput = (str: unknown, maxLen = 2000): string => {
     if (typeof str !== 'string') return '';
     return str
       .slice(0, maxLen)
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
       .trim();
+  };
+
+  // Validate Base64 Image to prevent SVG script execution & memory exhaustion
+  const isValidRasterImage = (base64: unknown): boolean => {
+    if (typeof base64 !== 'string') return false;
+    const allowedHeaders = [
+      'data:image/png;base64,',
+      'data:image/jpeg;base64,',
+      'data:image/jpg;base64,',
+      'data:image/webp;base64,',
+      'data:image/gif;base64,'
+    ];
+    return allowedHeaders.some(h => base64.startsWith(h)) && base64.length <= 2 * 1024 * 1024;
   };
 
   app.get('/api/comments', async (req, res) => {
     try {
-      const comments = await readComments();
+      const comments = await withCommentsLock(() => readComments());
       res.json(comments);
     } catch (err) {
       res.status(500).json({ error: 'Failed to retrieve comments' });
@@ -1065,25 +1099,30 @@ async function startServer() {
       }
 
       let safePhoto: string | null = null;
-      if (typeof photoBase64 === 'string' && photoBase64.startsWith('data:image/')) {
-        if (photoBase64.length <= 3 * 1024 * 1024) {
-          safePhoto = photoBase64;
-        }
+      if (typeof photoBase64 === 'string' && isValidRasterImage(photoBase64)) {
+        safePhoto = photoBase64;
       }
       
       const newComment = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         username: cleanUsername,
         text: cleanText,
         photoBase64: safePhoto,
         timestamp: Date.now()
       };
       
-      const comments = await readComments();
-      comments.push(newComment);
-      await writeComments(comments);
+      const result = await withCommentsLock(async () => {
+        const comments = await readComments();
+        comments.push(newComment);
+        // Limit total stored comments to prevent uncontrolled disk growth
+        if (comments.length > 500) {
+          comments.splice(0, comments.length - 500);
+        }
+        await writeComments(comments);
+        return newComment;
+      });
       
-      res.status(201).json(newComment);
+      res.status(201).json(result);
     } catch (err) {
       res.status(500).json({ error: 'Failed to post comment' });
     }
@@ -1099,18 +1138,25 @@ async function startServer() {
         return res.status(400).json({ error: 'Updated comment text cannot be empty' });
       }
       
-      const comments = await readComments();
-      const commentIndex = comments.findIndex(c => c.id === id);
-      
-      if (commentIndex === -1) {
+      const updated = await withCommentsLock(async () => {
+        const comments = await readComments();
+        const commentIndex = comments.findIndex(c => c.id === id);
+        
+        if (commentIndex === -1) {
+          return null;
+        }
+        
+        comments[commentIndex].text = cleanText;
+        comments[commentIndex].updatedAt = Date.now();
+        await writeComments(comments);
+        return comments[commentIndex];
+      });
+
+      if (!updated) {
         return res.status(404).json({ error: 'Comment not found' });
       }
       
-      comments[commentIndex].text = cleanText;
-      comments[commentIndex].updatedAt = Date.now();
-      await writeComments(comments);
-      
-      res.json(comments[commentIndex]);
+      res.json(updated);
     } catch (err) {
       res.status(500).json({ error: 'Failed to update comment' });
     }
@@ -1119,15 +1165,23 @@ async function startServer() {
   app.delete('/api/comments/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      let comments = await readComments();
-      const initialLength = comments.length;
-      comments = comments.filter(c => c.id !== id);
-      
-      if (comments.length === initialLength) {
+      const deleted = await withCommentsLock(async () => {
+        let comments = await readComments();
+        const initialLength = comments.length;
+        comments = comments.filter(c => c.id !== id);
+        
+        if (comments.length === initialLength) {
+          return false;
+        }
+
+        await writeComments(comments);
+        return true;
+      });
+
+      if (!deleted) {
         return res.status(404).json({ error: 'Comment not found' });
       }
 
-      await writeComments(comments);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ error: 'Failed to delete comment' });

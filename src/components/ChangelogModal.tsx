@@ -62,7 +62,7 @@ export const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ isOpen, onClos
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'linear' }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             onClick={onClose}
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-md cursor-pointer transform-gpu z-[99999]"
           />
@@ -72,7 +72,7 @@ export const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ isOpen, onClos
             initial={{ scale: 0.96, opacity: 0, y: 16 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: 12 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className="relative w-full max-w-xl max-h-[90dvh] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-[100000] my-auto text-slate-800 dark:text-slate-100 flex flex-col gpu-smooth transform-gpu"
             onClick={(e) => e.stopPropagation()}
           >

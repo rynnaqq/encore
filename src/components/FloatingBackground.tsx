@@ -9,7 +9,7 @@ export const FloatingBackground: React.FC = () => {
       <motion.div
         animate={{ y: [0, -12, 0], rotate: [0, 45, 0] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[15%] left-[8%] text-[#E195AB] opacity-25 dark:opacity-10"
+        className="absolute top-[15%] left-[8%] text-[#E195AB] opacity-25 dark:opacity-10 transform-gpu"
       >
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -21,7 +21,7 @@ export const FloatingBackground: React.FC = () => {
       <motion.div
         animate={{ y: [0, 16, 0], scale: [1, 1.05, 1] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute top-[38%] right-[12%] text-amber-400 opacity-25 dark:opacity-10"
+        className="absolute top-[38%] right-[12%] text-amber-400 opacity-25 dark:opacity-10 transform-gpu"
       >
         <Circle size={38} strokeWidth={1.5} />
       </motion.div>
@@ -30,7 +30,7 @@ export const FloatingBackground: React.FC = () => {
       <motion.div
         animate={{ y: [0, -14, 0], rotate: [0, -25, 0] }}
         transition={{ duration: 16, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute bottom-[28%] left-[16%] text-[#E195AB] opacity-25 dark:opacity-10"
+        className="absolute bottom-[28%] left-[16%] text-[#E195AB] opacity-25 dark:opacity-10 transform-gpu"
       >
         <Triangle size={30} strokeWidth={1.5} />
       </motion.div>
@@ -39,7 +39,7 @@ export const FloatingBackground: React.FC = () => {
       <motion.div
         animate={{ y: [0, 12, 0], rotate: [0, 15, 0] }}
         transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-        className="absolute top-[68%] right-[20%] text-rose-400 opacity-25 dark:opacity-10"
+        className="absolute top-[68%] right-[20%] text-rose-400 opacity-25 dark:opacity-10 transform-gpu"
       >
         <Star size={34} strokeWidth={1.5} />
       </motion.div>

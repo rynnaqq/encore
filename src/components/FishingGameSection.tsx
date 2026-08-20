@@ -2147,76 +2147,76 @@ export const FishingGameSection: React.FC = () => {
           }
 
           @keyframes waterWave {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-32px); }
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-32px, 0, 0); }
           }
           @keyframes kelpSway {
             0%, 100% { transform: rotate(-5deg); }
             50% { transform: rotate(7deg); }
           }
           @keyframes floatBubble {
-            0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
-            100% { transform: translateY(-130px) scale(1.3); opacity: 0; }
+            0% { transform: translate3d(0, 0, 0) scale(0.8); opacity: 0.8; }
+            100% { transform: translate3d(0, -130px, 0) scale(1.3); opacity: 0; }
           }
           @keyframes fishSwimLeft {
-            0% { transform: translateX(820px) scaleX(1); }
-            100% { transform: translateX(-100px) scaleX(1); }
+            0% { transform: translate3d(820px, 0, 0) scaleX(1); }
+            100% { transform: translate3d(-100px, 0, 0) scaleX(1); }
           }
           @keyframes rodVibrate {
             0%, 100% { transform: rotate(-30deg); }
             50% { transform: rotate(-26deg); }
           }
           @keyframes bobberGentleFloat {
-            0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
-            50% { transform: translate(-50%, -50%) translateY(4px); }
+            0%, 100% { transform: translate3d(-50%, -50%, 0) translateY(0px); }
+            50% { transform: translate3d(-50%, -50%, 0) translateY(4px); }
           }
           @keyframes shake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-4px, 4px) rotate(-1deg); }
-            40% { transform: translate(4px, -3px) rotate(1deg); }
-            60% { transform: translate(-3px, -2px) rotate(-1deg); }
-            80% { transform: translate(3px, 3px) rotate(1deg); }
+            0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+            20% { transform: translate3d(-4px, 4px, 0) rotate(-1deg); }
+            40% { transform: translate3d(4px, -3px, 0) rotate(1deg); }
+            60% { transform: translate3d(-3px, -2px, 0) rotate(-1deg); }
+            80% { transform: translate3d(3px, 3px, 0) rotate(1deg); }
           }
           @keyframes rainFall {
-            0% { transform: translateY(-100px) translateX(0); }
-            100% { transform: translateY(700px) translateX(-150px); }
+            0% { transform: translate3d(0, -100px, 0); }
+            100% { transform: translate3d(-150px, 700px, 0); }
           }
           @keyframes particleFloatUp {
-            0% { transform: translateY(0) scale(0.6); opacity: 0; }
-            25% { opacity: 1; transform: translateY(-30px) scale(1.2); }
-            100% { transform: translateY(-160px) scale(0.4); opacity: 0; }
+            0% { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
+            25% { opacity: 1; transform: translate3d(0, -30px, 0) scale(1.2); }
+            100% { transform: translate3d(0, -160px, 0) scale(0.4); opacity: 0; }
           }
           @keyframes shockwaveExpand {
-            0% { transform: scale(0.6); opacity: 0.9; }
-            100% { transform: scale(2.6); opacity: 0; }
+            0% { transform: scale(0.6) translateZ(0); opacity: 0.9; }
+            100% { transform: scale(2.6) translateZ(0); opacity: 0; }
           }
           @keyframes reelSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg) translateZ(0); }
+            100% { transform: rotate(360deg) translateZ(0); }
           }
           @keyframes divineRing {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg) translateZ(0); }
+            100% { transform: rotate(360deg) translateZ(0); }
           }
           @keyframes fireflyFloat {
-            0% { transform: translate(0, 0) scale(0.8); opacity: 0.2; }
-            50% { transform: translate(12px, -30px) scale(1.2); opacity: 0.95; }
-            100% { transform: translate(-8px, -65px) scale(0.6); opacity: 0; }
+            0% { transform: translate3d(0, 0, 0) scale(0.8); opacity: 0.2; }
+            50% { transform: translate3d(12px, -30px, 0) scale(1.2); opacity: 0.95; }
+            100% { transform: translate3d(-8px, -65px, 0) scale(0.6); opacity: 0; }
           }
           @keyframes reelCrankFast {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg) translateZ(0); }
+            100% { transform: rotate(360deg) translateZ(0); }
           }
           @keyframes foamSpread {
-            0% { transform: scale(0.6); opacity: 0.9; }
-            50% { transform: scale(1.4); opacity: 0.6; }
-            100% { transform: scale(2.2); opacity: 0; }
+            0% { transform: scale(0.6) translateZ(0); opacity: 0.9; }
+            50% { transform: scale(1.4) translateZ(0); opacity: 0.6; }
+            100% { transform: scale(2.2) translateZ(0); opacity: 0; }
           }
           @keyframes fishFight {
-            0%, 100% { transform: translate(0, 0) rotate(-14deg) scaleX(1); }
-            25% { transform: translate(8px, -5px) rotate(12deg) scaleX(1); }
-            50% { transform: translate(-10px, 6px) rotate(-16deg) scaleX(-1); }
-            75% { transform: translate(6px, 3px) rotate(10deg) scaleX(1); }
+            0%, 100% { transform: translate3d(0, 0, 0) rotate(-14deg) scaleX(1); }
+            25% { transform: translate3d(8px, -5px, 0) rotate(12deg) scaleX(1); }
+            50% { transform: translate3d(-10px, 6px, 0) rotate(-16deg) scaleX(-1); }
+            75% { transform: translate3d(6px, 3px, 0) rotate(10deg) scaleX(1); }
           }
           @keyframes vineSway {
             0%, 100% { transform: rotate(-4deg); }
@@ -2227,19 +2227,25 @@ export const FishingGameSection: React.FC = () => {
             50% { opacity: 0.75; }
           }
 
-          .animate-water { animation: waterWave 1.8s linear infinite; }
-          .animate-kelp { animation: kelpSway 3.2s ease-in-out infinite; transform-origin: bottom center; }
-          .animate-rod-vibrate { animation: rodVibrate 0.08s infinite; }
-          .animate-bobber-float { animation: bobberGentleFloat 1.8s ease-in-out infinite; }
-          .animate-particle-float { animation: particleFloatUp 2s ease-out infinite; }
-          .animate-shockwave { animation: shockwaveExpand 1.6s ease-out infinite; }
-          .animate-reel-spin { animation: reelSpin 0.35s linear infinite; }
-          .animate-firefly { animation: fireflyFloat 3.5s ease-in-out infinite; }
-          .animate-reel-crank { animation: reelCrankFast 0.12s linear infinite; }
-          .animate-foam { animation: foamSpread 0.75s ease-out infinite; }
-          .animate-fish-fight { animation: fishFight 0.25s ease-in-out infinite; }
-          .animate-vine { animation: vineSway 4.5s ease-in-out infinite; transform-origin: top center; }
-          .animate-sunbeam { animation: sunbeamPulse 4s ease-in-out infinite; }
+          .animate-water { animation: waterWave 1.8s linear infinite; will-change: transform; }
+          .animate-kelp { animation: kelpSway 3.2s ease-in-out infinite; transform-origin: bottom center; will-change: transform; }
+          .animate-rod-vibrate { animation: rodVibrate 0.08s infinite; will-change: transform; }
+          .animate-bobber-float { animation: bobberGentleFloat 1.8s ease-in-out infinite; will-change: transform; }
+          .animate-particle-float { animation: particleFloatUp 2s ease-out infinite; will-change: transform, opacity; }
+          .animate-shockwave { animation: shockwaveExpand 1.6s ease-out infinite; will-change: transform, opacity; }
+          .animate-reel-spin { animation: reelSpin 0.35s linear infinite; will-change: transform; }
+          .animate-firefly { animation: fireflyFloat 3.5s ease-in-out infinite; will-change: transform, opacity; }
+          .animate-reel-crank { animation: reelCrankFast 0.12s linear infinite; will-change: transform; }
+          .animate-foam { animation: foamSpread 0.75s ease-out infinite; will-change: transform, opacity; }
+          .animate-fish-fight { animation: fishFight 0.25s ease-in-out infinite; will-change: transform; }
+          .animate-vine { animation: vineSway 4.5s ease-in-out infinite; transform-origin: top center; will-change: transform; }
+          .animate-sunbeam { animation: sunbeamPulse 4s ease-in-out infinite; will-change: opacity; }
+
+          @media (prefers-reduced-motion: reduce) {
+            .animate-water, .animate-kelp, .animate-vine, .animate-sunbeam, .animate-firefly {
+              animation: none !important;
+            }
+          }
         `}
       </style>
 
