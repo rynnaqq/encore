@@ -1,21 +1,18 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const DEFAULT_SUPABASE_URL = 'https://czriatollbnjycispbap.supabase.co';
-const DEFAULT_SUPABASE_KEY = 'sb_publishable_21nWAISuO9F0z_RAO7hkiA_FUfYPA36';
-
-// Get default credentials from environment variables with guaranteed fallback
+// Get Supabase credentials strictly from environment variables
 export function getSupabaseCredentials() {
-  let url = DEFAULT_SUPABASE_URL;
-  let key = DEFAULT_SUPABASE_KEY;
+  let url = '';
+  let key = '';
 
   try {
     if (typeof import.meta !== 'undefined' && import.meta.env) {
-      if (import.meta.env.VITE_SUPABASE_URL) {
-        url = import.meta.env.VITE_SUPABASE_URL;
-      }
-      if (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-        key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      }
+      url = import.meta.env.VITE_SUPABASE_URL || '';
+      key =
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        import.meta.env.VITE_SUPABASE_ANON_KEY ||
+        import.meta.env.VITE_SUPABASE_KEY ||
+        '';
     }
   } catch (e) {
     // ignore
