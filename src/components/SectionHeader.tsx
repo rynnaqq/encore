@@ -1,8 +1,9 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 interface SectionHeaderProps {
   icon?: React.ReactNode;
+  badgeText?: string;
   title: React.ReactNode;
   subtitle?: string;
   className?: string;
@@ -10,6 +11,7 @@ interface SectionHeaderProps {
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({
   icon,
+  badgeText = 'Overview',
   title,
   subtitle,
   className = '',
@@ -24,7 +26,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
     >
       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E195AB]/10 text-[#E195AB] border border-[#E195AB]/25 text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest mb-3">
         {icon}
-        <span>Overview</span>
+        <span>{badgeText}</span>
       </div>
       <h2 className="font-sans text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
         {title}

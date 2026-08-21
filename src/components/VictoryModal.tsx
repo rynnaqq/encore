@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Trophy, Crown, RotateCcw, LogOut, Medal } from 'lucide-react';
 

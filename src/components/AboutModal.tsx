@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Terminal, Code, Cpu, CheckCircle2, Sparkles, Award, Heart, Mail, ExternalLink, Zap } from 'lucide-react';
 
 interface AboutModalProps {
@@ -16,7 +16,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   const highlights = [
     { title: 'Clean & Scalable Architecture', desc: 'Modular components built with TypeScript and strict type safety.' },
     { title: 'Pixel-Perfect Responsive UI', desc: 'Adaptive layouts optimized seamlessly for mobile, tablet, and ultra-wide screens.' },
-    { title: 'Modern React 18+ Ecosystem', desc: 'Utilizing Vite, Tailwind CSS, Motion animations, and custom state engines.' },
+    { title: 'Modern React 19 Ecosystem', desc: 'Utilizing Vite, Tailwind CSS, Motion animations, and custom state engines.' },
     { title: 'Lightning Fast Load Times', desc: 'Performance-focused code splitting, lazy asset loading, and tight bundles.' },
   ];
 

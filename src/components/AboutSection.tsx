@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { User, CheckCircle2, Code, Terminal, Cpu } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 
@@ -45,20 +45,16 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenModal }) => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <SectionHeader
-            title={
-              <>
-                Crafting Digital Experiences <span className="text-[#E195AB]">With Minimalist Precision</span>
-              </>
-            }
-          />
-        </motion.div>
+        <SectionHeader
+          icon={<User className="w-3.5 h-3.5" />}
+          badgeText="About Me"
+          title={
+            <>
+              Crafting Digital Experiences <span className="text-[#E195AB]">With Minimalist Precision</span>
+            </>
+          }
+          subtitle="Explore the stack, principles, and engineering standards behind Encore."
+        />
 
         {/* Main Content Card with Double-Bezel Architecture */}
         <motion.div

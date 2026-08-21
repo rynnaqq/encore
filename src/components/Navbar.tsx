@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ArrowUpRight, User as UserIcon, Shield, LogOut, LogIn, Sun, Moon } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -63,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       return;
     }
 
-    // Require login before entering any game (Fishing, Chess, Snake & Ladders, UNO)
+    // Require login before entering any game (Fishing, Snake & Ladders, UNO)
     const isProtectedGame = id === 'fishing' || id === 'snake' || id === 'uno' || path === '/fishing' || path === '/snake-ladders' || path === '/uno';
     if (isProtectedGame && !currentUser) {
       openLoginModal(() => {
@@ -194,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               ) : (
                 <button
-                  onClick={openLoginModal}
+                  onClick={() => openLoginModal()}
                   className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#E195AB] hover:bg-[#d68097] text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer shrink-0 active:scale-95"
                 >
                   <LogIn className="w-3.5 h-3.5" />

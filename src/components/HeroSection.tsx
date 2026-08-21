@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, User, Terminal, Code, Sparkles, CheckCircle, Cpu } from 'lucide-react';
 import { TypewriterText } from './TypewriterText';
 import { CyberDecoderText } from './CyberDecoderText';
@@ -51,7 +51,7 @@ const CodeShowcaseScreen: React.FC = () => {
             />
             {/* Fallback text if video not found */}
             <div className="absolute inset-0 flex items-center justify-center -z-10 text-slate-500 text-xs text-center p-4 font-sans">
-              Video will appear here<br/>(public/assets/videos/video.mp4)
+              Encore Interactive Preview
             </div>
           </div>
         ) : (

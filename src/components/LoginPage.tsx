@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { User, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Sparkles, ArrowLeft, Gamepad2, Trophy, MessageSquare, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Lock, LogIn, UserPlus, AlertCircle, Eye, EyeOff, Sparkles, ArrowLeft, Gamepad2, Trophy, MessageSquare, Crown, Fish } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -20,48 +20,66 @@ export const LoginPage: React.FC = () => {
     return (
       <div className="min-h-screen pt-24 pb-16 px-4 flex flex-col justify-center items-center relative overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 max-w-md w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-8 rounded-3xl border-2 border-[#FFCCE1] dark:border-slate-800 shadow-2xl text-center"
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 max-w-md w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl text-center"
         >
-          <div className="w-20 h-20 bg-gradient-to-tr from-[#E195AB] to-[#FFCCE1] rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-pink-200 dark:shadow-none">
-            <Sparkles className="w-10 h-10 text-white" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E195AB] rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-lg shadow-[#E195AB]/25">
+            <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mb-1.5 tracking-tight">
             Halo, {currentUser.username}! 👋
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
-            Anda sudah berhasil masuk ke akun Anda. Siap untuk bermain game atau menjelajah portofolio?
+          <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-5 leading-relaxed">
+            Anda sudah berhasil masuk. Siap untuk bermain game atau menjelajah portofolio?
           </p>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-6">
+            <button
+              onClick={() => navigate('/fishing')}
+              className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 font-bold text-xs flex flex-col items-center gap-1.5 hover:border-[#E195AB] hover:text-[#E195AB] dark:hover:border-[#E195AB] dark:hover:text-[#FFCCE1] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                <Fish className="w-4 h-4" />
+              </div>
+              <span className="font-semibold">Fishing Game</span>
+            </button>
 
             <button
               onClick={() => navigate('/uno')}
-              className="p-3.5 rounded-2xl bg-[#FFCCE1]/30 dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-xs flex flex-col items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
+              className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 font-bold text-xs flex flex-col items-center gap-1.5 hover:border-[#E195AB] hover:text-[#E195AB] dark:hover:border-[#E195AB] dark:hover:text-[#FFCCE1] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
             >
-              <Gamepad2 className="w-5 h-5" />
-              <span>Main UNO</span>
+              <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <Gamepad2 className="w-4 h-4" />
+              </div>
+              <span className="font-semibold">Main UNO</span>
             </button>
+
             <button
               onClick={() => navigate('/snake-ladders')}
-              className="p-3.5 rounded-2xl bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-xs flex flex-col items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
+              className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 font-bold text-xs flex flex-col items-center gap-1.5 hover:border-[#E195AB] hover:text-[#E195AB] dark:hover:border-[#E195AB] dark:hover:text-[#FFCCE1] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
             >
-              <Trophy className="w-5 h-5" />
-              <span>Ular Tangga</span>
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <Trophy className="w-4 h-4" />
+              </div>
+              <span className="font-semibold">Ular Tangga</span>
             </button>
+
             <button
               onClick={() => navigate('/')}
-              className="p-3.5 rounded-2xl bg-[#FFCCE1]/30 dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 text-[#E195AB] dark:text-[#FFCCE1] font-bold text-xs flex flex-col items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
+              className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 font-bold text-xs flex flex-col items-center gap-1.5 hover:border-[#E195AB] hover:text-[#E195AB] dark:hover:border-[#E195AB] dark:hover:text-[#FFCCE1] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
             >
-              <MessageSquare className="w-5 h-5" />
-              <span>Beranda</span>
+              <div className="w-8 h-8 rounded-xl bg-[#E195AB]/10 text-[#E195AB] flex items-center justify-center">
+                <MessageSquare className="w-4 h-4" />
+              </div>
+              <span className="font-semibold">Beranda</span>
             </button>
           </div>
 
           <button
             onClick={() => navigate('/')}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#E195AB] to-[#d68097] text-white font-extrabold text-sm shadow-md hover:opacity-95 transition-all cursor-pointer"
+            className="w-full py-3 sm:py-3.5 rounded-2xl bg-[#E195AB] hover:bg-[#d68097] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-[0.98]"
           >
             Lanjut Ke Beranda
           </button>
@@ -106,9 +124,9 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 flex flex-col justify-center items-center relative overflow-hidden">
       {/* Dynamic Ambient Background Glow Orbs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 sm:w-[540px] h-96 sm:h-[540px] bg-gradient-to-tr from-[#FFCCE1]/40 via-[#FFF5D7]/30 to-[#E195AB]/30 dark:from-pink-950/30 dark:via-purple-950/20 dark:to-indigo-950/30 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 sm:w-[540px] h-96 sm:h-[540px] bg-gradient-to-tr from-[#FFCCE1]/40 via-[#E195AB]/20 to-[#FFCCE1]/30 dark:from-pink-950/30 dark:via-purple-950/20 dark:to-indigo-950/30 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-[#FFCCE1]/30 dark:bg-pink-900/15 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-[#FFF5D7]/40 dark:bg-indigo-900/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-[#E195AB]/15 dark:bg-indigo-900/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Back to Home Link */}
       <div className="max-w-md w-full mb-4">
@@ -121,48 +139,49 @@ export const LoginPage: React.FC = () => {
         </Link>
       </div>
 
-      {/* Main Glassmorphic Form Card */}
+      {/* Main Glassmorphic Form Card with Double Bezel Architecture */}
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative max-w-md w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border-2 border-[#FFCCE1] dark:border-slate-800 p-6 sm:p-8 z-10 overflow-hidden"
+        className="relative max-w-md w-full p-1.5 sm:p-2 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-100/60 dark:bg-slate-900/40 shadow-xl z-10"
       >
-        {/* Animated Avatar Mascot */}
-        <div className="text-center mb-6">
-          <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            {/* Spinning Aura Ring */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-              className="absolute inset-0 rounded-3xl border-2 border-dashed border-[#E195AB] dark:border-pink-500/50"
-            />
-            {/* Glowing Icon Badge */}
-            <motion.div
-              key={isRegisterMode ? 'reg-badge' : 'login-badge'}
-              initial={{ scale: 0.8, rotate: -15 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', damping: 15 }}
-              className="relative z-10 w-16 h-16 bg-gradient-to-tr from-[#E195AB] via-[#FFCCE1] to-[#FFF5D7] dark:from-pink-600 dark:via-purple-600 dark:to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 dark:shadow-none"
-            >
-              {isRegisterMode ? (
-                <UserPlus className="w-8 h-8 text-white drop-shadow" />
-              ) : (
-                <LogIn className="w-8 h-8 text-white drop-shadow" />
-              )}
-            </motion.div>
+        <div className="bg-white dark:bg-slate-900 rounded-[calc(1.5rem-0.375rem)] border border-slate-200/60 dark:border-slate-800 p-6 sm:p-8">
+          {/* Animated Avatar Mascot */}
+          <div className="text-center mb-6">
+            <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+              {/* Spinning Aura Ring */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 rounded-3xl border-2 border-dashed border-[#E195AB]/60 dark:border-pink-500/50"
+              />
+              {/* Glowing Icon Badge */}
+              <motion.div
+                key={isRegisterMode ? 'reg-badge' : 'login-badge'}
+                initial={{ scale: 0.8, rotate: -15 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 15 }}
+                className="relative z-10 w-16 h-16 bg-[#E195AB] rounded-2xl flex items-center justify-center shadow-lg shadow-[#E195AB]/30"
+              >
+                {isRegisterMode ? (
+                  <UserPlus className="w-8 h-8 text-white drop-shadow" />
+                ) : (
+                  <LogIn className="w-8 h-8 text-white drop-shadow" />
+                )}
+              </motion.div>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+              {isRegisterMode ? 'Buat Akun Baru' : 'Selamat Datang!'}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+              Format akun simpel menggunakan <strong className="text-slate-700 dark:text-slate-300">Username & Password</strong>
+            </p>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
-            {isRegisterMode ? 'Buat Akun Baru' : 'Selamat Datang!'}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Format akun simpel menggunakan <strong className="text-slate-700 dark:text-slate-300">Username & Password</strong>
-          </p>
-        </div>
-
-        {/* Tab Pill Switcher */}
-        <div className="flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700/60 relative">
+          {/* Tab Pill Switcher */}
+          <div className="flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700/60 relative">
           <button
             type="button"
             onClick={() => {
@@ -305,20 +324,21 @@ export const LoginPage: React.FC = () => {
             <Sparkles className="w-3.5 h-3.5 text-[#E195AB]" />
             <span>Benefit Akun Pemain:</span>
           </div>
-          <div className="flex flex-wrap justify-center gap-1.5">
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
-              ♟️ Catur Online
+          <div className="flex flex-wrap justify-center gap-1.5 font-sans">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+              🎣 Fishing Game
             </span>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
               🎲 Ular Tangga
             </span>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
               🃏 UNO Multiplayer
             </span>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FFF5D7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-[#FFCCE1]/60 dark:border-slate-700">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
               💬 Komentar Komunitas
             </span>
           </div>
+        </div>
         </div>
       </motion.div>
     </div>

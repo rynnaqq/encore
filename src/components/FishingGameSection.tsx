@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertCircle, ArrowLeft, Trophy, Sparkles, Volume2, VolumeX,
   Sun, Moon, Flame, Maximize2, Minimize2, BookOpen, X, Coins,
@@ -2735,9 +2735,9 @@ export const FishingGameSection: React.FC = () => {
             style={{ bottom: waterHeight + 190 }}
           >
             <div className="relative">
-              <div className={`w-[75px] h-[16px] absolute top-0 left-[20px] ${timeOfDay === 'badai' ? 'bg-slate-700' : 'bg-white'}`} />
-              <div className={`w-[120px] h-[20px] absolute top-[16px] left-[0px] ${timeOfDay === 'badai' ? 'bg-slate-800' : 'bg-white'}`} />
-              <div className={`w-[95px] h-[8px] absolute top-[36px] left-[10px] ${timeOfDay === 'badai' ? 'bg-slate-900' : 'bg-sky-100'}`} />
+              <div className={`w-[75px] h-[16px] absolute top-0 left-[20px] ${weather === 'badai' || timeOfDay === 'malam' ? 'bg-slate-700' : 'bg-white'}`} />
+              <div className={`w-[120px] h-[20px] absolute top-[16px] left-[0px] ${weather === 'badai' || timeOfDay === 'malam' ? 'bg-slate-800' : 'bg-white'}`} />
+              <div className={`w-[95px] h-[8px] absolute top-[36px] left-[10px] ${weather === 'badai' || timeOfDay === 'malam' ? 'bg-slate-900' : 'bg-sky-100'}`} />
             </div>
           </motion.div>
 
@@ -2748,9 +2748,9 @@ export const FishingGameSection: React.FC = () => {
             style={{ bottom: waterHeight + 140 }}
           >
             <div className="relative">
-              <div className={`w-[55px] h-[14px] absolute top-0 left-[15px] ${timeOfDay === 'badai' ? 'bg-slate-700' : 'bg-white'}`} />
-              <div className={`w-[85px] h-[16px] absolute top-[14px] left-[0px] ${timeOfDay === 'badai' ? 'bg-slate-800' : 'bg-white'}`} />
-              <div className={`w-[65px] h-[6px] absolute top-[30px] left-[10px] ${timeOfDay === 'badai' ? 'bg-slate-900' : 'bg-sky-100'}`} />
+              <div className={`w-[55px] h-[14px] absolute top-0 left-[15px] ${weather === 'badai' || timeOfDay === 'malam' ? 'bg-slate-700' : 'bg-white'}`} />
+              <div className={`w-[85px] h-[16px] absolute top-[14px] left-[0px] ${weather === 'badai' || timeOfDay === 'malam' ? 'bg-slate-800' : 'bg-white'}`} />
+              <div className={`w-[65px] h-[6px] absolute top-[30px] left-[10px] ${weather === 'badai' || timeOfDay === 'malam' ? 'bg-slate-900' : 'bg-sky-100'}`} />
             </div>
           </motion.div>
 

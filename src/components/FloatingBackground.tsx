@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Star, Circle, Triangle } from 'lucide-react';
 
 export const FloatingBackground: React.FC = () => {

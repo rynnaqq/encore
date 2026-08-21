@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Upload, Edit2, Trash2, X, Download, Image as ImageIcon, Pin, PinOff, Reply, MessageSquare, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient, getSupabaseCredentials } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { AdminBadge, isAdminName, DeveloperBadge, isDeveloperName, GuestBadge } from './AdminBadge';
+import { SectionHeader } from './SectionHeader';
 
 
 interface Comment {
@@ -594,24 +595,16 @@ export const CommentSection: React.FC = () => {
   return (
     <section id="comments" className="py-20 relative bg-slate-50/50 dark:bg-slate-950/60 border-t border-slate-200/80 dark:border-slate-800/80">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-10 sm:mb-12"
-        >
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E195AB]/10 text-[#E195AB] border border-[#E195AB]/25 text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest mb-3">
-            <Send className="w-3.5 h-3.5" />
-            <span>Guestbook</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
-            Leave a Comment
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 font-sans text-xs sm:text-sm mt-2 max-w-md mx-auto leading-relaxed">
-            Share your thoughts, suggestions, or just say hello!
-          </p>
-        </motion.div>
+        <SectionHeader
+          icon={<Send className="w-3.5 h-3.5" />}
+          badgeText="Guestbook"
+          title={
+            <>
+              Community <span className="text-[#E195AB]">Guestbook</span>
+            </>
+          }
+          subtitle="Share your thoughts, suggestions, or just say hello to Encore and the community!"
+        />
 
         {/* Comment Form with Double Bezel Architecture */}
         <motion.div

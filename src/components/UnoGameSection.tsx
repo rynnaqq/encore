@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { Copy, Check, Users, ArrowRight, Sparkles, AlertCircle, User, Plus, Clock } from 'lucide-react';
@@ -726,66 +726,69 @@ export const UnoGameSection: React.FC = () => {
     }
 
     return (
-      <div id="uno" className="min-h-screen pt-28 sm:pt-32 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
+      <div id="uno" className="min-h-screen pt-24 sm:pt-28 pb-12 sm:pb-16 flex flex-col justify-center items-center px-4 max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-[#FFCCE1] dark:border-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full mx-auto text-center"
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="p-1.5 sm:p-2 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-100/60 dark:bg-slate-900/40 shadow-xl max-w-md w-full mx-auto"
         >
-          {/* Authentic UNO Badge */}
-          <div className="w-20 h-20 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-5 transform -rotate-6 border-4 border-[#FFF5D7] dark:border-slate-800 shadow-lg">
-            <span className="text-[#FFF5D7] font-black text-3xl tracking-tighter drop-shadow">UNO</span>
-          </div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">UNO Multiplayer</h2>
-          <p className="text-slate-600 dark:text-slate-400 text-xs mb-6">Bermain kartu UNO bersama teman secara real-time</p>
-          
-          {errorMsg && (
-             <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold mb-4">
-               {errorMsg}
-             </div>
-          )}
-          
-          <div className="mb-4 text-left">
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Nama Pemain</label>
-            <input
-              type="text"
-              value={playerName}
-              disabled
-              readOnly
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-400 cursor-not-allowed outline-none text-sm"
-            />
-          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-[calc(1.5rem-0.375rem)] p-6 sm:p-8 border border-slate-200/60 dark:border-slate-800 text-center">
+            {/* Authentic UNO Badge */}
+            <div className="w-16 h-16 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#E195AB]/25">
+              <span className="text-white font-black text-2xl tracking-tighter drop-shadow">UNO</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mb-1 tracking-tight">UNO Multiplayer</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mb-6">Bermain kartu UNO bersama teman secara real-time</p>
+            
+            {errorMsg && (
+               <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold mb-4 text-center">
+                 {errorMsg}
+               </div>
+            )}
+            
+            <div className="mb-4 text-left">
+              <label className="block text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Nama Pemain</label>
+              <input
+                type="text"
+                value={playerName}
+                disabled
+                readOnly
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-400 cursor-not-allowed outline-none text-xs sm:text-sm"
+              />
+            </div>
 
-          <button
-            onClick={handleCreateRoom}
-            className="w-full bg-[#E195AB] hover:bg-[#d88299] text-white font-bold py-3.5 rounded-xl mb-4 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Buat Room Baru</span>
-          </button>
-          
-          <div className="relative flex items-center py-2 mb-4">
-            <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-            <span className="flex-shrink-0 mx-4 text-slate-400 font-bold text-xs uppercase tracking-wider">atau</span>
-            <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Kode Room"
-              value={joinRoomId}
-              onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100 uppercase outline-none focus:border-[#E195AB] text-sm"
-              maxLength={6}
-            />
             <button
-              onClick={handleJoinRoom}
-              disabled={joinRoomId.trim().length < 4}
-              className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 text-white font-bold px-6 rounded-xl transition-all cursor-pointer text-sm shadow-sm whitespace-nowrap"
+              onClick={handleCreateRoom}
+              className="w-full bg-[#E195AB] hover:bg-[#d68097] text-white font-bold py-3 rounded-xl mb-4 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md text-xs sm:text-sm active:scale-[0.98]"
             >
-              Masuk
+              <Sparkles className="w-4 h-4" />
+              <span>Buat Room Baru</span>
             </button>
+            
+            <div className="relative flex items-center py-1 mb-4">
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+              <span className="flex-shrink-0 mx-3 text-slate-400 font-mono font-bold text-[10px] uppercase tracking-widest">atau gabung</span>
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Kode Room"
+                value={joinRoomId}
+                onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-100 uppercase outline-none focus:border-[#E195AB] text-xs sm:text-sm"
+                maxLength={6}
+              />
+              <button
+                onClick={handleJoinRoom}
+                disabled={joinRoomId.trim().length < 4}
+                className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 text-white font-bold px-5 rounded-xl transition-all cursor-pointer text-xs sm:text-sm shadow-sm whitespace-nowrap active:scale-[0.98]"
+              >
+                Masuk
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -881,115 +884,118 @@ export const UnoGameSection: React.FC = () => {
     return (
       <div id="uno" className="min-h-screen pt-24 sm:pt-28 pb-12 px-4 max-w-xl mx-auto flex flex-col justify-center">
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border-2 border-[#FFCCE1] dark:border-slate-800 shadow-2xl text-center space-y-5"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="p-1.5 sm:p-2 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-100/60 dark:bg-slate-900/40 shadow-xl text-center"
         >
-          {/* Logo & Header */}
-          <div className="w-16 h-16 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-2 transform -rotate-3 border-2 border-white shadow-md">
-            <span className="text-[#FFF5D7] font-black text-2xl tracking-tighter drop-shadow">UNO</span>
-          </div>
-          <div>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">Lobby UNO Multiplayer</h3>
-            <p className="text-slate-600 dark:text-slate-400 text-xs font-medium">Menunggu pemain lain untuk bergabung ke dalam room</p>
-          </div>
-
-          {errorMsg && (
-            <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold">
-              {errorMsg}
+          <div className="bg-white dark:bg-slate-900 rounded-[calc(1.5rem-0.375rem)] p-6 sm:p-8 border border-slate-200/60 dark:border-slate-800 space-y-5">
+            {/* Logo & Header */}
+            <div className="w-14 h-14 bg-[#E195AB] rounded-2xl flex items-center justify-center mx-auto shadow-md shadow-[#E195AB]/25">
+              <span className="text-white font-black text-xl tracking-tighter drop-shadow">UNO</span>
             </div>
-          )}
-
-          {/* Room Code Card */}
-          <div className="bg-[#FFF5D7] dark:bg-slate-800 p-4 rounded-2xl border border-[#FFCCE1] dark:border-slate-700 text-center shadow-sm">
-            <p className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Kode Room</p>
-            <div className="flex items-center justify-center gap-2.5">
-              <span className="text-3xl font-mono font-black tracking-wider text-[#E195AB] dark:text-[#FFCCE1] select-all">{gameState.roomId}</span>
-              <button
-                onClick={handleCopyRoomCode}
-                className="p-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
-                title="Salin Kode Room"
-              >
-                {copiedRoomCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              </button>
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mb-1 tracking-tight">Lobby UNO Multiplayer</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Menunggu pemain lain untuk bergabung ke dalam room</p>
             </div>
-            {/* 5-minute Lobby Inactivity Countdown */}
-            <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 dark:border-amber-400/20 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Batas waktu lobby: {Math.floor(lobbyTimeLeft / 60)}:{(lobbyTimeLeft % 60).toString().padStart(2, '0')}</span>
-            </div>
-          </div>
 
-          {/* Player List */}
-          <div className="text-left">
-            <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 mb-2.5 uppercase tracking-wider">
-              Daftar Pemain ({gameState.players.length}/4)
-            </h4>
-            <div className="space-y-2">
-              {gameState.players.map((p) => (
-                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-[#FFCCE1]/60 dark:border-slate-800 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-[#E195AB] flex items-center justify-center text-white shrink-0 shadow-xs">
-                    <User className="w-4 h-4 text-[#FFF5D7]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
-                      <span className="truncate">{p.name} {p.id === localPlayerId && '(Anda)'}</span>
-                      {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
-                    </div>
-                  </div>
-                  {p.id === gameState.hostId && (
-                    <span className="text-[10px] font-mono font-bold text-[#E195AB] dark:text-[#FFCCE1] bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded-md shrink-0">
-                      Host
-                    </span>
-                  )}
-                </div>
-              ))}
-              {gameState.players.length < 4 && (
-                <div className="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400">
-                  <div className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-                    <Plus className="w-4 h-4" />
-                  </div>
-                  <div className="font-medium text-xs">Menunggu pemain lain...</div>
-                </div>
-              )}
-            </div>
-          </div>
+            {errorMsg && (
+              <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold">
+                {errorMsg}
+              </div>
+            )}
 
-          {/* Action Buttons */}
-          {effectiveIsHost ? (
-            <div className="pt-2 space-y-2.5">
-              {gameState.players.length >= 2 ? (
+            {/* Room Code Card */}
+            <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 text-center shadow-xs">
+              <p className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Kode Room</p>
+              <div className="flex items-center justify-center gap-2.5">
+                <span className="text-2xl sm:text-3xl font-mono font-black tracking-wider text-[#E195AB] select-all">{gameState.roomId}</span>
                 <button
-                  onClick={handleStartGame}
-                  className="w-full py-3.5 rounded-xl bg-[#E195AB] text-white font-black text-base hover:bg-[#d88299] transition-all cursor-pointer shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+                  onClick={handleCopyRoomCode}
+                  className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  title="Salin Kode Room"
                 >
-                  MULAI PERMAINAN
+                  {copiedRoomCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                 </button>
-              ) : (
-                <p className="text-amber-700 dark:text-amber-300 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs">
-                  Minimal 2 pemain untuk memulai permainan.
+              </div>
+              {/* 5-minute Lobby Inactivity Countdown */}
+              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 text-[11px] font-mono font-bold">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Batas waktu: {Math.floor(lobbyTimeLeft / 60)}:{(lobbyTimeLeft % 60).toString().padStart(2, '0')}</span>
+              </div>
+            </div>
+
+            {/* Player List */}
+            <div className="text-left">
+              <h4 className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wider">
+                Daftar Pemain ({gameState.players.length}/4)
+              </h4>
+              <div className="space-y-2">
+                {gameState.players.map((p) => (
+                  <div key={p.id} className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+                    <div className="w-7 h-7 rounded-lg bg-[#E195AB] flex items-center justify-center text-white shrink-0 shadow-xs">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                        <span className="truncate">{p.name} {p.id === localPlayerId && '(Anda)'}</span>
+                        {isDeveloperName(p.name) && <DeveloperBadge />}{!isDeveloperName(p.name) && isAdminName(p.name) && <AdminBadge />}
+                      </div>
+                    </div>
+                    {p.id === gameState.hostId && (
+                      <span className="text-[10px] font-mono font-bold text-[#E195AB] bg-[#E195AB]/10 border border-[#E195AB]/20 px-2 py-0.5 rounded-md shrink-0">
+                        Host
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {gameState.players.length < 4 && (
+                  <div className="flex items-center gap-2.5 p-2.5 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400">
+                    <div className="w-7 h-7 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                      <Plus className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="font-medium text-xs">Menunggu pemain lain...</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            {effectiveIsHost ? (
+              <div className="pt-2 space-y-2">
+                {gameState.players.length >= 2 ? (
+                  <button
+                    onClick={handleStartGame}
+                    className="w-full py-3 rounded-xl bg-[#E195AB] hover:bg-[#d68097] text-white font-bold text-sm transition-all cursor-pointer shadow-md active:scale-[0.98]"
+                  >
+                    MULAI PERMAINAN
+                  </button>
+                ) : (
+                  <p className="text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 px-3.5 py-2 rounded-xl text-xs">
+                    Minimal 2 pemain untuk memulai permainan.
+                  </p>
+                )}
+                <button
+                  onClick={handleLeaveRoom}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                >
+                  Keluar dari Room
+                </button>
+              </div>
+            ) : (
+              <div className="pt-2 space-y-2.5 text-center">
+                <p className="text-slate-600 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 rounded-xl text-xs animate-pulse">
+                  Menunggu host memulai permainan...
                 </p>
-              )}
-              <button
-                onClick={handleLeaveRoom}
-                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
-              >
-                Keluar dari Room
-              </button>
-            </div>
-          ) : (
-            <div className="pt-2 space-y-2.5 text-center">
-              <p className="text-slate-600 dark:text-slate-400 font-bold bg-[#FFF5D7] dark:bg-slate-800 border border-[#FFCCE1] dark:border-slate-700 px-4 py-2.5 rounded-xl text-xs animate-pulse">
-                Menunggu host memulai permainan...
-              </p>
-              <button
-                onClick={handleLeaveRoom}
-                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
-              >
-                Keluar dari Room
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={handleLeaveRoom}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                >
+                  Keluar dari Room
+                </button>
+              </div>
+            )}
+          </div>
         </motion.div>
       </div>
     );
@@ -1001,19 +1007,19 @@ export const UnoGameSection: React.FC = () => {
 
   return (
     <div id="uno" className="max-w-7xl mx-auto p-2 md:p-4 pt-24 sm:pt-28 md:pt-32 pb-4 md:pb-8 flex flex-col min-h-screen">
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border-2 border-[#FFCCE1] dark:border-slate-800 flex flex-col flex-1">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-slate-200/80 dark:border-slate-800 flex flex-col flex-1">
         
         {/* Header */}
-        <div className="bg-[#FFF5D7] dark:bg-slate-800 p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-[#FFCCE1] dark:border-slate-700 shrink-0">
+        <div className="bg-slate-50/90 dark:bg-slate-800/90 p-3 md:p-4 px-4 md:px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#E195AB] rounded-xl flex items-center justify-center transform -rotate-3 border-2 border-white shadow-sm">
-              <span className="text-[#FFF5D7] font-black text-xs">UNO</span>
+            <div className="w-8 h-8 bg-[#E195AB] rounded-xl flex items-center justify-center shadow-xs">
+              <span className="text-white font-black text-xs">UNO</span>
             </div>
             <div>
-              <h2 className="text-slate-800 dark:text-slate-100 font-extrabold text-base md:text-lg leading-tight">UNO Multiplayer</h2>
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-xs font-medium">
-                <span>Kode Room:</span>
-                <span className="bg-white dark:bg-slate-900 border border-[#FFCCE1] dark:border-slate-700 px-2 py-0.5 rounded font-mono text-[#E195AB] dark:text-[#FFCCE1] font-bold select-all shadow-2xs">{gameState.roomId}</span>
+              <h2 className="text-slate-800 dark:text-slate-100 font-bold text-sm md:text-base leading-tight">UNO Multiplayer</h2>
+              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] font-mono">
+                <span>Room:</span>
+                <span className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-mono text-[#E195AB] font-bold select-all shadow-2xs">{gameState.roomId}</span>
                 <button
                   onClick={handleCopyRoomCode}
                   className="p-1 hover:text-[#E195AB] transition-colors cursor-pointer"
@@ -1026,7 +1032,7 @@ export const UnoGameSection: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
-             <button onClick={handleLeaveRoom} className="px-3.5 py-1.5 bg-[#E195AB]/10 hover:bg-[#E195AB]/20 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#E195AB] dark:text-[#FFCCE1] rounded-lg font-bold text-xs border border-[#FFCCE1] dark:border-slate-700 transition-colors cursor-pointer">
+             <button onClick={handleLeaveRoom} className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-700/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl font-bold text-xs border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer">
                Keluar
              </button>
           </div>
@@ -1035,7 +1041,7 @@ export const UnoGameSection: React.FC = () => {
         {/* Game Area */}
         <div className="flex flex-col lg:flex-row flex-1 min-h-0">
           {/* Main Felt Board */}
-          <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-[#FFF5D7]/30 dark:bg-slate-950/50 border-b lg:border-b-0 border-[#FFCCE1] dark:border-slate-800 overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
+          <div className="flex-1 p-3 md:p-6 flex flex-col justify-between relative bg-slate-50/40 dark:bg-slate-950/50 border-b lg:border-b-0 border-slate-200/80 dark:border-slate-800 overflow-y-auto lg:overflow-hidden min-h-[500px] lg:min-h-0 shadow-inner">
             {gameState.status === 'finished' && (
               <VictoryModal
                 isOpen={true}

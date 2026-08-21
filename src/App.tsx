@@ -12,7 +12,7 @@ import { Footer } from './components/Footer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginModal } from './components/LoginModal';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Lazy load heavy game sections and pages for optimal performance
 const FishingGameSection = lazy(() =>
@@ -264,13 +264,7 @@ function MainLayout({ isLoading }: { isLoading: boolean }) {
     setIsAboutModalOpen(false);
   };
 
-  // Redirect to chess section if room code is in URL
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.has('room') && location.pathname !== '/chess') {
-      window.location.href = `/chess${location.search}`;
-    }
-  }, [location]);
+
 
   // Active section observer using IntersectionObserver (zero layout thrashing & 60fps)
   useEffect(() => {

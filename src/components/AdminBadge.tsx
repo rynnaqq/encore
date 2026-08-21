@@ -20,6 +20,16 @@ export const isAdminName = (name?: string | null): boolean => {
   return adminUsernamesSet.has(clean) || clean === 'adminkawaaii';
 };
 
+export const registerDeveloperUsername = (username?: string | null) => {
+  if (username) {
+    developerUsernamesSet.add(username.trim().toLowerCase());
+  }
+};
+
+export const registerDeveloperUsernames = (usernames: string[]) => {
+  usernames.forEach((u) => registerDeveloperUsername(u));
+};
+
 export const isDeveloperName = (name?: string | null): boolean => {
   if (!name) return false;
   const clean = name.trim().toLowerCase();

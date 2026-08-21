@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Gamepad2, AlertTriangle, Bug, ChevronRight, MessageSquareCode } from 'lucide-react';
 
 interface BetaNoticeModalProps {
@@ -15,7 +15,7 @@ export const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ isOpen, onClos
       type: 'game',
       title: 'Tahap Uji Coba & Pengembangan Aktif',
       items: [
-        'Game (Pixel Fishing Pro, Chess, Snake & Ladders, UNO) saat ini berada dalam tahap Early Access Beta.',
+        'Game (Pixel Fishing Pro, Snake & Ladders, UNO) saat ini berada dalam tahap Early Access Beta.',
         'Fitur multiplayer, leaderboard, dan sinkronisasi real-time sedang dalam pengujian berkala.',
         'Performa game dioptimalkan secara terus-menerus untuk semua jenis perangkat.',
       ],

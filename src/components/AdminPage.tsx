@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getSupabaseClient, getSupabaseCredentials } from '../lib/supabaseClient';
-import { Trash2, Users, MessageSquare, Shield, KeyRound, UserPlus, Search, LogOut, CheckCircle2, AlertCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Users, MessageSquare, Shield, KeyRound, UserPlus, Search, LogOut, CheckCircle2, AlertCircle, RefreshCw, Eye, EyeOff, Sparkles, Activity } from 'lucide-react';
 import { useAuth, User } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Comment {
   id: string;
@@ -18,7 +19,7 @@ export const AdminPage: React.FC = () => {
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [activeTab, setActiveTab] = useState<'users' | 'comments' | 'system'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'comments'>('users');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Add user modal / state
@@ -205,120 +206,175 @@ export const AdminPage: React.FC = () => {
     u.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const adminCount = users.filter(u => u.role === 'admin').length;
+
   if (!isAdminAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 pt-24">
-        <form onSubmit={handleAdminLogin} className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 max-w-md w-full">
-          <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
-            <Shield className="w-6 h-6" />
+      <div className="min-h-screen flex items-center justify-center p-4 pt-24 pb-16 relative overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="relative max-w-md w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl z-10"
+        >
+          <div className="w-14 h-14 bg-[#E195AB]/10 text-[#E195AB] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#E195AB]/25">
+            <Shield className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black text-white mb-1 text-center">Universal Admin Login</h2>
-          <p className="text-slate-400 text-xs text-center mb-6">
-            Masukan password admin untuk mengakses kontrol universal
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1 text-center tracking-tight">Admin Portal</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-xs text-center mb-6 leading-relaxed">
+            Masukkan password master admin untuk mengakses dashboard
           </p>
           
-          <div className="mb-6 relative">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-              Password Admin
-            </label>
-            <div className="relative">
-              <input
-                type={showAdminPassword ? "text" : "password"}
-                required
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                className="w-full pl-4 pr-12 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all text-sm"
-                placeholder="Masukkan password admin"
-              />
-              <button
-                type="button"
-                onClick={() => setShowAdminPassword(!showAdminPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-              >
-                {showAdminPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider font-mono">
+                Password Admin
+              </label>
+              <div className="relative">
+                <input
+                  type={showAdminPassword ? "text" : "password"}
+                  required
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full pl-4 pr-12 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:border-[#E195AB] focus:ring-2 focus:ring-[#E195AB]/20 outline-none transition-all text-sm"
+                  placeholder="Masukkan password admin"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminPassword(!showAdminPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                >
+                  {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white font-black hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/30 text-sm"
-          >
-            Masuk Ke Dashboard Admin
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-2xl bg-[#E195AB] hover:bg-[#d68097] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-[0.98]"
+            >
+              Masuk Ke Dashboard Admin
+            </button>
+          </form>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-slate-900 p-6 rounded-3xl border border-slate-800">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/30 shrink-0">
-              <Shield className="w-6 h-6" />
+    <div className="min-h-screen pt-24 sm:pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-6xl mx-auto space-y-6">
+        
+        {/* Header Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="p-1.5 sm:p-2 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-100/60 dark:bg-slate-900/40 shadow-xs"
+        >
+          <div className="p-5 sm:p-6 rounded-[calc(1.5rem-0.375rem)] bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#E195AB]/10 text-[#E195AB] border border-[#E195AB]/25 flex items-center justify-center shrink-0">
+                <Shield className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Admin Dashboard</h1>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#E195AB]/10 text-[#E195AB] border border-[#E195AB]/20 uppercase">
+                    Root
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-sans">
+                  Manajemen akun pemain, moderasi komentar, dan pemantauan sistem
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-white">Universal Admin Dashboard</h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Kelola User, Game State, dan Komentar untuk Chess, Snake & Ladders, dan UNO
-              </p>
+            
+            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+              <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                {currentUser.username}
+              </span>
+              <button
+                onClick={logout}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Logout
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Admin: {currentUser.username}
-            </span>
-            <button
-              onClick={logout}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-2 border border-slate-700 transition-colors"
-            >
-              <LogOut className="w-4 h-4" /> Logout
-            </button>
+        </motion.div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#E195AB]/10 text-[#E195AB] flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{users.length}</div>
+              <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Akun</div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{adminCount}</div>
+              <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Admin Role</div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{comments.length}</div>
+              <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Komentar Aktif</div>
+            </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3">
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-4 sm:px-5 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'users'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-[#E195AB] text-white shadow-xs'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-slate-800'
             }`}
           >
             <Users className="w-4 h-4" /> Kelola User ({users.length})
           </button>
           <button
             onClick={() => setActiveTab('comments')}
-            className={`px-4 sm:px-5 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'comments'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-[#E195AB] text-white shadow-xs'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-slate-800'
             }`}
           >
-            <MessageSquare className="w-4 h-4" /> Kelola Komentar ({comments.length})
+            <MessageSquare className="w-4 h-4" /> Moderasi Komentar ({comments.length})
           </button>
         </div>
 
         {/* TAB 1: User Management */}
         {activeTab === 'users' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Create New User Box */}
-            <div className="bg-slate-900 p-4 sm:p-6 rounded-3xl border border-slate-800 h-fit">
-              <h3 className="text-base font-black text-white mb-4 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-400" /> Tambah User Baru
+            <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+              <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2 tracking-tight">
+                <UserPlus className="w-4 h-4 text-[#E195AB]" /> Tambah User Baru
               </h3>
 
               {userActionMsg && (
                 <div
                   className={`p-3 rounded-2xl text-xs font-bold mb-4 flex items-center gap-2 ${
                     userActionMsg.type === 'success'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
+                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25'
                   }`}
                 >
                   {userActionMsg.type === 'success' ? (
@@ -330,9 +386,9 @@ export const AdminPage: React.FC = () => {
                 </div>
               )}
 
-              <form onSubmit={handleCreateUser} className="space-y-4">
+              <form onSubmit={handleCreateUser} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 font-mono">
                     Username
                   </label>
                   <input
@@ -341,12 +397,12 @@ export const AdminPage: React.FC = () => {
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
                     placeholder="Contoh: player_master"
-                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold focus:border-[#E195AB] outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 font-mono">
                     Password
                   </label>
                   <div className="relative">
@@ -356,12 +412,12 @@ export const AdminPage: React.FC = () => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Masukkan password"
-                      className="w-full pl-4 pr-12 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                      className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold focus:border-[#E195AB] outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                     >
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -369,13 +425,13 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 font-mono">
                     Role Akun
                   </label>
                   <select
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value as 'user' | 'admin')}
-                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-bold focus:border-indigo-500 outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold focus:border-[#E195AB] outline-none"
                   >
                     <option value="user">User (Pemain)</option>
                     <option value="admin">Admin (Akses Penuh)</option>
@@ -384,7 +440,7 @@ export const AdminPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/30 transition-all mt-2 cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-[#E195AB] hover:bg-[#d68097] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all mt-2 cursor-pointer active:scale-[0.98]"
                 >
                   + Tambah Akun
                 </button>
@@ -392,71 +448,71 @@ export const AdminPage: React.FC = () => {
             </div>
 
             {/* Users List */}
-            <div className="lg:col-span-2 bg-slate-900 p-4 sm:p-6 rounded-3xl border border-slate-800">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <h3 className="text-base font-black text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-indigo-400" /> Daftar Pengguna Terdaftar
+            <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3.5 mb-5">
+                <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 tracking-tight">
+                  <Users className="w-4 h-4 text-[#E195AB]" /> Daftar Pengguna Terdaftar
                 </h3>
 
                 <div className="relative w-full sm:w-64">
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari username..."
-                    className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-bold text-white focus:border-indigo-500 outline-none"
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-[#E195AB] outline-none"
                   />
                 </div>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-300 min-w-[480px]">
+                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300 min-w-[480px]">
                   <thead>
-                    <tr className="border-b border-slate-800 text-xs font-bold uppercase text-slate-500">
-                      <th className="py-3 px-3">Username</th>
-                      <th className="py-3 px-3">Role</th>
-                      <th className="py-3 px-3">Terdaftar</th>
-                      <th className="py-3 px-3 text-right">Aksi</th>
+                    <tr className="border-b border-slate-200/80 dark:border-slate-800 text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400">
+                      <th className="py-2.5 px-3">Username</th>
+                      <th className="py-2.5 px-3">Role</th>
+                      <th className="py-2.5 px-3">Terdaftar</th>
+                      <th className="py-2.5 px-3 text-right">Aksi</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     {filteredUsers.map((u) => (
-                      <tr key={u.username} className="hover:bg-slate-800/40">
-                        <td className="py-3.5 px-3 font-bold text-white flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-black text-xs flex items-center justify-center border border-indigo-500/30">
+                      <tr key={u.username} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3 px-3 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-[#E195AB]/15 text-[#E195AB] font-mono font-bold text-xs flex items-center justify-center border border-[#E195AB]/25">
                             {u.username.substring(0, 2).toUpperCase()}
                           </div>
                           <span>{u.username}</span>
                         </td>
-                        <td className="py-3.5 px-3">
+                        <td className="py-3 px-3">
                           <select
                             value={u.role}
                             onChange={(e) => updateUserRole(u.username, e.target.value as 'user' | 'admin')}
-                            className={`px-2.5 py-1 rounded-xl font-bold text-xs border outline-none ${
+                            className={`px-2 py-0.5 rounded-lg font-mono font-bold text-[11px] border outline-none ${
                               u.role === 'admin'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                                ? 'bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                             }`}
                           >
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                           </select>
                         </td>
-                        <td className="py-3.5 px-3 text-xs text-slate-400">
+                        <td className="py-3 px-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                           {new Date(u.createdAt).toLocaleDateString('id-ID')}
                         </td>
-                        <td className="py-3.5 px-3 text-right">
+                        <td className="py-3 px-3 text-right">
                           {u.username.toLowerCase() !== 'adminkawaaii' ? (
                             <button
                               onClick={() => handleDeleteUserClick(u.username)}
-                              className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-colors"
+                              className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                               title="Hapus User"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           ) : (
-                            <span className="text-[10px] text-slate-500 font-bold uppercase">Utama</span>
+                            <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">Master</span>
                           )}
                         </td>
                       </tr>
@@ -470,46 +526,46 @@ export const AdminPage: React.FC = () => {
 
         {/* TAB 2: Comments Management */}
         {activeTab === 'comments' && (
-          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-base font-black text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-indigo-400" /> Komentar Pengguna
+          <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 tracking-tight">
+                <MessageSquare className="w-4 h-4 text-[#E195AB]" /> Komentar Pengguna
               </h3>
 
               <button
                 onClick={fetchComments}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 border border-slate-700"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoadingComments ? 'animate-spin' : ''}`} /> Refresh
               </button>
             </div>
 
             {isLoadingComments ? (
-              <p className="text-slate-500 text-sm py-8 text-center">Memuat komentar...</p>
+              <p className="text-slate-500 text-xs py-8 text-center font-mono">Memuat komentar...</p>
             ) : comments.length === 0 ? (
-              <p className="text-slate-500 text-sm py-8 text-center">Belum ada komentar pengguna.</p>
+              <p className="text-slate-500 text-xs py-8 text-center font-mono">Belum ada komentar pengguna.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {comments.map((comment) => (
-                  <div key={comment.id} className="p-4 border border-slate-800 bg-slate-950/60 rounded-2xl flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm">{comment.username}</span>
-                        <span className="text-[10px] text-slate-500 font-medium">
+                  <div key={comment.id} className="p-4 border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-800 dark:text-slate-100 text-xs">{comment.username}</span>
+                        <span className="text-[10px] font-mono text-slate-400">
                           {new Date(comment.timestamp).toLocaleString('id-ID')}
                         </span>
                       </div>
-                      <p className="text-slate-300 text-xs mt-2 leading-relaxed">{comment.text}</p>
+                      <p className="text-slate-600 dark:text-slate-300 text-xs mt-1.5 leading-relaxed break-words">{comment.text}</p>
                       {comment.photoBase64 && (
-                        <img src={comment.photoBase64} alt="Attachment" className="max-h-28 mt-3 rounded-xl border border-slate-800 object-cover" />
+                        <img src={comment.photoBase64} alt="Attachment" className="max-h-24 mt-2.5 rounded-xl border border-slate-200 dark:border-slate-700 object-cover" />
                       )}
                     </div>
                     <button
                       onClick={() => handleDeleteComment(comment.id)}
-                      className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-colors shrink-0"
+                      className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors shrink-0 cursor-pointer"
                       title="Hapus Komentar"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -521,3 +577,4 @@ export const AdminPage: React.FC = () => {
     </div>
   );
 };
+
