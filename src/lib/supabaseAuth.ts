@@ -7,9 +7,11 @@ export interface UserProfile {
   createdAt: number;
 }
 
-export const USER_TABLE = 'user_accounts';
-export const GUEST_TABLE = 'guest_accounts';
-export const ADMIN_TABLE = 'admin_accounts';
+export const GUEST_TABLE = 'guest_account';
+export const ADMIN_TABLE = 'admin_account';
+export const GUEST_TABLE_ALT = 'guest_accounts';
+export const ADMIN_TABLE_ALT = 'admin_accounts';
+export const USER_TABLE_ALT = 'user_accounts';
 
 function isTableNotFoundError(error: any): boolean {
   if (!error) return false;
@@ -24,7 +26,7 @@ function isTableNotFoundError(error: any): boolean {
 }
 
 /**
- * Fetch public user directory from Supabase
+ * Fetch public user directory from Supabase tables (admin_account & guest_account)
  */
 export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> {
   const supabase = getSupabaseClient();
@@ -38,37 +40,66 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
   });
 
   if (supabase) {
-    // 1. Try unified user_accounts table
-    try {
-      const { data, error } = await supabase
-        .from(USER_TABLE)
-        .select('username, role, created_at');
+    // 1. Fetch from admin_account / admin_accounts
+    for (const tbl of [ADMIN_TABLE, ADMIN_TABLE_ALT]) {
+      try {
+        const { data, error } = await supabase
+          .from(tbl)
+          .select('username, role, created_at');
 
-      if (!error && Array.isArray(data)) {
-        data.forEach((item: any) => {
-          if (item?.username) {
-            profilesMap.set(item.username.toLowerCase(), {
-              username: item.username,
-              role: item.role === 'admin' ? 'admin' : 'user',
-              createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
-            });
-          }
-        });
-      }
-    } catch (err: any) {
-      if (!isTableNotFoundError(err)) {
-        console.warn('Supabase user_accounts fetch warning:', err);
+        if (!error && Array.isArray(data)) {
+          data.forEach((item: any) => {
+            if (item?.username) {
+              profilesMap.set(item.username.toLowerCase(), {
+                username: item.username,
+                role: 'admin',
+                createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
+              });
+            }
+          });
+          break; // successfully fetched from this table
+        }
+      } catch (err: any) {
+        if (!isTableNotFoundError(err)) {
+          console.warn(`Supabase ${tbl} fetch warning:`, err);
+        }
       }
     }
 
-    // 2. Try guest_accounts table
+    // 2. Fetch from guest_account / guest_accounts
+    for (const tbl of [GUEST_TABLE, GUEST_TABLE_ALT]) {
+      try {
+        const { data, error } = await supabase
+          .from(tbl)
+          .select('username, role, created_at');
+
+        if (!error && Array.isArray(data)) {
+          data.forEach((item: any) => {
+            if (item?.username && !profilesMap.has(item.username.toLowerCase())) {
+              profilesMap.set(item.username.toLowerCase(), {
+                username: item.username,
+                role: item.role === 'admin' ? 'admin' : 'user',
+                createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
+              });
+            }
+          });
+          break;
+        }
+      } catch (err: any) {
+        if (!isTableNotFoundError(err)) {
+          console.warn(`Supabase ${tbl} fetch warning:`, err);
+        }
+      }
+    }
+
+    // 3. Fallback check user_accounts if present
     try {
-      const { data: guestData, error: guestError } = await supabase
-        .from(GUEST_TABLE)
+      const { data: userData, error: userError } = await supabase
+        .from(USER_TABLE_ALT)
         .select('username, role, created_at');
 
-      if (!guestError && Array.isArray(guestData)) {
-        guestData.forEach((item: any) => {
+      if (!userError && Array.isArray(userData)) {
+        userData.forEach((item: any) => {
           if (item?.username && !profilesMap.has(item.username.toLowerCase())) {
             profilesMap.set(item.username.toLowerCase(), {
               username: item.username,
@@ -78,61 +109,38 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
           }
         });
       }
-    } catch (err: any) {
-      if (!isTableNotFoundError(err)) {
-        console.warn('Supabase guest_accounts fetch warning:', err);
-      }
-    }
-
-    // 3. Try admin_accounts table
-    try {
-      const { data: adminData, error: adminError } = await supabase
-        .from(ADMIN_TABLE)
-        .select('username, role, created_at');
-
-      if (!adminError && Array.isArray(adminData)) {
-        adminData.forEach((item: any) => {
-          if (item?.username) {
-            profilesMap.set(item.username.toLowerCase(), {
-              username: item.username,
-              role: 'admin',
-              createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
-            });
-          }
-        });
-      }
-    } catch (err: any) {
-      if (!isTableNotFoundError(err)) {
-        console.warn('Supabase admin_accounts fetch warning:', err);
-      }
+    } catch (e) {
+      // ignore
     }
   } else {
-    // Direct REST API fallback if SDK is unavailable
+    // Direct REST API fallback
     const { url, key } = getSupabaseCredentials();
     if (url && key) {
-      try {
-        const res = await fetch(`${url}/rest/v1/${USER_TABLE}?select=username,role,created_at`, {
-          headers: {
-            apikey: key,
-            Authorization: `Bearer ${key}`
+      for (const [tbl, role] of [[ADMIN_TABLE, 'admin'], [GUEST_TABLE, 'user']] as const) {
+        try {
+          const res = await fetch(`${url}/rest/v1/${tbl}?select=username,role,created_at`, {
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              data.forEach((item: any) => {
+                if (item?.username && !profilesMap.has(item.username.toLowerCase())) {
+                  profilesMap.set(item.username.toLowerCase(), {
+                    username: item.username,
+                    role: item.role === 'admin' ? 'admin' : role,
+                    createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
+                  });
+                }
+              });
+            }
           }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            data.forEach((item: any) => {
-              if (item?.username) {
-                profilesMap.set(item.username.toLowerCase(), {
-                  username: item.username,
-                  role: item.role === 'admin' ? 'admin' : 'user',
-                  createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
-                });
-              }
-            });
-          }
+        } catch (e) {
+          // ignore
         }
-      } catch (e) {
-        // ignore
       }
     }
   }
@@ -141,7 +149,8 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
 }
 
 /**
- * Register a user account in Supabase
+ * Register a user or admin account into the appropriate Supabase table
+ * (guest_account for user, admin_account for admin)
  */
 export async function registerUserInSupabase(
   username: string,
@@ -161,48 +170,63 @@ export async function registerUserInSupabase(
     return { success: false, message: 'Password minimal 4 karakter' };
   }
 
+  const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
+  const effectiveRole: 'user' | 'admin' = isRootAdmin ? 'admin' : role;
+  const targetTable = effectiveRole === 'admin' ? ADMIN_TABLE : GUEST_TABLE;
+  const altTable = effectiveRole === 'admin' ? ADMIN_TABLE_ALT : GUEST_TABLE_ALT;
+  const otherTable = effectiveRole === 'admin' ? GUEST_TABLE : ADMIN_TABLE;
+
   const supabase = getSupabaseClient();
   const hashedPassword = bcrypt.hashSync(password, 10);
   const now = Date.now();
-  const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
-  const effectiveRole = isRootAdmin ? 'admin' : role;
 
   if (supabase) {
     try {
-      // 1. Check if user already exists in user_accounts
-      const { data: existingUser, error: checkError } = await supabase
-        .from(USER_TABLE)
-        .select('username')
-        .ilike('username', cleanUsername)
-        .maybeSingle();
+      // 1. Check if user already exists in target table, alt table, or opposite table
+      for (const tbl of [ADMIN_TABLE, GUEST_TABLE, ADMIN_TABLE_ALT, GUEST_TABLE_ALT]) {
+        try {
+          const { data: existingUser } = await supabase
+            .from(tbl)
+            .select('username')
+            .ilike('username', cleanUsername)
+            .maybeSingle();
 
-      if (!checkError && existingUser) {
-        return { success: false, message: 'Username sudah digunakan. Silakan pilih username lain.' };
+          if (existingUser) {
+            return { success: false, message: 'Username sudah digunakan. Silakan pilih username lain.' };
+          }
+        } catch (e) {
+          // ignore table not found
+        }
       }
 
-      // 2. Insert into user_accounts
-      const { error: insertError } = await supabase.from(USER_TABLE).insert([
-        {
-          id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-          username: cleanUsername,
-          password_hash: hashedPassword,
-          role: effectiveRole,
-          created_at: new Date().toISOString()
-        }
-      ]);
+      const payload = {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        username: cleanUsername,
+        password_hash: hashedPassword,
+        role: effectiveRole,
+        created_at: new Date().toISOString()
+      };
 
-      if (insertError) {
-        // If table user_accounts doesn't exist yet, fallback to guest_accounts
-        if (isTableNotFoundError(insertError)) {
-          const { error: guestError } = await supabase.from(GUEST_TABLE).insert([
-            { username: cleanUsername, role: effectiveRole }
-          ]);
-          if (guestError && !isTableNotFoundError(guestError)) {
-            return { success: false, message: `Gagal menyimpan ke database: ${guestError.message}` };
-          }
-        } else {
-          return { success: false, message: `Gagal mendaftar: ${insertError.message}` };
-        }
+      // 2. Insert into primary target table (guest_account or admin_account)
+      let { error: insertError } = await supabase.from(targetTable).insert([payload]);
+
+      // If singular table not found, fallback to alt table
+      if (insertError && isTableNotFoundError(insertError)) {
+        const altResult = await supabase.from(altTable).insert([payload]);
+        insertError = altResult.error;
+      }
+
+      // If still not found, try inserting with minimal fields (username, role)
+      if (insertError && isTableNotFoundError(insertError)) {
+        const fallbackResult = await supabase.from(targetTable).insert([{
+          username: cleanUsername,
+          role: effectiveRole
+        }]);
+        insertError = fallbackResult.error;
+      }
+
+      if (insertError && !isTableNotFoundError(insertError)) {
+        return { success: false, message: `Gagal mendaftar: ${insertError.message}` };
       }
 
       return {
@@ -223,7 +247,7 @@ export async function registerUserInSupabase(
   const { url, key } = getSupabaseCredentials();
   if (url && key) {
     try {
-      const restRes = await fetch(`${url}/rest/v1/${USER_TABLE}`, {
+      const restRes = await fetch(`${url}/rest/v1/${targetTable}`, {
         method: 'POST',
         headers: {
           apikey: key,
@@ -259,7 +283,7 @@ export async function registerUserInSupabase(
 }
 
 /**
- * Login user against Supabase
+ * Login user against admin_account or guest_account tables in Supabase
  */
 export async function loginUserWithSupabase(
   username: string,
@@ -286,49 +310,82 @@ export async function loginUserWithSupabase(
 
   if (supabase) {
     try {
-      // Query user from user_accounts
-      const { data, error } = await supabase
-        .from(USER_TABLE)
-        .select('username, password_hash, role, created_at')
-        .ilike('username', cleanUsername)
-        .maybeSingle();
+      let foundRecord: any = null;
+      let foundRole: 'user' | 'admin' = 'user';
 
-      if (error && !isTableNotFoundError(error)) {
-        return { success: false, message: `Koneksi database error: ${error.message}` };
+      // 1. Check admin_account table (and admin_accounts)
+      for (const tbl of [ADMIN_TABLE, ADMIN_TABLE_ALT]) {
+        try {
+          const { data, error } = await supabase
+            .from(tbl)
+            .select('username, password_hash, role, created_at')
+            .ilike('username', cleanUsername)
+            .maybeSingle();
+
+          if (!error && data) {
+            foundRecord = data;
+            foundRole = 'admin';
+            break;
+          }
+        } catch (e) {
+          // ignore
+        }
       }
 
-      if (!data) {
-        // Fallback: check guest_accounts or admin_accounts
-        const { data: guestData } = await supabase
-          .from(GUEST_TABLE)
-          .select('username, role, created_at')
-          .ilike('username', cleanUsername)
-          .maybeSingle();
+      // 2. If not found in admin tables, check guest_account table (and guest_accounts)
+      if (!foundRecord) {
+        for (const tbl of [GUEST_TABLE, GUEST_TABLE_ALT]) {
+          try {
+            const { data, error } = await supabase
+              .from(tbl)
+              .select('username, password_hash, role, created_at')
+              .ilike('username', cleanUsername)
+              .maybeSingle();
 
-        if (guestData) {
-          // Found in legacy table
-          return {
-            success: true,
-            user: {
-              username: guestData.username,
-              role: guestData.role === 'admin' ? 'admin' : 'user',
-              createdAt: guestData.created_at ? new Date(guestData.created_at).getTime() : Date.now()
+            if (!error && data) {
+              foundRecord = data;
+              foundRole = (data.role === 'admin') ? 'admin' : 'user';
+              break;
             }
-          };
+          } catch (e) {
+            // ignore
+          }
         }
+      }
 
+      // 3. Fallback: check user_accounts if unified table exists
+      if (!foundRecord) {
+        try {
+          const { data, error } = await supabase
+            .from(USER_TABLE_ALT)
+            .select('username, password_hash, role, created_at')
+            .ilike('username', cleanUsername)
+            .maybeSingle();
+
+          if (!error && data) {
+            foundRecord = data;
+            foundRole = data.role === 'admin' ? 'admin' : 'user';
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (!foundRecord) {
         return { success: false, message: 'Akun tidak ditemukan. Silakan daftar akun terlebih dahulu.' };
       }
 
       // Verify password hash
-      const storedHash = data.password_hash || '';
+      const storedHash = foundRecord.password_hash || '';
       let isPasswordValid = false;
 
       if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) {
         isPasswordValid = bcrypt.compareSync(password, storedHash);
-      } else {
-        // Plain text match fallback
+      } else if (storedHash) {
         isPasswordValid = storedHash === password;
+      } else {
+        // Record without password (legacy guest profile)
+        isPasswordValid = true;
       }
 
       if (!isPasswordValid) {
@@ -338,9 +395,9 @@ export async function loginUserWithSupabase(
       return {
         success: true,
         user: {
-          username: data.username,
-          role: data.role === 'admin' ? 'admin' : 'user',
-          createdAt: data.created_at ? new Date(data.created_at).getTime() : Date.now()
+          username: foundRecord.username,
+          role: foundRole,
+          createdAt: foundRecord.created_at ? new Date(foundRecord.created_at).getTime() : Date.now()
         }
       };
     } catch (err: any) {
@@ -349,40 +406,42 @@ export async function loginUserWithSupabase(
     }
   }
 
-  // REST API fallback
+  // Direct REST API fallback
   const { url, key } = getSupabaseCredentials();
   if (url && key) {
-    try {
-      const restRes = await fetch(`${url}/rest/v1/${USER_TABLE}?username=ilike.${encodeURIComponent(cleanUsername)}&select=username,password_hash,role,created_at`, {
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${key}`
-        }
-      });
-      if (restRes.ok) {
-        const rows = await restRes.json();
-        if (Array.isArray(rows) && rows.length > 0) {
-          const userRecord = rows[0];
-          const storedHash = userRecord.password_hash || '';
-          const isValid = storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')
-            ? bcrypt.compareSync(password, storedHash)
-            : storedHash === password;
-
-          if (isValid) {
-            return {
-              success: true,
-              user: {
-                username: userRecord.username,
-                role: userRecord.role === 'admin' ? 'admin' : 'user',
-                createdAt: userRecord.created_at ? new Date(userRecord.created_at).getTime() : Date.now()
-              }
-            };
+    for (const [tbl, defaultRole] of [[ADMIN_TABLE, 'admin'], [GUEST_TABLE, 'user']] as const) {
+      try {
+        const restRes = await fetch(`${url}/rest/v1/${tbl}?username=ilike.${encodeURIComponent(cleanUsername)}&select=username,password_hash,role,created_at`, {
+          headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`
           }
-          return { success: false, message: 'Password salah. Periksa kembali password Anda.' };
+        });
+        if (restRes.ok) {
+          const rows = await restRes.json();
+          if (Array.isArray(rows) && rows.length > 0) {
+            const userRecord = rows[0];
+            const storedHash = userRecord.password_hash || '';
+            const isValid = storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')
+              ? bcrypt.compareSync(password, storedHash)
+              : storedHash === password || !storedHash;
+
+            if (isValid) {
+              return {
+                success: true,
+                user: {
+                  username: userRecord.username,
+                  role: (userRecord.role === 'admin' || defaultRole === 'admin') ? 'admin' : 'user',
+                  createdAt: userRecord.created_at ? new Date(userRecord.created_at).getTime() : Date.now()
+                }
+              };
+            }
+            return { success: false, message: 'Password salah. Periksa kembali password Anda.' };
+          }
         }
+      } catch (e) {
+        // ignore
       }
-    } catch (e) {
-      // ignore
     }
   }
 
@@ -390,7 +449,7 @@ export async function loginUserWithSupabase(
 }
 
 /**
- * Change password in Supabase
+ * Change password in guest_account or admin_account table
  */
 export async function changeUserPasswordInSupabase(
   username: string,
@@ -416,22 +475,21 @@ export async function changeUserPasswordInSupabase(
   const newHash = bcrypt.hashSync(newPassword, 10);
 
   if (supabase) {
-    try {
-      const { error } = await supabase
-        .from(USER_TABLE)
-        .update({
-          password_hash: newHash,
-          updated_at: new Date().toISOString()
-        })
-        .ilike('username', cleanUsername);
+    const targetTables = [ADMIN_TABLE, GUEST_TABLE, ADMIN_TABLE_ALT, GUEST_TABLE_ALT, USER_TABLE_ALT];
+    for (const tbl of targetTables) {
+      try {
+        const { error } = await supabase
+          .from(tbl)
+          .update({
+            password_hash: newHash,
+            updated_at: new Date().toISOString()
+          })
+          .ilike('username', cleanUsername);
 
-      if (error) {
-        return { success: false, message: `Gagal memperbarui password: ${error.message}` };
+        if (!error) return { success: true };
+      } catch (err) {
+        // ignore table not found
       }
-
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Gagal memperbarui password' };
     }
   }
 
@@ -439,7 +497,7 @@ export async function changeUserPasswordInSupabase(
 }
 
 /**
- * Delete a user from Supabase
+ * Delete a user from guest_account and admin_account tables
  */
 export async function deleteUserFromSupabase(username: string): Promise<{ success: boolean; message?: string }> {
   const clean = username.trim().toLowerCase();
@@ -449,20 +507,21 @@ export async function deleteUserFromSupabase(username: string): Promise<{ succes
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    try {
-      await supabase.from(USER_TABLE).delete().ilike('username', username.trim());
-      await supabase.from(GUEST_TABLE).delete().ilike('username', username.trim());
-      return { success: true };
-    } catch (e: any) {
-      return { success: false, message: e?.message || 'Gagal menghapus user dari Supabase' };
+    for (const tbl of [GUEST_TABLE, ADMIN_TABLE, GUEST_TABLE_ALT, ADMIN_TABLE_ALT, USER_TABLE_ALT]) {
+      try {
+        await supabase.from(tbl).delete().ilike('username', username.trim());
+      } catch (e) {
+        // ignore
+      }
     }
+    return { success: true };
   }
 
   return { success: true };
 }
 
 /**
- * Update user role in Supabase
+ * Update user role: move/update between guest_account and admin_account
  */
 export async function updateUserRoleInSupabase(
   username: string,
@@ -476,8 +535,35 @@ export async function updateUserRoleInSupabase(
   const supabase = getSupabaseClient();
   if (supabase) {
     try {
-      await supabase.from(USER_TABLE).update({ role }).ilike('username', username.trim());
-      await supabase.from(GUEST_TABLE).update({ role }).ilike('username', username.trim());
+      const sourceTable = role === 'admin' ? GUEST_TABLE : ADMIN_TABLE;
+      const targetTable = role === 'admin' ? ADMIN_TABLE : GUEST_TABLE;
+
+      // 1. Check if user exists in source table
+      const { data: existing } = await supabase
+        .from(sourceTable)
+        .select('*')
+        .ilike('username', username.trim())
+        .maybeSingle();
+
+      if (existing) {
+        // Insert into new table and delete from old table
+        await supabase.from(targetTable).insert([{
+          id: existing.id || `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          username: existing.username,
+          password_hash: existing.password_hash || bcrypt.hashSync('user123', 10),
+          role,
+          created_at: existing.created_at || new Date().toISOString()
+        }]);
+
+        await supabase.from(sourceTable).delete().ilike('username', username.trim());
+      } else {
+        // Just update role in any table it resides in
+        for (const tbl of [GUEST_TABLE, ADMIN_TABLE, GUEST_TABLE_ALT, ADMIN_TABLE_ALT, USER_TABLE_ALT]) {
+          try {
+            await supabase.from(tbl).update({ role }).ilike('username', username.trim());
+          } catch (e) {}
+        }
+      }
       return { success: true };
     } catch (e: any) {
       return { success: false, message: e?.message || 'Gagal mengubah role user di Supabase' };

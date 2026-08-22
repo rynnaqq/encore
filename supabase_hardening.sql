@@ -50,10 +50,11 @@ CREATE POLICY "Allow delete comments"
 
 
 -- ==============================================================================
--- 2. TABEL AKUN PENGGUNA (user_accounts)
+-- 2. TABEL GUEST ACCOUNT (guest_account)
+-- Digunakan untuk akun pemain/tamu umum (role = 'user')
 -- ==============================================================================
 
-CREATE TABLE IF NOT EXISTS public.user_accounts (
+CREATE TABLE IF NOT EXISTS public.guest_account (
   id text PRIMARY KEY,
   username text UNIQUE NOT NULL,
   password_hash text NOT NULL,
@@ -62,43 +63,92 @@ CREATE TABLE IF NOT EXISTS public.user_accounts (
   updated_at timestamptz DEFAULT now()
 );
 
--- Aktifkan RLS pada tabel user_accounts
-ALTER TABLE public.user_accounts ENABLE ROW LEVEL SECURITY;
+-- Aktifkan RLS pada tabel guest_account
+ALTER TABLE public.guest_account ENABLE ROW LEVEL SECURITY;
 
--- Policy: Publik diizinkan membaca username, role, dan created_at (untuk direktori pengguna)
-DROP POLICY IF EXISTS "Public select user directory" ON public.user_accounts;
-CREATE POLICY "Public select user directory" 
-  ON public.user_accounts 
+-- Policy: Publik boleh melihat username, role, created_at untuk direktori akun
+DROP POLICY IF EXISTS "Public select guest_account" ON public.guest_account;
+CREATE POLICY "Public select guest_account" 
+  ON public.guest_account 
   FOR SELECT 
   USING (true);
 
--- Policy: Pendaftaran akun baru (INSERT publik dengan validasi)
-DROP POLICY IF EXISTS "Public register user_accounts" ON public.user_accounts;
-CREATE POLICY "Public register user_accounts" 
-  ON public.user_accounts 
+-- Policy: Pendaftaran akun guest baru (INSERT)
+DROP POLICY IF EXISTS "Public insert guest_account" ON public.guest_account;
+CREATE POLICY "Public insert guest_account" 
+  ON public.guest_account 
   FOR INSERT 
   WITH CHECK (
     char_length(username) >= 3 AND char_length(username) <= 30 AND
     char_length(password_hash) >= 4
   );
 
--- Policy: Mengubah password atau role (UPDATE)
-DROP POLICY IF EXISTS "Allow update user_accounts" ON public.user_accounts;
-CREATE POLICY "Allow update user_accounts" 
-  ON public.user_accounts 
+-- Policy: Ubah password guest_account (UPDATE)
+DROP POLICY IF EXISTS "Allow update guest_account" ON public.guest_account;
+CREATE POLICY "Allow update guest_account" 
+  ON public.guest_account 
   FOR UPDATE 
   USING (true);
 
--- Policy: Menghapus akun (DELETE)
-DROP POLICY IF EXISTS "Allow delete user_accounts" ON public.user_accounts;
-CREATE POLICY "Allow delete user_accounts" 
-  ON public.user_accounts 
+-- Policy: Hapus guest_account (DELETE)
+DROP POLICY IF EXISTS "Allow delete guest_account" ON public.guest_account;
+CREATE POLICY "Allow delete guest_account" 
+  ON public.guest_account 
   FOR DELETE 
   USING (true);
 
--- Tambahkan Akun Root Admin Default (AdminKawaaii) jika belum ada
--- Password default: admin123 (bcrypt hash: $2a$10$7R.. / bcrypt generated)
-INSERT INTO public.user_accounts (id, username, password_hash, role, created_at)
+
+-- ==============================================================================
+-- 3. TABEL ADMIN ACCOUNT (admin_account)
+-- Digunakan khusus untuk akun administrator (role = 'admin')
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS public.admin_account (
+  id text PRIMARY KEY,
+  username text UNIQUE NOT NULL,
+  password_hash text NOT NULL,
+  role text NOT NULL DEFAULT 'admin',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Aktifkan RLS pada tabel admin_account
+ALTER TABLE public.admin_account ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Publik boleh membaca data admin_account untuk badge dan verifikasi role
+DROP POLICY IF EXISTS "Public select admin_account" ON public.admin_account;
+CREATE POLICY "Public select admin_account" 
+  ON public.admin_account 
+  FOR SELECT 
+  USING (true);
+
+-- Policy: Kelola admin_account (INSERT)
+DROP POLICY IF EXISTS "Allow insert admin_account" ON public.admin_account;
+CREATE POLICY "Allow insert admin_account" 
+  ON public.admin_account 
+  FOR INSERT 
+  WITH CHECK (
+    char_length(username) >= 3 AND char_length(username) <= 30 AND
+    char_length(password_hash) >= 4
+  );
+
+-- Policy: Ubah password admin_account (UPDATE)
+DROP POLICY IF EXISTS "Allow update admin_account" ON public.admin_account;
+CREATE POLICY "Allow update admin_account" 
+  ON public.admin_account 
+  FOR UPDATE 
+  USING (true);
+
+-- Policy: Hapus admin_account (DELETE)
+DROP POLICY IF EXISTS "Allow delete admin_account" ON public.admin_account;
+CREATE POLICY "Allow delete admin_account" 
+  ON public.admin_account 
+  FOR DELETE 
+  USING (true);
+
+-- Tambahkan Akun Master Admin Default (AdminKawaaii) ke admin_account jika belum ada
+-- Password default: admin123 (bcrypt hash: $2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW)
+INSERT INTO public.admin_account (id, username, password_hash, role, created_at)
 VALUES (
   'root-admin-kawaaii',
   'AdminKawaaii',

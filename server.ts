@@ -186,22 +186,25 @@ async function startServer() {
 
       const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
       const effectiveRole: 'user' | 'admin' = (role === 'admin' || isRootAdmin) ? 'admin' : 'user';
+      const targetTable = effectiveRole === 'admin' ? 'admin_account' : 'guest_account';
       const hashedPassword = bcrypt.hashSync(password, 10);
 
       // Check Supabase if configured
       if (supabase) {
-        try {
-          const { data: existingUser } = await supabase
-            .from('user_accounts')
-            .select('username')
-            .ilike('username', cleanUsername)
-            .maybeSingle();
+        for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+          try {
+            const { data: existingUser } = await supabase
+              .from(tbl)
+              .select('username')
+              .ilike('username', cleanUsername)
+              .maybeSingle();
 
-          if (existingUser) {
-            return res.status(400).json({ success: false, message: 'Username is already taken' });
+            if (existingUser) {
+              return res.status(400).json({ success: false, message: 'Username is already taken' });
+            }
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore table not found
         }
       }
 
@@ -219,16 +222,28 @@ async function startServer() {
           createdAt: Date.now(),
         };
 
-        // Write to Supabase
+        // Write to Supabase table (guest_account or admin_account)
         if (supabase) {
           try {
-            await supabase.from('user_accounts').insert([{
+            const { error: insErr } = await supabase.from(targetTable).insert([{
               id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
               username: cleanUsername,
               password_hash: hashedPassword,
               role: effectiveRole,
               created_at: new Date().toISOString()
             }]);
+
+            if (insErr) {
+              // fallback to plural table name if needed
+              const altTable = effectiveRole === 'admin' ? 'admin_accounts' : 'guest_accounts';
+              await supabase.from(altTable).insert([{
+                id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                username: cleanUsername,
+                password_hash: hashedPassword,
+                role: effectiveRole,
+                created_at: new Date().toISOString()
+              }]);
+            }
           } catch (e) {
             console.error('Failed to write user to supabase:', e);
           }
@@ -271,33 +286,36 @@ async function startServer() {
       let users = await withUsersLock(() => readUsers());
       let account = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
 
-      // If not in local users.json, check Supabase
+      // If not in local users.json, check Supabase tables (admin_account & guest_account)
       if (!account && supabase) {
-        try {
-          const { data: dbUser } = await supabase
-            .from('user_accounts')
-            .select('username, password_hash, role, created_at')
-            .ilike('username', cleanUsername)
-            .maybeSingle();
+        for (const [tbl, role] of [['admin_account', 'admin'], ['guest_account', 'user'], ['admin_accounts', 'admin'], ['guest_accounts', 'user'], ['user_accounts', 'user']] as const) {
+          try {
+            const { data: dbUser } = await supabase
+              .from(tbl)
+              .select('username, password_hash, role, created_at')
+              .ilike('username', cleanUsername)
+              .maybeSingle();
 
-          if (dbUser) {
-            account = {
-              username: dbUser.username,
-              password: dbUser.password_hash,
-              role: dbUser.role === 'admin' ? 'admin' : 'user',
-              createdAt: dbUser.created_at ? new Date(dbUser.created_at).getTime() : Date.now()
-            };
-            // Cache locally
-            await withUsersLock(async () => {
-              const current = await readUsers();
-              if (!current.some(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
-                current.push(account!);
-                await writeUsers(current);
-              }
-            });
+            if (dbUser) {
+              account = {
+                username: dbUser.username,
+                password: dbUser.password_hash,
+                role: dbUser.role === 'admin' ? 'admin' : (role === 'admin' ? 'admin' : 'user'),
+                createdAt: dbUser.created_at ? new Date(dbUser.created_at).getTime() : Date.now()
+              };
+              // Cache locally
+              await withUsersLock(async () => {
+                const current = await readUsers();
+                if (!current.some(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
+                  current.push(account!);
+                  await writeUsers(current);
+                }
+              });
+              break;
+            }
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore
         }
       }
 
@@ -380,13 +398,13 @@ async function startServer() {
         await writeUsers(users);
 
         if (supabase) {
-          try {
-            await supabase
-              .from('user_accounts')
-              .update({ password_hash: newHashed, updated_at: new Date().toISOString() })
-              .ilike('username', cleanUsername);
-          } catch (e) {
-            console.error('Failed to update password in supabase:', e);
+          for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+            try {
+              await supabase
+                .from(tbl)
+                .update({ password_hash: newHashed, updated_at: new Date().toISOString() })
+                .ilike('username', cleanUsername);
+            } catch (e) {}
           }
         }
 
@@ -419,26 +437,28 @@ async function startServer() {
         });
       });
 
-      // 2. Fetch from Supabase if configured
+      // 2. Fetch from Supabase tables if configured
       if (supabase) {
-        try {
-          const { data, error } = await supabase
-            .from('user_accounts')
-            .select('username, role, created_at');
+        for (const [tbl, defaultRole] of [['admin_account', 'admin'], ['guest_account', 'user'], ['admin_accounts', 'admin'], ['guest_accounts', 'user'], ['user_accounts', 'user']] as const) {
+          try {
+            const { data, error } = await supabase
+              .from(tbl)
+              .select('username, role, created_at');
 
-          if (!error && Array.isArray(data)) {
-            data.forEach((u: any) => {
-              if (u?.username && !usersMap.has(u.username.toLowerCase())) {
-                usersMap.set(u.username.toLowerCase(), {
-                  username: u.username,
-                  role: u.role === 'admin' ? 'admin' : 'user',
-                  createdAt: u.created_at ? new Date(u.created_at).getTime() : Date.now()
-                });
-              }
-            });
+            if (!error && Array.isArray(data)) {
+              data.forEach((u: any) => {
+                if (u?.username && !usersMap.has(u.username.toLowerCase())) {
+                  usersMap.set(u.username.toLowerCase(), {
+                    username: u.username,
+                    role: u.role === 'admin' ? 'admin' : (defaultRole === 'admin' ? 'admin' : 'user'),
+                    createdAt: u.created_at ? new Date(u.created_at).getTime() : Date.now()
+                  });
+                }
+              });
+            }
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore
         }
       }
 
@@ -475,10 +495,10 @@ async function startServer() {
       }
 
       if (supabase) {
-        try {
-          await supabase.from('user_accounts').update({ role }).ilike('username', username);
-        } catch (e) {
-          console.error('Failed to update role in supabase:', e);
+        for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+          try {
+            await supabase.from(tbl).update({ role }).ilike('username', username);
+          } catch (e) {}
         }
       }
 
@@ -511,10 +531,10 @@ async function startServer() {
       }
 
       if (supabase) {
-        try {
-          await supabase.from('user_accounts').delete().ilike('username', username);
-        } catch (e) {
-          console.error('Failed to delete user in supabase:', e);
+        for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+          try {
+            await supabase.from(tbl).delete().ilike('username', username);
+          } catch (e) {}
         }
       }
 
