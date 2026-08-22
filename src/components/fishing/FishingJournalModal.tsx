@@ -98,7 +98,7 @@ export const FishingJournal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto touch-auto overscroll-contain"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
           playFishingSound('click', soundEnabled);
@@ -112,8 +112,9 @@ export const FishingJournal: React.FC<{
         exit={{ scale: 0.95, opacity: 0, y: 12 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100 my-auto"
+        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100 my-auto touch-auto"
       >
+
         {/* Top Header Banner */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3.5">

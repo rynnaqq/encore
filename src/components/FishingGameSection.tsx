@@ -831,6 +831,18 @@ export const FishingGameSection: React.FC = () => {
               animation: none !important;
             }
           }
+
+          #fishing, #fishing * {
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-user-drag: none !important;
+          }
+
+          input, textarea {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+          }
         `}
       </style>
 
@@ -845,11 +857,11 @@ export const FishingGameSection: React.FC = () => {
                 playSound('click');
                 navigate('/');
               }}
-              className="bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-slate-700/80 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer font-sans font-bold text-xs sm:text-sm"
+              className="bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-slate-700/80 backdrop-blur-xl px-3 sm:px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer font-sans font-bold text-xs sm:text-sm"
               title="Kembali ke Portofolio Utama"
             >
               <ArrowLeft className="w-4 h-4 text-[#E195AB]" />
-              <span>Beranda</span>
+              <span className="hidden sm:inline">Beranda</span>
             </button>
 
             {/* Jakarta Live Clock Pill */}
@@ -1765,10 +1777,42 @@ export const FishingGameSection: React.FC = () => {
             </motion.div>
           )}
 
+          {/* Active In-Game Visual Guidance Prompts */}
+          {gameState === 'idle' && hasStarted && (
+            <motion.div
+              key="prompt-cast"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex flex-col items-center gap-1.5"
+            >
+              <div className="bg-slate-900/90 border-2 border-amber-400/80 px-4 py-2 rounded-2xl shadow-xl backdrop-blur-md flex items-center gap-2 text-yellow-300 text-xs sm:text-sm font-sans font-black animate-pulse">
+                <span>🎣</span>
+                <span>TAHAN LAYAR UNTUK MENGISI TENAGA</span>
+              </div>
+            </motion.div>
+          )}
+
+          {gameState === 'waiting' && (
+            <motion.div
+              key="prompt-waiting"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex flex-col items-center gap-1.5"
+            >
+              <div className="bg-slate-900/90 border-2 border-cyan-400/80 px-4 py-2 rounded-2xl shadow-xl backdrop-blur-md flex items-center gap-2 text-cyan-300 text-xs sm:text-sm font-sans font-bold">
+                <span className="animate-spin">🌊</span>
+                <span>MENUNGGU IKAN MENDEKATI UMPAN...</span>
+              </div>
+            </motion.div>
+          )}
+
           {/* Flash screen on catch */}
           {flashScreen && (
             <div className="absolute inset-0 bg-white z-[60] pointer-events-none animate-ping" />
           )}
+
 
           {/* Catch Result Celebration Modal */}
           {gameState === 'caught' && fish && fishStats && (
@@ -1777,8 +1821,9 @@ export const FishingGameSection: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-50 p-3 sm:p-4 overflow-hidden select-none"
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-50 p-3 sm:p-4 overflow-hidden select-none touch-auto"
               onPointerDown={(e) => e.stopPropagation()}
+
             >
               {/* Aurora background */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
@@ -1995,8 +2040,9 @@ export const FishingGameSection: React.FC = () => {
               key="escape-modal"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4 select-none"
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-50 p-4 select-none touch-auto"
               onPointerDown={(e) => e.stopPropagation()}
+
             >
               <div className="bg-red-700 border-[5px] border-black p-5 sm:p-6 w-full max-w-[420px] text-white shadow-[8px_8px_0_0_#000] text-center relative">
                 <h2 className="text-xl sm:text-2xl font-black mb-3 text-yellow-300 drop-shadow-[2px_2px_0_#000] font-sans">
