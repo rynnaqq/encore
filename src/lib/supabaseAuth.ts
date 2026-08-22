@@ -122,6 +122,7 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
 /**
  * Register a user or admin account into the appropriate Supabase table
  * (guest_accounts for user, admin_accounts for admin)
+ * Uses plain 'password' column without hashing
  */
 export async function registerUserInSupabase(
   username: string,
@@ -146,7 +147,6 @@ export async function registerUserInSupabase(
   const targetTable = effectiveRole === 'admin' ? ADMIN_TABLE : GUEST_TABLE;
 
   const supabase = getSupabaseClient();
-  const hashedPassword = bcrypt.hashSync(password, 10);
   const now = Date.now();
 
   if (supabase) {
@@ -175,7 +175,7 @@ export async function registerUserInSupabase(
       const payload = {
         id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         username: cleanUsername,
-        password_hash: hashedPassword,
+        password: password,
         role: effectiveRole,
         created_at: new Date().toISOString()
       };
@@ -220,7 +220,7 @@ export async function registerUserInSupabase(
         body: JSON.stringify({
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           username: cleanUsername,
-          password_hash: hashedPassword,
+          password: password,
           role: effectiveRole,
           created_at: new Date().toISOString()
         })
@@ -249,6 +249,7 @@ export async function registerUserInSupabase(
 
 /**
  * Login user against admin_accounts or guest_accounts tables in Supabase
+ * Verifies with plain 'password' column
  */
 export async function loginUserWithSupabase(
   username: string,
@@ -312,14 +313,14 @@ export async function loginUserWithSupabase(
         return { success: false, message: 'Akun tidak ditemukan di database. Silakan daftar akun terlebih dahulu.' };
       }
 
-      // Verify password hash
-      const storedHash = foundRecord.password_hash || foundRecord.password || '';
+      // Verify plain password or legacy hash
+      const storedPassword = foundRecord.password || foundRecord.password_hash || '';
       let isPasswordValid = false;
 
-      if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) {
-        isPasswordValid = bcrypt.compareSync(password, storedHash);
-      } else if (storedHash) {
-        isPasswordValid = storedHash === password;
+      if (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$')) {
+        isPasswordValid = bcrypt.compareSync(password, storedPassword);
+      } else if (storedPassword) {
+        isPasswordValid = storedPassword === password;
       } else {
         // Record without password
         isPasswordValid = true;
@@ -358,10 +359,10 @@ export async function loginUserWithSupabase(
           const rows = await restRes.json();
           if (Array.isArray(rows) && rows.length > 0) {
             const userRecord = rows[0];
-            const storedHash = userRecord.password_hash || userRecord.password || '';
-            const isValid = storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')
-              ? bcrypt.compareSync(password, storedHash)
-              : storedHash === password || !storedHash;
+            const storedPassword = userRecord.password || userRecord.password_hash || '';
+            const isValid = (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$'))
+              ? bcrypt.compareSync(password, storedPassword)
+              : storedPassword === password || !storedPassword;
 
             if (isValid) {
               return {
@@ -409,7 +410,6 @@ export async function changeUserPasswordInSupabase(
   }
 
   const supabase = getSupabaseClient();
-  const newHash = bcrypt.hashSync(newPassword, 10);
 
   if (supabase) {
     for (const tbl of [ADMIN_TABLE, GUEST_TABLE]) {
@@ -417,7 +417,7 @@ export async function changeUserPasswordInSupabase(
         const { error } = await supabase
           .from(tbl)
           .update({
-            password_hash: newHash,
+            password: newPassword,
             updated_at: new Date().toISOString()
           })
           .ilike('username', cleanUsername);
@@ -482,7 +482,7 @@ export async function updateUserRoleInSupabase(
         await supabase.from(targetTable).insert([{
           id: existing.id || `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           username: existing.username,
-          password_hash: existing.password_hash || existing.password || bcrypt.hashSync('user123', 10),
+          password: existing.password || existing.password_hash || 'user123',
           role,
           created_at: existing.created_at || new Date().toISOString()
         }]);

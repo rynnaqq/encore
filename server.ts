@@ -187,7 +187,6 @@ async function startServer() {
       const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
       const effectiveRole: 'user' | 'admin' = (role === 'admin' || isRootAdmin) ? 'admin' : 'user';
       const targetTable = effectiveRole === 'admin' ? 'admin_accounts' : 'guest_accounts';
-      const hashedPassword = bcrypt.hashSync(password, 10);
 
       // Check Supabase if configured
       if (supabase) {
@@ -217,7 +216,7 @@ async function startServer() {
 
         const newAccount: UserAccount = {
           username: cleanUsername,
-          password: hashedPassword,
+          password: password,
           role: effectiveRole,
           createdAt: Date.now(),
         };
@@ -228,7 +227,7 @@ async function startServer() {
             await supabase.from(targetTable).insert([{
               id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
               username: cleanUsername,
-              password_hash: hashedPassword,
+              password: password,
               role: effectiveRole,
               created_at: new Date().toISOString()
             }]);
@@ -280,14 +279,14 @@ async function startServer() {
           try {
             const { data: dbUser } = await supabase
               .from(tbl)
-              .select('username, password_hash, role, created_at')
+              .select('*')
               .ilike('username', cleanUsername)
               .maybeSingle();
 
             if (dbUser) {
               account = {
                 username: dbUser.username,
-                password: dbUser.password_hash,
+                password: dbUser.password || dbUser.password_hash || '',
                 role: dbUser.role === 'admin' ? 'admin' : (role === 'admin' ? 'admin' : 'user'),
                 createdAt: dbUser.created_at ? new Date(dbUser.created_at).getTime() : Date.now()
               };
@@ -311,22 +310,9 @@ async function startServer() {
         return res.status(401).json({ success: false, message: 'Username not found. Please register first.' });
       }
 
-      let isValid = false;
-      if (account.password.startsWith('$2a$') || account.password.startsWith('$2b$')) {
+      let isValid = account.password === password;
+      if (!isValid && (account.password.startsWith('$2a$') || account.password.startsWith('$2b$'))) {
         isValid = bcrypt.compareSync(password, account.password);
-      } else {
-        // Upgrade legacy plain password to bcrypt hash
-        isValid = account.password === password;
-        if (isValid) {
-          await withUsersLock(async () => {
-            const currentUsers = await readUsers();
-            const idx = currentUsers.findIndex(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
-            if (idx !== -1) {
-              currentUsers[idx].password = bcrypt.hashSync(password, 10);
-              await writeUsers(currentUsers);
-            }
-          });
-        }
       }
 
       if (!isValid) {
@@ -370,19 +356,16 @@ async function startServer() {
           return { success: false, message: 'Account not found' };
         }
 
-        let isOldValid = false;
-        if (account.password.startsWith('$2a$') || account.password.startsWith('$2b$')) {
+        let isOldValid = account.password === oldPassword;
+        if (!isOldValid && (account.password.startsWith('$2a$') || account.password.startsWith('$2b$'))) {
           isOldValid = bcrypt.compareSync(oldPassword, account.password);
-        } else {
-          isOldValid = account.password === oldPassword;
         }
 
         if (!isOldValid) {
           return { success: false, message: 'Incorrect old password' };
         }
 
-        const newHashed = bcrypt.hashSync(newPassword, 10);
-        account.password = newHashed;
+        account.password = newPassword;
         await writeUsers(users);
 
         if (supabase) {
@@ -390,7 +373,7 @@ async function startServer() {
             try {
               await supabase
                 .from(tbl)
-                .update({ password_hash: newHashed, updated_at: new Date().toISOString() })
+                .update({ password: newPassword, updated_at: new Date().toISOString() })
                 .ilike('username', cleanUsername);
             } catch (e) {}
           }
