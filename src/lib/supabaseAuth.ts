@@ -209,6 +209,19 @@ export async function registerUserInSupabase(
       // 2. Insert into primary target table (guest_accounts or admin_accounts)
       let { error: insertError } = await supabase.from(targetTable).insert([payload]);
 
+      // If column password_hash does not exist, try with 'password' column name
+      if (insertError && (insertError.message?.includes('password_hash') || insertError.code === '42703')) {
+        const legacyPayload = {
+          id: payload.id,
+          username: cleanUsername,
+          password: hashedPassword,
+          role: effectiveRole,
+          created_at: payload.created_at
+        };
+        const legacyResult = await supabase.from(targetTable).insert([legacyPayload]);
+        insertError = legacyResult.error;
+      }
+
       // If primary table not found, fallback to alt table
       if (insertError && isTableNotFoundError(insertError)) {
         const altResult = await supabase.from(altTable).insert([payload]);
@@ -317,7 +330,7 @@ export async function loginUserWithSupabase(
         try {
           const { data, error } = await supabase
             .from(tbl)
-            .select('username, password_hash, role, created_at')
+            .select('*')
             .ilike('username', cleanUsername)
             .maybeSingle();
 
@@ -337,7 +350,7 @@ export async function loginUserWithSupabase(
           try {
             const { data, error } = await supabase
               .from(tbl)
-              .select('username, password_hash, role, created_at')
+              .select('*')
               .ilike('username', cleanUsername)
               .maybeSingle();
 
@@ -357,7 +370,7 @@ export async function loginUserWithSupabase(
         try {
           const { data, error } = await supabase
             .from(USER_TABLE_ALT)
-            .select('username, password_hash, role, created_at')
+            .select('*')
             .ilike('username', cleanUsername)
             .maybeSingle();
 
@@ -374,8 +387,8 @@ export async function loginUserWithSupabase(
         return { success: false, message: 'Akun tidak ditemukan. Silakan daftar akun terlebih dahulu.' };
       }
 
-      // Verify password hash
-      const storedHash = foundRecord.password_hash || '';
+      // Verify password hash or password column
+      const storedHash = foundRecord.password_hash || foundRecord.password || '';
       let isPasswordValid = false;
 
       if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) {
