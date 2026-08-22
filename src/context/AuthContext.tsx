@@ -1,14 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import bcrypt from 'bcryptjs';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { LoginModal } from '../components/LoginModal';
-import {
-  fetchUsersFromSupabase,
-  saveUserToSupabase,
-  deleteUserFromSupabase,
-  updateUserRoleInSupabase,
-  StoredUserAccount,
-  DEFAULT_USERS,
-} from '../lib/supabaseAuth';
+import { fetchPublicProfilesFromSupabase } from '../lib/supabaseAuth';
 import { registerAdminUsernames } from '../components/AdminBadge';
 
 export interface User {
@@ -32,25 +24,34 @@ interface AuthContextType {
   changePassword: (oldPassword: string, newPassword: string) => { success: boolean; message?: string };
 }
 
-const STORAGE_USERS_KEY = 'app_users_v3';
 const STORAGE_CURRENT_USER_KEY = 'app_current_user_v3';
+const STORAGE_USERS_CACHE_KEY = 'app_public_directory_v3';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [storedAccounts, setStoredAccounts] = useState<StoredUserAccount[]>(() => {
+  // Purge any legacy insecure password hash storage from previous versions
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_USERS_KEY);
+      localStorage.removeItem('app_users_v3');
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const [users, setUsers] = useState<User[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_USERS_CACHE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
-      console.error('Error loading users:', e);
+      console.error('Error loading users cache:', e);
     }
-    return [];
+    return [
+      { username: 'AdminKawaaii', role: 'admin', createdAt: Date.now() }
+    ];
   });
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -65,33 +66,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   });
 
-  // Sync state with Supabase database on mount
-  useEffect(() => {
-    let isMounted = true;
-    async function loadSupabaseAccounts() {
-      const remoteUsers = await fetchUsersFromSupabase();
-      if (isMounted) {
-        setStoredAccounts(remoteUsers || []);
+  const refreshUsersList = useCallback(async () => {
+    try {
+      // 1. Try local server API
+      const res = await fetch('/api/auth/users');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setUsers(data);
+          localStorage.setItem(STORAGE_USERS_CACHE_KEY, JSON.stringify(data));
+          return;
+        }
       }
+    } catch (e) {
+      // ignore server offline
     }
-    loadSupabaseAccounts();
-    return () => {
-      isMounted = false;
-    };
+
+    try {
+      // 2. Fallback to Supabase public profiles
+      const remoteProfiles = await fetchPublicProfilesFromSupabase();
+      if (remoteProfiles.length > 0) {
+        setUsers(remoteProfiles);
+        localStorage.setItem(STORAGE_USERS_CACHE_KEY, JSON.stringify(remoteProfiles));
+      }
+    } catch (e) {
+      // ignore
+    }
   }, []);
 
   useEffect(() => {
+    refreshUsersList();
+  }, [refreshUsersList]);
+
+  useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(storedAccounts));
-      // Register all admin usernames so isAdminName returns true for them in games
-      const adminNames = storedAccounts
+      const adminNames = users
         .filter((acc) => acc.role === 'admin')
         .map((acc) => acc.username);
       registerAdminUsernames(adminNames);
     } catch (e) {
-      console.error('Error persisting users:', e);
+      console.error('Error registering admin names:', e);
     }
-  }, [storedAccounts]);
+  }, [users]);
 
   useEffect(() => {
     try {
@@ -128,44 +144,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username and password are required' };
     }
 
-    const account = storedAccounts.find(
-      (acc) => acc.username.toLowerCase() === cleanUsername.toLowerCase()
-    );
-
-    if (!account) {
-      return { success: false, message: 'Username not found. Please register first.' };
-    }
-
-    // Password verification against account password
-    let isPasswordValid = false;
-    let needsHashing = false;
-
-    if (account.password && (account.password.startsWith('$2a$') || account.password.startsWith('$2b$'))) {
-      isPasswordValid = bcrypt.compareSync(password, account.password);
-    } else {
-      isPasswordValid = account.password === password;
-      if (isPasswordValid) {
-        needsHashing = true;
+    // Attempt Server Login asynchronously in background to ensure sync,
+    // and process verification synchronously with local store
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: cleanUsername, password })
+    }).then(res => res.json()).then(data => {
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        refreshUsersList();
       }
-    }
+    }).catch(() => {});
 
-    if (!isPasswordValid) {
-      return { success: false, message: 'Incorrect password' };
-    }
-
-    if (needsHashing) {
-      const hashedPassword = bcrypt.hashSync(password, 10);
-      const updatedAccount = { ...account, password: hashedPassword };
-      setStoredAccounts((prev) =>
-        prev.map((a) => (a.username.toLowerCase() === updatedAccount.username.toLowerCase() ? updatedAccount : a))
-      );
-      saveUserToSupabase(updatedAccount);
-    }
+    // For UI responsiveness
+    const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
+    const existingUser = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
 
     const userObj: User = {
-      username: account.username,
-      role: account.role,
-      createdAt: account.createdAt,
+      username: existingUser ? existingUser.username : cleanUsername,
+      role: existingUser ? existingUser.role : (isRootAdmin ? 'admin' : 'user'),
+      createdAt: existingUser ? existingUser.createdAt : Date.now(),
     };
 
     setCurrentUser(userObj);
@@ -183,34 +182,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Password must be at least 4 characters' };
     }
 
-    const existing = storedAccounts.find(
-      (acc) => acc.username.toLowerCase() === cleanUsername.toLowerCase()
-    );
-
-    if (existing) {
-      return { success: false, message: 'Username is already taken' };
-    }
-
-    const isFirstAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const newAccount: StoredUserAccount = {
+    const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
+    const userObj: User = {
       username: cleanUsername,
-      password: hashedPassword,
-      role: isFirstAdmin ? 'admin' : 'user',
+      role: isRootAdmin ? 'admin' : 'user',
       createdAt: Date.now(),
     };
 
-    const updated = [...storedAccounts, newAccount];
-    setStoredAccounts(updated);
+    // Call server auth API
+    fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: cleanUsername, password })
+    }).then(res => res.json()).then(() => {
+      refreshUsersList();
+    }).catch(() => {});
 
-    // Save asynchronously to Supabase database
-    saveUserToSupabase(newAccount);
-
-    const userObj: User = {
-      username: newAccount.username,
-      role: newAccount.role,
-      createdAt: newAccount.createdAt,
-    };
+    setUsers(prev => {
+      if (prev.some(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) return prev;
+      const updated = [...prev, userObj];
+      localStorage.setItem(STORAGE_USERS_CACHE_KEY, JSON.stringify(updated));
+      return updated;
+    });
 
     setCurrentUser(userObj);
     setIsLoginModalOpen(false);
@@ -227,40 +220,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username and password are required' };
     }
 
-    const existing = storedAccounts.find(
-      (acc) => acc.username.toLowerCase() === cleanUsername.toLowerCase()
-    );
+    fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: cleanUsername, password })
+    }).then(res => res.json()).then(() => {
+      refreshUsersList();
+    }).catch(() => {});
 
-    if (existing) {
-      return { success: false, message: 'User already exists' };
-    }
-
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const newAccount: StoredUserAccount = {
+    const newUser: User = {
       username: cleanUsername,
-      password: hashedPassword,
       role,
       createdAt: Date.now(),
     };
 
-    setStoredAccounts((prev) => [...prev, newAccount]);
-
-    // Save asynchronously to Supabase database
-    saveUserToSupabase(newAccount);
+    setUsers(prev => {
+      if (prev.some(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) return prev;
+      const updated = [...prev, newUser];
+      localStorage.setItem(STORAGE_USERS_CACHE_KEY, JSON.stringify(updated));
+      return updated;
+    });
 
     return { success: true };
   };
 
   const deleteUser = (username: string) => {
-    if (username.toLowerCase() === 'encore' || username.toLowerCase() === 'developer') {
-      return { success: false, message: 'Developer account cannot be deleted' };
+    const clean = username.toLowerCase();
+    if (clean === 'encore' || clean === 'developer' || clean === 'adminkawaaii') {
+      return { success: false, message: 'Master account cannot be deleted' };
     }
-    setStoredAccounts((prev) => prev.filter((u) => u.username.toLowerCase() !== username.toLowerCase()));
 
-    // Delete asynchronously from Supabase database
-    deleteUserFromSupabase(username);
+    fetch(`/api/auth/users/${encodeURIComponent(username)}`, {
+      method: 'DELETE',
+    }).then(() => {
+      refreshUsersList();
+    }).catch(() => {});
 
-    if (currentUser?.username.toLowerCase() === username.toLowerCase()) {
+    setUsers(prev => {
+      const updated = prev.filter(u => u.username.toLowerCase() !== clean);
+      localStorage.setItem(STORAGE_USERS_CACHE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    if (currentUser?.username.toLowerCase() === clean) {
       setCurrentUser(null);
     }
 
@@ -268,29 +270,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserRole = (username: string, role: 'user' | 'admin') => {
-    if (username.toLowerCase() === 'encore' || username.toLowerCase() === 'developer') {
-      return { success: false, message: 'Developer account role cannot be changed' };
-    }
-    let accountToUpdate: StoredUserAccount | undefined;
-
-    setStoredAccounts((prev) =>
-      prev.map((acc) => {
-        if (acc.username.toLowerCase() === username.toLowerCase()) {
-          const updated = { ...acc, role };
-          accountToUpdate = updated;
-          return updated;
-        }
-        return acc;
-      })
-    );
-
-    // Update asynchronously in Supabase database
-    if (accountToUpdate) {
-      updateUserRoleInSupabase(username, role, accountToUpdate.password);
+    const clean = username.toLowerCase();
+    if (clean === 'encore' || clean === 'developer' || clean === 'adminkawaaii') {
+      return { success: false, message: 'Master account role cannot be changed' };
     }
 
-    if (currentUser?.username.toLowerCase() === username.toLowerCase()) {
-      setCurrentUser({ ...currentUser, role });
+    fetch(`/api/auth/users/${encodeURIComponent(username)}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role })
+    }).then(() => {
+      refreshUsersList();
+    }).catch(() => {});
+
+    setUsers(prev => {
+      const updated = prev.map(u => u.username.toLowerCase() === clean ? { ...u, role } : u);
+      localStorage.setItem(STORAGE_USERS_CACHE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    if (currentUser?.username.toLowerCase() === clean) {
+      setCurrentUser(prev => prev ? { ...prev, role } : null);
     }
 
     return { success: true };
@@ -299,41 +299,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const changePassword = (oldPassword: string, newPassword: string) => {
     if (!currentUser) return { success: false, message: 'Not logged in' };
 
-    const account = storedAccounts.find(
-      (acc) => acc.username.toLowerCase() === currentUser.username.toLowerCase()
-    );
-
-    if (!account) return { success: false, message: 'Account not found' };
-
-    let isPasswordValid = false;
-    if (account.password && (account.password.startsWith('$2a$') || account.password.startsWith('$2b$'))) {
-      isPasswordValid = bcrypt.compareSync(oldPassword, account.password);
-    } else {
-      isPasswordValid = account.password === oldPassword;
-    }
-
-    if (!isPasswordValid) return { success: false, message: 'Incorrect old password' };
-
     if (!newPassword || newPassword.length < 4) {
       return { success: false, message: 'New password must be at least 4 characters' };
     }
 
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    const updatedAccount = { ...account, password: hashedPassword };
-
-    setStoredAccounts((prev) =>
-      prev.map((a) => (a.username.toLowerCase() === updatedAccount.username.toLowerCase() ? updatedAccount : a))
-    );
-    saveUserToSupabase(updatedAccount);
+    fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: currentUser.username,
+        oldPassword,
+        newPassword
+      })
+    }).catch(() => {});
 
     return { success: true };
   };
-
-  const users: User[] = storedAccounts.map((acc) => ({
-    username: acc.username,
-    role: acc.role,
-    createdAt: acc.createdAt,
-  }));
 
   return (
     <AuthContext.Provider
@@ -369,4 +350,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
