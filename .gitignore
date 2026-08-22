@@ -1,18 +1,71 @@
+# ==============================================================================
+# --- SECURITY & ENVIRONMENT SECRETS ---
+# ==============================================================================
+.env
+.env.*
+*.env
+!.env.example
+*.pem
+*.key
+*.cert
+*.pfx
+*.p12
+
+# ==============================================================================
+# --- RUNTIME DATA & LOCAL DATABASES ---
+# ==============================================================================
+users.json
+comments.json
+*.sqlite
+*.sqlite3
+*.db
+storage/
+
+# ==============================================================================
+# --- DEPENDENCIES & BUILD ARTIFACTS ---
+# ==============================================================================
 node_modules/
-build/
 dist/
+dist-ssr/
+build/
+out/
 coverage/
-.DS_Store
+*.tsbuildinfo
+*.tgz
+bun.lock*
+
+
+# ==============================================================================
+# --- LOGS & DIAGNOSTICS ---
+# ==============================================================================
 *.log
-.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ==============================================================================
+# --- AI AGENT, IDE & TEMPORARY CONFIGS ---
+# ==============================================================================
 .agent/
 .agents/
-.impeccable/
-README.md
-PRODUCT.md
-.env.example
-/assets/
+.gemini/
 .claude/
+.impeccable/
 .playwright/
-*.tgz
-scripts/
+.system_generated/
+opencode.json
+skills-lock.json
+
+# Editors & OS
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
