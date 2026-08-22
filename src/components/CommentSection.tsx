@@ -18,6 +18,7 @@ interface Comment {
 
 
 import { parseCommentText, serializeCommentText } from '../lib/commentHelpers';
+import { compressImageFile } from '../lib/imageCompressor';
 
 
 export const CommentSection: React.FC = () => {
@@ -184,20 +185,33 @@ export const CommentSection: React.FC = () => {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1 * 1024 * 1024) {
-        alert('File size too large (max 1MB)');
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran file terlalu besar (maksimal 5MB sebelum kompresi)');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoBase64(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImageFile(file, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.75,
+          mimeType: 'image/webp'
+        });
+        setPhotoBase64(compressed);
+      } catch (err) {
+        console.error('Image compression error:', err);
+        // Fallback to direct reading if compression fails
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
+
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
