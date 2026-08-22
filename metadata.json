@@ -1,6 +1,6 @@
 {
-  "name": "Ryan Portfolio",
-  "description": "Modern developer portfolio featuring interactive tools, fishing game, and full-featured Grandmaster Chess game with real-time global online multiplayer across 30+ countries, VS Bot AI, and local Pass & Play.",
+  "name": "Encore Portfolio & Interactive Mini-Games",
+  "description": "Modern interactive developer portfolio featuring Pixel Fishing Pro game, Snake & Ladders, UNO Game, threaded community guestbook, dark/light theme switching, and admin management portal.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
