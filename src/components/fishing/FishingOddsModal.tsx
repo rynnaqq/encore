@@ -13,6 +13,8 @@ import {
   calculateRarityRates
 } from "../../data/fishDatabase";
 import { RODS_DATABASE, BAITS_DATABASE } from "../../data/equipmentDatabase";
+import { playFishingSound } from "../../lib/fishingAudio";
+
 
 export const FishingOddsModal: React.FC<{
   equippedRod: string;
