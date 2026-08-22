@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, X, Trophy, Sparkles, Filter, Search, CheckCircle2,
-  ChevronLeft, ChevronRight, Eye, Star, Lock, Award, Fish, Coins
+  ChevronLeft, ChevronRight, Eye, Star, Lock, Award, Fish, Coins, Crown
 } from "lucide-react";
+
 import { FishType, FISH_DATABASE } from "../../data/fishDatabase";
 import { FishGraphic } from "../FishGraphic";
 import { playFishingSound } from "../../lib/fishingAudio";
@@ -97,7 +98,7 @@ export const FishingJournal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
           playFishingSound('click', soundEnabled);

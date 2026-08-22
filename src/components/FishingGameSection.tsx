@@ -525,8 +525,10 @@ export const FishingGameSection: React.FC = () => {
   };
 
   const handlePointerDown = () => {
+    if (activeModal !== null) return;
     unlockAudio();
     if (gameState === 'idle') {
+
       startPreparing();
     } else if (gameState === 'waiting') {
       if (biteTimeoutRef.current) clearTimeout(biteTimeoutRef.current);
@@ -648,10 +650,12 @@ export const FishingGameSection: React.FC = () => {
   };
 
   const handlePointerUp = () => {
+    if (activeModal !== null) return;
     if (gameState === 'preparing') {
       castLine();
     }
   };
+
 
   // Reeling decay physics
   useEffect(() => {
@@ -1711,53 +1715,11 @@ export const FishingGameSection: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* ================= MODALS & STATE OVERLAYS ================= */}
+        {/* ================= STATE OVERLAYS ================= */}
         <AnimatePresence>
-          {isJournalOpen && (
-            <FishingJournal
-              key="journal-modal"
-              score={score}
-              caughtCount={caughtCount}
-              discoveredSpecies={discoveredSpecies}
-              soundEnabled={soundEnabled}
-              onClose={closeModal}
-            />
-          )}
-
-          {isOddsOpen && (
-            <FishingOddsModal
-              key="odds-modal"
-              equippedRod={equippedRod}
-              equippedBait={equippedBait}
-              weather={weather}
-              adminOdds={adminOdds}
-              setAdminOdds={setAdminOdds}
-              setCoins={setCoins}
-              soundEnabled={soundEnabled}
-              onClose={closeModal}
-            />
-          )}
-
-          {isShopOpen && (
-            <FishingShopModal
-              key="shop-modal"
-              coins={coins}
-              setCoins={setCoins}
-              equippedRod={equippedRod}
-              setEquippedRod={setEquippedRod}
-              ownedRods={ownedRods}
-              setOwnedRods={setOwnedRods}
-              equippedBait={equippedBait}
-              setEquippedBait={setEquippedBait}
-              baitCounts={baitCounts}
-              setBaitCounts={setBaitCounts}
-              soundEnabled={soundEnabled}
-              onClose={closeModal}
-            />
-          )}
-
           {/* Start Screen */}
           {gameState === 'idle' && !hasStarted && (
+
             <motion.div
               key="start-screen"
               initial={{ opacity: 0 }}
@@ -2068,6 +2030,53 @@ export const FishingGameSection: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ================= OUTSIDE CANVAS MODALS (TRUE FULLSCREEN VIEWPORT) ================= */}
+      <AnimatePresence>
+        {isJournalOpen && (
+          <FishingJournal
+            key="journal-modal"
+            score={score}
+            caughtCount={caughtCount}
+            discoveredSpecies={discoveredSpecies}
+            soundEnabled={soundEnabled}
+            onClose={closeModal}
+          />
+        )}
+
+        {isOddsOpen && (
+          <FishingOddsModal
+            key="odds-modal"
+            equippedRod={equippedRod}
+            equippedBait={equippedBait}
+            weather={weather}
+            adminOdds={adminOdds}
+            setAdminOdds={setAdminOdds}
+            setCoins={setCoins}
+            soundEnabled={soundEnabled}
+            onClose={closeModal}
+          />
+        )}
+
+        {isShopOpen && (
+          <FishingShopModal
+            key="shop-modal"
+            coins={coins}
+            setCoins={setCoins}
+            equippedRod={equippedRod}
+            setEquippedRod={setEquippedRod}
+            ownedRods={ownedRods}
+            setOwnedRods={setOwnedRods}
+            equippedBait={equippedBait}
+            setEquippedBait={setEquippedBait}
+            baitCounts={baitCounts}
+            setBaitCounts={setBaitCounts}
+            soundEnabled={soundEnabled}
+            onClose={closeModal}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 };
+

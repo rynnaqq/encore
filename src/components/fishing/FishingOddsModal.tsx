@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3, X, Sliders, Shield, Crown, Sparkles, Zap,
-  TrendingUp, RefreshCw, Layers, Lock, Flame
+  TrendingUp, RefreshCw, Layers, Lock, Flame, Activity
 } from "lucide-react";
+
 import { useAuth } from "../../context/AuthContext";
 import { isAdminName } from "../AdminBadge";
 import {
@@ -60,7 +61,7 @@ export const FishingOddsModal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[350] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
           playFishingSound('click', soundEnabled);
