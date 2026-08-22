@@ -12,6 +12,7 @@ export interface User {
 interface AuthContextType {
   currentUser: User | null;
   users: User[];
+  sessionToken: string | null;
   isLoginModalOpen: boolean;
   openLoginModal: (onSuccessCallback?: () => void) => void;
   closeLoginModal: () => void;
@@ -26,6 +27,7 @@ interface AuthContextType {
 
 const STORAGE_CURRENT_USER_KEY = 'app_current_user_v3';
 const STORAGE_USERS_CACHE_KEY = 'app_public_directory_v3';
+const STORAGE_TOKEN_KEY = 'app_session_token_v3';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -38,6 +40,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ignore
     }
   }, []);
+
+  const [sessionToken, setSessionToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(STORAGE_TOKEN_KEY);
+    } catch (e) {
+      return null;
+    }
+  });
 
   const [users, setUsers] = useState<User[]>(() => {
     try {
@@ -116,10 +126,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         localStorage.removeItem(STORAGE_CURRENT_USER_KEY);
       }
+      if (sessionToken) {
+        localStorage.setItem(STORAGE_TOKEN_KEY, sessionToken);
+      } else {
+        localStorage.removeItem(STORAGE_TOKEN_KEY);
+      }
     } catch (e) {
-      console.error('Error persisting current user:', e);
+      console.error('Error persisting current user and token:', e);
     }
-  }, [currentUser]);
+  }, [currentUser, sessionToken]);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginSuccessCallback, setLoginSuccessCallback] = useState<(() => void) | null>(null);
@@ -144,8 +159,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username and password are required' };
     }
 
-    // Attempt Server Login asynchronously in background to ensure sync,
-    // and process verification synchronously with local store
     fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -153,11 +166,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).then(res => res.json()).then(data => {
       if (data.success && data.user) {
         setCurrentUser(data.user);
+        if (data.token) {
+          setSessionToken(data.token);
+        }
         refreshUsersList();
       }
     }).catch(() => {});
 
-    // For UI responsiveness
+    // Responsive local fallback
     const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
     const existingUser = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
 
@@ -189,12 +205,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: Date.now(),
     };
 
-    // Call server auth API
     fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: cleanUsername, password })
-    }).then(res => res.json()).then(() => {
+    }).then(res => res.json()).then(data => {
+      if (data.success && data.token) {
+        setSessionToken(data.token);
+      }
       refreshUsersList();
     }).catch(() => {});
 
@@ -212,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setCurrentUser(null);
+    setSessionToken(null);
   };
 
   const addUser = (username: string, password: string, role: 'user' | 'admin') => {
@@ -220,9 +239,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Username and password are required' };
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+
     fetch('/api/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ username: cleanUsername, password })
     }).then(res => res.json()).then(() => {
       refreshUsersList();
@@ -250,8 +272,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Master account cannot be deleted' };
     }
 
+    const headers: Record<string, string> = {};
+    if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+
     fetch(`/api/auth/users/${encodeURIComponent(username)}`, {
       method: 'DELETE',
+      headers
     }).then(() => {
       refreshUsersList();
     }).catch(() => {});
@@ -264,6 +290,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (currentUser?.username.toLowerCase() === clean) {
       setCurrentUser(null);
+      setSessionToken(null);
     }
 
     return { success: true };
@@ -275,9 +302,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Master account role cannot be changed' };
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+
     fetch(`/api/auth/users/${encodeURIComponent(username)}/role`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ role })
     }).then(() => {
       refreshUsersList();
@@ -303,9 +333,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'New password must be at least 4 characters' };
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+
     fetch('/api/auth/change-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         username: currentUser.username,
         oldPassword,
@@ -321,6 +354,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         users,
+        sessionToken,
         isLoginModalOpen,
         openLoginModal,
         closeLoginModal,

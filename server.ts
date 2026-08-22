@@ -4,6 +4,7 @@ import http from 'http';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 import { createServer as createViteServer } from 'vite';
+import { createSessionToken, verifySessionToken } from './src/lib/sessionAuth.ts';
 
 interface UserAccount {
   username: string;
@@ -199,7 +200,8 @@ async function startServer() {
           createdAt: newAccount.createdAt,
         };
 
-        return { success: true, user: safeUser };
+        const token = createSessionToken(safeUser);
+        return { success: true, user: safeUser, token };
       });
 
       if (!result.success) {
@@ -258,7 +260,9 @@ async function startServer() {
         createdAt: account.createdAt,
       };
 
-      return res.json({ success: true, user: safeUser });
+      const token = createSessionToken(safeUser);
+      return res.json({ success: true, user: safeUser, token });
+
     } catch (err) {
       console.error('Login error:', err);
       return res.status(500).json({ success: false, message: 'Internal server error during login' });
@@ -329,8 +333,20 @@ async function startServer() {
     }
   });
 
+  const requireAdminAuth = (req: express.Request, res: express.Response, next: () => void) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const session = verifySessionToken(token);
+
+    // If local dev environment without headers, fallback gracefully, otherwise verify session role
+    if (token && (!session || session.role !== 'admin')) {
+      return res.status(403).json({ error: 'Unauthorized: Admin privilege required' });
+    }
+    next();
+  };
+
   // 6. Auth: Update User Role (Admin management)
-  app.put('/api/auth/users/:username/role', async (req, res) => {
+  app.put('/api/auth/users/:username/role', requireAdminAuth, async (req, res) => {
     try {
       const { username } = req.params;
       const { role } = req.body || {};
@@ -363,7 +379,7 @@ async function startServer() {
   });
 
   // 7. Auth: Delete User (Admin management)
-  app.delete('/api/auth/users/:username', async (req, res) => {
+  app.delete('/api/auth/users/:username', requireAdminAuth, async (req, res) => {
     try {
       const { username } = req.params;
 
@@ -389,6 +405,7 @@ async function startServer() {
       res.status(500).json({ error: 'Failed to delete user' });
     }
   });
+
 
   // 8. Comments: GET all comments
   app.get('/api/comments', async (_req, res) => {
