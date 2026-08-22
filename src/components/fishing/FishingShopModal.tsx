@@ -61,7 +61,13 @@ export const FishingShopModal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto touch-auto overscroll-contain"
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2 sm:p-4 font-sans select-none overflow-hidden touch-auto overscroll-contain"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          playFishingSound('click', soundEnabled);
+          onClose();
+        }
+      }}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
           playFishingSound('click', soundEnabled);
@@ -75,11 +81,11 @@ export const FishingShopModal: React.FC<{
         exit={{ scale: 0.95, opacity: 0, y: 12 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col max-h-[85vh] overflow-hidden text-slate-100 my-auto touch-auto"
+        className="bg-slate-900/95 border border-slate-700/80 rounded-2xl sm:rounded-3xl w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100 touch-auto"
       >
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-5 py-4 flex items-center justify-between shrink-0">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
@@ -87,29 +93,35 @@ export const FishingShopModal: React.FC<{
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white font-sans">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-xl font-black tracking-tight text-white font-sans">
                   Toko Alat Pancing
                 </h2>
-                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40">
-                  Angler's Emporium
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40">
+                  Emporium
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium hidden sm:block mt-0.5">
                 Tingkatkan joran & stok umpan sakral untuk memburu ikan purba
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Wallet Chip */}
-            <div className="bg-amber-400/15 border border-amber-400/40 px-3.5 py-1.5 rounded-2xl flex items-center gap-2 font-mono font-bold text-sm text-amber-300 shadow-sm">
+            <div className="bg-amber-400/15 border border-amber-400/40 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 font-mono font-bold text-xs sm:text-sm text-amber-300 shadow-sm">
               <Coins className="w-4 h-4 text-amber-400" />
               <span>{coins.toLocaleString()}</span>
             </div>
 
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
+                playFishingSound('click', soundEnabled);
+                onClose();
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
                 playFishingSound('click', soundEnabled);
                 onClose();
               }}
@@ -120,6 +132,7 @@ export const FishingShopModal: React.FC<{
             </button>
           </div>
         </div>
+
 
         {/* Category Switcher Tabs */}
         <div className="px-5 pt-3 pb-1 bg-slate-950/40 border-b border-slate-800/80 flex gap-2.5 shrink-0">
@@ -373,6 +386,29 @@ export const FishingShopModal: React.FC<{
               );
             })
           )}
+        </div>
+
+        {/* Footer with Close Button */}
+        <div className="bg-slate-950/80 border-t border-slate-800 px-4 sm:px-5 py-3 flex items-center justify-between shrink-0">
+          <div className="text-xs text-slate-400 font-mono">
+            Saldo: <strong className="text-amber-400 font-bold">🪙 {coins.toLocaleString()}</strong>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              playFishingSound('click', soundEnabled);
+              onClose();
+            }}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              playFishingSound('click', soundEnabled);
+              onClose();
+            }}
+            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-mono font-bold text-xs sm:text-sm border border-slate-700 transition-all cursor-pointer active:scale-95 flex items-center gap-2"
+          >
+            <X className="w-4 h-4" />
+            <span>Tutup Toko</span>
+          </button>
         </div>
       </motion.div>
     </motion.div>

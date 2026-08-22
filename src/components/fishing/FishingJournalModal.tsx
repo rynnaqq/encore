@@ -98,7 +98,13 @@ export const FishingJournal: React.FC<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2.5 sm:p-4 pt-16 sm:pt-20 font-sans select-none overflow-y-auto touch-auto overscroll-contain"
+      className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2 sm:p-4 font-sans select-none overflow-hidden touch-auto overscroll-contain"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          playFishingSound('click', soundEnabled);
+          onClose();
+        }
+      }}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
           playFishingSound('click', soundEnabled);
@@ -112,24 +118,24 @@ export const FishingJournal: React.FC<{
         exit={{ scale: 0.95, opacity: 0, y: 12 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="bg-slate-900/95 border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[85vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100 my-auto touch-auto"
+        className="bg-slate-900/95 border border-slate-700/80 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[92vh] sm:max-h-[88vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden text-slate-100 touch-auto"
       >
 
         {/* Top Header Banner */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-amber-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white font-sans">
+                <h2 className="text-base sm:text-xl font-black tracking-tight text-white font-sans">
                   Jurnal Spesies Samudra
                 </h2>
-                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40">
-                  v2.0 Ensiklopedia
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40">
+                  v2.0
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-300 font-medium hidden sm:block mt-0.5">
@@ -160,7 +166,13 @@ export const FishingJournal: React.FC<{
             </div>
 
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
+                playFishingSound('click', soundEnabled);
+                onClose();
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
                 playFishingSound('click', soundEnabled);
                 onClose();
               }}
@@ -171,6 +183,7 @@ export const FishingJournal: React.FC<{
             </button>
           </div>
         </div>
+
 
         {/* Overview Stats & Telemetry Banner */}
         <div className="bg-slate-950/60 border-b border-slate-800/80 p-3.5 sm:p-5 shrink-0 space-y-3.5">
