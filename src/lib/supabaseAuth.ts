@@ -71,3 +71,30 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
 
   return profiles;
 }
+
+/**
+ * Register a guest account in Supabase directly
+ */
+export async function registerGuestInSupabase(username: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.from(GUEST_TABLE).insert([
+      { username, role: 'user' }
+    ]);
+    
+    if (error) {
+      if (!isTableNotFoundError(error)) {
+        console.warn('Error inserting guest account to supabase:', error);
+      }
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    if (!isTableNotFoundError(err)) {
+      console.warn('Exception inserting guest account to supabase:', err);
+    }
+    return false;
+  }
+}

@@ -5,6 +5,15 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import { createServer as createViteServer } from 'vite';
 import { createSessionToken, verifySessionToken } from './src/lib/sessionAuth.ts';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
 
 interface UserAccount {
   username: string;
@@ -410,6 +419,19 @@ async function startServer() {
   // 8. Comments: GET all comments
   app.get('/api/comments', async (_req, res) => {
     try {
+      if (supabase) {
+        const { data, error } = await supabase.from('comments').select('*').order('timestamp', { ascending: true });
+        if (!error && data) {
+          return res.json(data.map((c: any) => ({
+            id: c.id,
+            username: c.username,
+            text: c.text,
+            photoBase64: c.photo_base64 || c.photoBase64,
+            timestamp: typeof c.timestamp === 'number' ? c.timestamp : Number(c.timestamp),
+            updatedAt: c.updated_at ? new Date(c.updated_at).getTime() : undefined
+          })));
+        }
+      }
       const comments = await withCommentsLock(() => readComments());
       res.json(comments);
     } catch (err) {
@@ -442,6 +464,19 @@ async function startServer() {
       };
 
       const result = await withCommentsLock(async () => {
+        if (supabase) {
+          try {
+            await supabase.from('comments').insert([{
+              id: newComment.id,
+              username: newComment.username,
+              text: newComment.text,
+              photo_base64: newComment.photoBase64,
+              timestamp: newComment.timestamp
+            }]);
+          } catch (e) {
+            console.error('Failed to write comment to supabase:', e);
+          }
+        }
         const comments = await readComments();
         comments.push(newComment);
         if (comments.length > 500) {
@@ -469,6 +504,13 @@ async function startServer() {
       }
 
       const updated = await withCommentsLock(async () => {
+        if (supabase) {
+          try {
+            await supabase.from('comments').update({ text: cleanText }).eq('id', id);
+          } catch (e) {
+            console.error('Failed to update comment in supabase:', e);
+          }
+        }
         const comments = await readComments();
         const commentIndex = comments.findIndex(c => c.id === id);
 
@@ -495,6 +537,13 @@ async function startServer() {
     try {
       const { id } = req.params;
       const deleted = await withCommentsLock(async () => {
+        if (supabase) {
+          try {
+            await supabase.from('comments').delete().eq('id', id);
+          } catch (e) {
+            console.error('Failed to delete comment in supabase:', e);
+          }
+        }
         let comments = await readComments();
         const initialLength = comments.length;
         comments = comments.filter(c => c.id !== id);

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { LoginModal } from '../components/LoginModal';
-import { fetchPublicProfilesFromSupabase } from '../lib/supabaseAuth';
+import { fetchPublicProfilesFromSupabase, registerGuestInSupabase } from '../lib/supabaseAuth';
 import { registerAdminUsernames } from '../components/AdminBadge';
 
 export interface User {
@@ -209,9 +209,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: cleanUsername, password })
-    }).then(res => res.json()).then(data => {
+    }).then(res => res.json()).then(async data => {
       if (data.success && data.token) {
         setSessionToken(data.token);
+        if (userObj.role === 'user') {
+          await registerGuestInSupabase(cleanUsername);
+        }
       }
       refreshUsersList();
     }).catch(() => {});
@@ -246,7 +249,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       headers,
       body: JSON.stringify({ username: cleanUsername, password })
-    }).then(res => res.json()).then(() => {
+    }).then(res => res.json()).then(async () => {
+      if (role === 'user') {
+        await registerGuestInSupabase(cleanUsername);
+      }
       refreshUsersList();
     }).catch(() => {});
 
