@@ -17,41 +17,8 @@ interface Comment {
 }
 
 
-const parseCommentText = (rawText: string | null | undefined) => {
-  let isPinned = false;
-  let parentId: string | null = null;
-  let replyToUsername: string | null = null;
-  let text = typeof rawText === 'string' ? rawText : '';
+import { parseCommentText, serializeCommentText } from '../lib/commentHelpers';
 
-  if (text.startsWith('[PINNED]:')) {
-    isPinned = true;
-    text = text.substring(9);
-  }
-
-  const replyMatch = text.match(/^\[REPLY_TO:([^\]:]+)(?::([^\]]+))?\](.*)/s);
-  if (replyMatch) {
-    parentId = replyMatch[1];
-    replyToUsername = replyMatch[2] || null;
-    text = replyMatch[3];
-  }
-
-  return { isPinned, parentId, replyToUsername, text };
-};
-
-const serializeCommentText = (text: string, isPinned: boolean, parentId: string | null, replyToUsername: string | null = null) => {
-  let res = text;
-  if (parentId) {
-    if (replyToUsername) {
-      res = `[REPLY_TO:${parentId}:${replyToUsername}]${res}`;
-    } else {
-      res = `[REPLY_TO:${parentId}]${res}`;
-    }
-  }
-  if (isPinned) {
-    res = `[PINNED]:${res}`;
-  }
-  return res;
-};
 
 export const CommentSection: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
