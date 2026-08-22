@@ -64,14 +64,15 @@ export const FishingOddsModal: React.FC<{
       className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2 sm:p-4 font-sans select-none overflow-hidden touch-auto overscroll-contain"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
+          e.preventDefault();
+          e.stopPropagation();
           playFishingSound('click', soundEnabled);
           onClose();
         }
       }}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
-          playFishingSound('click', soundEnabled);
-          onClose();
+          e.stopPropagation();
         }
       }}
     >
@@ -110,15 +111,15 @@ export const FishingOddsModal: React.FC<{
           </div>
 
           <button
+            type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               playFishingSound('click', soundEnabled);
               onClose();
             }}
             onPointerDown={(e) => {
               e.stopPropagation();
-              playFishingSound('click', soundEnabled);
-              onClose();
             }}
             className="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
             aria-label="Tutup Odds"
@@ -126,6 +127,7 @@ export const FishingOddsModal: React.FC<{
             <X className="w-5 h-5" />
           </button>
         </div>
+
 
 
         {/* Tab Switcher (For Admins) */}
@@ -368,27 +370,8 @@ export const FishingOddsModal: React.FC<{
             </div>
           )}
         </div>
-
-        {/* Footer with Close Button */}
-        <div className="bg-slate-950/80 border-t border-slate-800 px-4 sm:px-5 py-3 flex items-center justify-end shrink-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              playFishingSound('click', soundEnabled);
-              onClose();
-            }}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              playFishingSound('click', soundEnabled);
-              onClose();
-            }}
-            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-mono font-bold text-xs sm:text-sm border border-slate-700 transition-all cursor-pointer active:scale-95 flex items-center gap-2"
-          >
-            <X className="w-4 h-4" />
-            <span>Tutup Telemetri</span>
-          </button>
-        </div>
       </motion.div>
     </motion.div>
   );
+
 };

@@ -101,14 +101,15 @@ export const FishingJournal: React.FC<{
       className="fixed inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl z-[600] p-2 sm:p-4 font-sans select-none overflow-hidden touch-auto overscroll-contain"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
+          e.preventDefault();
+          e.stopPropagation();
           playFishingSound('click', soundEnabled);
           onClose();
         }
       }}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) {
-          playFishingSound('click', soundEnabled);
-          onClose();
+          e.stopPropagation();
         }
       }}
     >
@@ -166,15 +167,15 @@ export const FishingJournal: React.FC<{
             </div>
 
             <button
+              type="button"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 playFishingSound('click', soundEnabled);
                 onClose();
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();
-                playFishingSound('click', soundEnabled);
-                onClose();
               }}
               className="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700/80 hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer active:scale-90 shrink-0"
               aria-label="Tutup Jurnal"
@@ -183,6 +184,7 @@ export const FishingJournal: React.FC<{
             </button>
           </div>
         </div>
+
 
 
         {/* Overview Stats & Telemetry Banner */}
@@ -513,12 +515,22 @@ export const FishingJournal: React.FC<{
                 {/* Right Action Navigation Deck */}
                 <div className="flex sm:flex-col items-center justify-between gap-2 shrink-0 w-full sm:w-auto">
                   <button
-                    onClick={() => setSelectedFish(null)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      playFishingSound('click', soundEnabled);
+                      setSelectedFish(null);
+                    }}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                    }}
                     className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer self-end sm:self-auto"
                     title="Tutup Detail"
                   >
                     <X className="w-5 h-5" />
                   </button>
+
 
                   <div className="flex items-center gap-2">
                     <button

@@ -136,13 +136,18 @@ export const FishingGameSection: React.FC = () => {
   const isOddsOpen = activeModal === 'odds';
   const isShopOpen = activeModal === 'shop';
 
+  const lastClosedTimeRef = useRef(0);
+
   const toggleModal = (modal: 'journal' | 'shop' | 'odds') => {
+    if (Date.now() - lastClosedTimeRef.current < 250) return;
     setActiveModal((prev) => (prev === modal ? null : modal));
   };
 
   const closeModal = () => {
+    lastClosedTimeRef.current = Date.now();
     setActiveModal(null);
   };
+
 
   // Keyboard shortcut: Escape to close whichever modal is active
   useEffect(() => {
