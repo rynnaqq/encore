@@ -221,22 +221,26 @@ export const CommentSection: React.FC = () => {
       return;
     }
 
-    if (isLoginMode) {
-      const res = login(username.trim(), password);
-      if (!res.success) {
-        setAuthError(res.message || 'Login failed');
-        return;
+    try {
+      if (isLoginMode) {
+        const res = await login(username.trim(), password);
+        if (!res.success) {
+          setAuthError(res.message || 'Login failed');
+          return;
+        }
+        setUsername('');
+        setPassword('');
+      } else {
+        const res = await register(username.trim(), password);
+        if (!res.success) {
+          setAuthError(res.message || 'Registration failed');
+          return;
+        }
+        setUsername('');
+        setPassword('');
       }
-      setUsername('');
-      setPassword('');
-    } else {
-      const res = register(username.trim(), password);
-      if (!res.success) {
-        setAuthError(res.message || 'Registration failed');
-        return;
-      }
-      setUsername('');
-      setPassword('');
+    } catch (err: any) {
+      setAuthError(err?.message || 'Authentication error');
     }
   };
 

@@ -169,7 +169,7 @@ async function startServer() {
   // 2. Auth: Register Endpoint
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { username, password } = req.body || {};
+      const { username, password, role } = req.body || {};
       const cleanUsername = typeof username === 'string' ? username.trim() : '';
 
       if (!cleanUsername || cleanUsername.length < 3 || cleanUsername.length > 30) {
@@ -184,6 +184,27 @@ async function startServer() {
         return res.status(400).json({ success: false, message: 'Password must be at least 4 characters' });
       }
 
+      const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
+      const effectiveRole: 'user' | 'admin' = (role === 'admin' || isRootAdmin) ? 'admin' : 'user';
+      const hashedPassword = bcrypt.hashSync(password, 10);
+
+      // Check Supabase if configured
+      if (supabase) {
+        try {
+          const { data: existingUser } = await supabase
+            .from('user_accounts')
+            .select('username')
+            .ilike('username', cleanUsername)
+            .maybeSingle();
+
+          if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Username is already taken' });
+          }
+        } catch (e) {
+          // ignore table not found
+        }
+      }
+
       const result = await withUsersLock(async () => {
         const users = await readUsers();
         const existing = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
@@ -191,14 +212,27 @@ async function startServer() {
           return { success: false, message: 'Username is already taken' };
         }
 
-        const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
-        const hashedPassword = bcrypt.hashSync(password, 10);
         const newAccount: UserAccount = {
           username: cleanUsername,
           password: hashedPassword,
-          role: isRootAdmin ? 'admin' : 'user',
+          role: effectiveRole,
           createdAt: Date.now(),
         };
+
+        // Write to Supabase
+        if (supabase) {
+          try {
+            await supabase.from('user_accounts').insert([{
+              id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+              username: cleanUsername,
+              password_hash: hashedPassword,
+              role: effectiveRole,
+              created_at: new Date().toISOString()
+            }]);
+          } catch (e) {
+            console.error('Failed to write user to supabase:', e);
+          }
+        }
 
         users.push(newAccount);
         await writeUsers(users);
@@ -234,8 +268,38 @@ async function startServer() {
         return res.status(400).json({ success: false, message: 'Username and password are required' });
       }
 
-      const users = await withUsersLock(() => readUsers());
-      const account = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
+      let users = await withUsersLock(() => readUsers());
+      let account = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
+
+      // If not in local users.json, check Supabase
+      if (!account && supabase) {
+        try {
+          const { data: dbUser } = await supabase
+            .from('user_accounts')
+            .select('username, password_hash, role, created_at')
+            .ilike('username', cleanUsername)
+            .maybeSingle();
+
+          if (dbUser) {
+            account = {
+              username: dbUser.username,
+              password: dbUser.password_hash,
+              role: dbUser.role === 'admin' ? 'admin' : 'user',
+              createdAt: dbUser.created_at ? new Date(dbUser.created_at).getTime() : Date.now()
+            };
+            // Cache locally
+            await withUsersLock(async () => {
+              const current = await readUsers();
+              if (!current.some(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
+                current.push(account!);
+                await writeUsers(current);
+              }
+            });
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
 
       if (!account) {
         return res.status(401).json({ success: false, message: 'Username not found. Please register first.' });
@@ -311,8 +375,21 @@ async function startServer() {
           return { success: false, message: 'Incorrect old password' };
         }
 
-        account.password = bcrypt.hashSync(newPassword, 10);
+        const newHashed = bcrypt.hashSync(newPassword, 10);
+        account.password = newHashed;
         await writeUsers(users);
+
+        if (supabase) {
+          try {
+            await supabase
+              .from('user_accounts')
+              .update({ password_hash: newHashed, updated_at: new Date().toISOString() })
+              .ilike('username', cleanUsername);
+          } catch (e) {
+            console.error('Failed to update password in supabase:', e);
+          }
+        }
+
         return { success: true };
       });
 
@@ -330,13 +407,42 @@ async function startServer() {
   // 5. Auth: Get Users List (Sanitized: NO PASSWORDS EXPOSED)
   app.get('/api/auth/users', async (_req, res) => {
     try {
-      const users = await withUsersLock(() => readUsers());
-      const sanitizedUsers: SanitizedUser[] = users.map(u => ({
-        username: u.username,
-        role: u.role,
-        createdAt: u.createdAt,
-      }));
-      res.json(sanitizedUsers);
+      const usersMap = new Map<string, SanitizedUser>();
+
+      // 1. Try local storage
+      const localUsers = await withUsersLock(() => readUsers());
+      localUsers.forEach(u => {
+        usersMap.set(u.username.toLowerCase(), {
+          username: u.username,
+          role: u.role,
+          createdAt: u.createdAt
+        });
+      });
+
+      // 2. Fetch from Supabase if configured
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('user_accounts')
+            .select('username, role, created_at');
+
+          if (!error && Array.isArray(data)) {
+            data.forEach((u: any) => {
+              if (u?.username && !usersMap.has(u.username.toLowerCase())) {
+                usersMap.set(u.username.toLowerCase(), {
+                  username: u.username,
+                  role: u.role === 'admin' ? 'admin' : 'user',
+                  createdAt: u.created_at ? new Date(u.created_at).getTime() : Date.now()
+                });
+              }
+            });
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      res.json(Array.from(usersMap.values()));
     } catch (err) {
       res.status(500).json({ error: 'Failed to retrieve users' });
     }
@@ -368,6 +474,14 @@ async function startServer() {
         return res.status(403).json({ error: 'Master developer account role cannot be changed' });
       }
 
+      if (supabase) {
+        try {
+          await supabase.from('user_accounts').update({ role }).ilike('username', username);
+        } catch (e) {
+          console.error('Failed to update role in supabase:', e);
+        }
+      }
+
       const updated = await withUsersLock(async () => {
         const users = await readUsers();
         const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
@@ -394,6 +508,14 @@ async function startServer() {
 
       if (username.toLowerCase() === 'adminkawaaii' || username.toLowerCase() === 'encore' || username.toLowerCase() === 'developer') {
         return res.status(403).json({ error: 'Master developer account cannot be deleted' });
+      }
+
+      if (supabase) {
+        try {
+          await supabase.from('user_accounts').delete().ilike('username', username);
+        } catch (e) {
+          console.error('Failed to delete user in supabase:', e);
+        }
       }
 
       const deleted = await withUsersLock(async () => {

@@ -23,22 +23,26 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   if (!isOpen || !currentUser) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMsg(null);
 
-    const result = changePassword(oldPassword, newPassword);
-    
-    if (result.success) {
-      setStatusMsg({ type: 'success', text: 'Password berhasil diubah!' });
-      setOldPassword('');
-      setNewPassword('');
-      setTimeout(() => {
-        onClose();
-        setStatusMsg(null);
-      }, 2000);
-    } else {
-      setStatusMsg({ type: 'error', text: result.message || 'Gagal mengubah password' });
+    try {
+      const result = await changePassword(oldPassword, newPassword);
+      
+      if (result.success) {
+        setStatusMsg({ type: 'success', text: 'Password berhasil diubah!' });
+        setOldPassword('');
+        setNewPassword('');
+        setTimeout(() => {
+          onClose();
+          setStatusMsg(null);
+        }, 2000);
+      } else {
+        setStatusMsg({ type: 'error', text: result.message || 'Gagal mengubah password' });
+      }
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err?.message || 'Gagal mengubah password' });
     }
   };
 

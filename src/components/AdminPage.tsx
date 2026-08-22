@@ -32,9 +32,9 @@ export const AdminPage: React.FC = () => {
   // Admin session authentication
   const isAdminAuthenticated = currentUser?.role === 'admin';
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = login('AdminKawaaii', adminPassword);
+    const res = await login('AdminKawaaii', adminPassword);
     if (!res.success) {
       alert(res.message || 'Password Admin salah!');
     }
@@ -173,11 +173,11 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setUserActionMsg(null);
 
-    const res = addUser(newUsername, newPassword, newRole);
+    const res = await addUser(newUsername, newPassword, newRole);
     if (res.success) {
       setUserActionMsg({ type: 'success', text: `User "${newUsername}" berhasil dibuat!` });
       setNewUsername('');
@@ -187,14 +187,14 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  const handleDeleteUserClick = (targetUsername: string) => {
+  const handleDeleteUserClick = async (targetUsername: string) => {
     if (targetUsername.toLowerCase() === 'adminkawaaii') {
       alert('User admin utama tidak dapat dihapus!');
       return;
     }
     if (!confirm(`Hapus akun user "${targetUsername}"?`)) return;
 
-    const res = deleteUser(targetUsername);
+    const res = await deleteUser(targetUsername);
     if (res.success) {
       setUserActionMsg({ type: 'success', text: `User "${targetUsername}" telah dihapus.` });
     } else {

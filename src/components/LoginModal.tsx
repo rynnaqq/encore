@@ -25,14 +25,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
     setIsCapsLock(e.getModifierState('CapsLock'));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
       if (isRegisterMode) {
-        const res = register(username, password);
+        const res = await register(username, password);
         if (res.success) {
           setUsername('');
           setPassword('');
@@ -42,7 +42,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
           setErrorMsg(res.message || 'Gagal mendaftar');
         }
       } else {
-        const res = login(username, password);
+        const res = await login(username, password);
         if (res.success) {
           setUsername('');
           setPassword('');
@@ -52,8 +52,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
           setErrorMsg(res.message || 'Gagal masuk');
         }
       }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Terjadi kesalahan sistem');
+    } finally {
       setIsSubmitting(false);
-    }, 150);
+    }
   };
 
   return (

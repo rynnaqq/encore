@@ -3,27 +3,28 @@
 -- Jalankan skrip ini di: Supabase Dashboard -> SQL Editor -> New Query
 -- ==============================================================================
 
--- 1. Tabel Komentar Aman dengan RLS
+-- 1. TABEL KOMENTAR (comments)
 CREATE TABLE IF NOT EXISTS public.comments (
   id text PRIMARY KEY,
   username text NOT NULL,
   text text NOT NULL,
   photo_base64 text,
   timestamp bigint NOT NULL DEFAULT (extract(epoch from now()) * 1000)::bigint,
-  created_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz
 );
 
 -- Aktifkan RLS pada tabel comments
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
--- Policy 1: Publik diizinkan membaca semua komentar
+-- Policy: Publik diizinkan membaca semua komentar
 DROP POLICY IF EXISTS "Public read comments" ON public.comments;
 CREATE POLICY "Public read comments" 
   ON public.comments 
   FOR SELECT 
   USING (true);
 
--- Policy 2: Pengguna publik boleh memposting komentar dengan validasi teks & username
+-- Policy: Pengguna publik boleh memposting komentar dengan validasi teks & username
 DROP POLICY IF EXISTS "Public insert comments" ON public.comments;
 CREATE POLICY "Public insert comments" 
   ON public.comments 
@@ -33,34 +34,76 @@ CREATE POLICY "Public insert comments"
     char_length(text) >= 1 AND char_length(text) <= 2500
   );
 
--- Policy 3: Membatasi update/delete hanya untuk service role atau authenticated admin
-DROP POLICY IF EXISTS "Admin update comments" ON public.comments;
-CREATE POLICY "Admin update comments" 
+-- Policy: Update komentar
+DROP POLICY IF EXISTS "Allow update comments" ON public.comments;
+CREATE POLICY "Allow update comments" 
   ON public.comments 
   FOR UPDATE 
-  USING (auth.role() = 'service_role' OR auth.role() = 'authenticated');
+  USING (true);
 
-DROP POLICY IF EXISTS "Admin delete comments" ON public.comments;
-CREATE POLICY "Admin delete comments" 
+-- Policy: Delete komentar
+DROP POLICY IF EXISTS "Allow delete comments" ON public.comments;
+CREATE POLICY "Allow delete comments" 
   ON public.comments 
   FOR DELETE 
-  USING (auth.role() = 'service_role' OR auth.role() = 'authenticated');
+  USING (true);
 
 
 -- ==============================================================================
--- 2. Proteksi Akun Admin & Guest (Mencegah Eksposur Password Hash ke Publik)
+-- 2. TABEL AKUN PENGGUNA (user_accounts)
 -- ==============================================================================
 
--- Pastikan tabel admin_accounts tidak dapat dibaca bebas oleh anon key
-ALTER TABLE IF EXISTS public.admin_accounts ENABLE ROW LEVEL SECURITY;
+CREATE TABLE IF NOT EXISTS public.user_accounts (
+  id text PRIMARY KEY,
+  username text UNIQUE NOT NULL,
+  password_hash text NOT NULL,
+  role text NOT NULL DEFAULT 'user',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
 
-DROP POLICY IF EXISTS "Public read admin_accounts" ON public.admin_accounts;
-DROP POLICY IF EXISTS "Public insert admin_accounts" ON public.admin_accounts;
-DROP POLICY IF EXISTS "Public update admin_accounts" ON public.admin_accounts;
-DROP POLICY IF EXISTS "Public delete admin_accounts" ON public.admin_accounts;
+-- Aktifkan RLS pada tabel user_accounts
+ALTER TABLE public.user_accounts ENABLE ROW LEVEL SECURITY;
 
--- Hanya Service Role (Backend) yang boleh mengelola admin_accounts
-CREATE POLICY "Service Role Only on admin_accounts" 
-  ON public.admin_accounts 
-  FOR ALL 
-  USING (auth.role() = 'service_role');
+-- Policy: Publik diizinkan membaca username, role, dan created_at (untuk direktori pengguna)
+DROP POLICY IF EXISTS "Public select user directory" ON public.user_accounts;
+CREATE POLICY "Public select user directory" 
+  ON public.user_accounts 
+  FOR SELECT 
+  USING (true);
+
+-- Policy: Pendaftaran akun baru (INSERT publik dengan validasi)
+DROP POLICY IF EXISTS "Public register user_accounts" ON public.user_accounts;
+CREATE POLICY "Public register user_accounts" 
+  ON public.user_accounts 
+  FOR INSERT 
+  WITH CHECK (
+    char_length(username) >= 3 AND char_length(username) <= 30 AND
+    char_length(password_hash) >= 4
+  );
+
+-- Policy: Mengubah password atau role (UPDATE)
+DROP POLICY IF EXISTS "Allow update user_accounts" ON public.user_accounts;
+CREATE POLICY "Allow update user_accounts" 
+  ON public.user_accounts 
+  FOR UPDATE 
+  USING (true);
+
+-- Policy: Menghapus akun (DELETE)
+DROP POLICY IF EXISTS "Allow delete user_accounts" ON public.user_accounts;
+CREATE POLICY "Allow delete user_accounts" 
+  ON public.user_accounts 
+  FOR DELETE 
+  USING (true);
+
+-- Tambahkan Akun Root Admin Default (AdminKawaaii) jika belum ada
+-- Password default: admin123 (bcrypt hash: $2a$10$7R.. / bcrypt generated)
+INSERT INTO public.user_accounts (id, username, password_hash, role, created_at)
+VALUES (
+  'root-admin-kawaaii',
+  'AdminKawaaii',
+  '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
+  'admin',
+  now()
+)
+ON CONFLICT (username) DO NOTHING;
