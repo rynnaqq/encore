@@ -16,13 +16,11 @@ CREATE TABLE IF NOT EXISTS public.comments (
   updated_at timestamptz
 );
 
--- Pastikan semua kolom komentar ada
 ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS photo_base64 text;
 ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS timestamp bigint DEFAULT (extract(epoch from now()) * 1000)::bigint;
 ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
 ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS updated_at timestamptz;
 
--- Aktifkan RLS pada tabel comments
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public read comments" ON public.comments;
@@ -43,26 +41,23 @@ CREATE POLICY "Allow delete comments" ON public.comments FOR DELETE USING (true)
 
 -- ------------------------------------------------------------------------------
 -- 2. TABEL GUEST ACCOUNTS (guest_accounts)
--- Digunakan untuk akun pemain/tamu umum dengan kolom plain 'password'
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.guest_accounts (
   id text PRIMARY KEY,
   username text UNIQUE NOT NULL,
-  password text NOT NULL,
+  "password" text NOT NULL,
   role text NOT NULL DEFAULT 'user',
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
 
--- Pastikan semua kolom ada (mencegah error jika tabel sudah pernah dibuat)
 ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS id text;
 ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS username text;
-ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS password text;
+ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS "password" text;
 ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS role text DEFAULT 'user';
 ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
 ALTER TABLE public.guest_accounts ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
--- Aktifkan RLS pada tabel guest_accounts
 ALTER TABLE public.guest_accounts ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public select guest_accounts" ON public.guest_accounts;
@@ -80,26 +75,23 @@ CREATE POLICY "Allow delete guest_accounts" ON public.guest_accounts FOR DELETE 
 
 -- ------------------------------------------------------------------------------
 -- 3. TABEL ADMIN ACCOUNTS (admin_accounts)
--- Digunakan untuk akun administrator dengan kolom plain 'password'
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.admin_accounts (
   id text PRIMARY KEY,
   username text UNIQUE NOT NULL,
-  password text NOT NULL,
+  "password" text NOT NULL,
   role text NOT NULL DEFAULT 'admin',
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
 
--- Pastikan semua kolom ada
 ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS id text;
 ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS username text;
-ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS password text;
+ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS "password" text;
 ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS role text DEFAULT 'admin';
 ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
 ALTER TABLE public.admin_accounts ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
--- Aktifkan RLS pada tabel admin_accounts
 ALTER TABLE public.admin_accounts ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public select admin_accounts" ON public.admin_accounts;
@@ -118,7 +110,7 @@ CREATE POLICY "Allow delete admin_accounts" ON public.admin_accounts FOR DELETE 
 -- ------------------------------------------------------------------------------
 -- 4. DEFAULT MASTER ADMIN (AdminKawaaii / password: admin123)
 -- ------------------------------------------------------------------------------
-INSERT INTO public.admin_accounts (id, username, password, role, created_at)
+INSERT INTO public.admin_accounts (id, username, "password", role, created_at)
 VALUES (
   'root-admin-kawaaii',
   'AdminKawaaii',
@@ -127,4 +119,4 @@ VALUES (
   now()
 )
 ON CONFLICT (username) DO UPDATE 
-SET password = COALESCE(admin_accounts.password, EXCLUDED.password);
+SET "password" = EXCLUDED."password";
