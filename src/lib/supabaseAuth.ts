@@ -7,10 +7,10 @@ export interface UserProfile {
   createdAt: number;
 }
 
-export const GUEST_TABLE = 'guest_account';
-export const ADMIN_TABLE = 'admin_account';
-export const GUEST_TABLE_ALT = 'guest_accounts';
-export const ADMIN_TABLE_ALT = 'admin_accounts';
+export const GUEST_TABLE = 'guest_accounts';
+export const ADMIN_TABLE = 'admin_accounts';
+export const GUEST_TABLE_ALT = 'guest_account';
+export const ADMIN_TABLE_ALT = 'admin_account';
 export const USER_TABLE_ALT = 'user_accounts';
 
 function isTableNotFoundError(error: any): boolean {
@@ -26,7 +26,7 @@ function isTableNotFoundError(error: any): boolean {
 }
 
 /**
- * Fetch public user directory from Supabase tables (admin_account & guest_account)
+ * Fetch public user directory from Supabase tables (admin_accounts & guest_accounts)
  */
 export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> {
   const supabase = getSupabaseClient();
@@ -40,7 +40,7 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
   });
 
   if (supabase) {
-    // 1. Fetch from admin_account / admin_accounts
+    // 1. Fetch from admin_accounts / admin_account
     for (const tbl of [ADMIN_TABLE, ADMIN_TABLE_ALT]) {
       try {
         const { data, error } = await supabase
@@ -66,7 +66,7 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
       }
     }
 
-    // 2. Fetch from guest_account / guest_accounts
+    // 2. Fetch from guest_accounts / guest_account
     for (const tbl of [GUEST_TABLE, GUEST_TABLE_ALT]) {
       try {
         const { data, error } = await supabase
@@ -150,7 +150,7 @@ export async function fetchPublicProfilesFromSupabase(): Promise<UserProfile[]> 
 
 /**
  * Register a user or admin account into the appropriate Supabase table
- * (guest_account for user, admin_account for admin)
+ * (guest_accounts for user, admin_accounts for admin)
  */
 export async function registerUserInSupabase(
   username: string,
@@ -174,7 +174,6 @@ export async function registerUserInSupabase(
   const effectiveRole: 'user' | 'admin' = isRootAdmin ? 'admin' : role;
   const targetTable = effectiveRole === 'admin' ? ADMIN_TABLE : GUEST_TABLE;
   const altTable = effectiveRole === 'admin' ? ADMIN_TABLE_ALT : GUEST_TABLE_ALT;
-  const otherTable = effectiveRole === 'admin' ? GUEST_TABLE : ADMIN_TABLE;
 
   const supabase = getSupabaseClient();
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -207,10 +206,10 @@ export async function registerUserInSupabase(
         created_at: new Date().toISOString()
       };
 
-      // 2. Insert into primary target table (guest_account or admin_account)
+      // 2. Insert into primary target table (guest_accounts or admin_accounts)
       let { error: insertError } = await supabase.from(targetTable).insert([payload]);
 
-      // If singular table not found, fallback to alt table
+      // If primary table not found, fallback to alt table
       if (insertError && isTableNotFoundError(insertError)) {
         const altResult = await supabase.from(altTable).insert([payload]);
         insertError = altResult.error;
@@ -283,7 +282,7 @@ export async function registerUserInSupabase(
 }
 
 /**
- * Login user against admin_account or guest_account tables in Supabase
+ * Login user against admin_accounts or guest_accounts tables in Supabase
  */
 export async function loginUserWithSupabase(
   username: string,
@@ -313,7 +312,7 @@ export async function loginUserWithSupabase(
       let foundRecord: any = null;
       let foundRole: 'user' | 'admin' = 'user';
 
-      // 1. Check admin_account table (and admin_accounts)
+      // 1. Check admin_accounts table (and admin_account)
       for (const tbl of [ADMIN_TABLE, ADMIN_TABLE_ALT]) {
         try {
           const { data, error } = await supabase
@@ -332,7 +331,7 @@ export async function loginUserWithSupabase(
         }
       }
 
-      // 2. If not found in admin tables, check guest_account table (and guest_accounts)
+      // 2. If not found in admin tables, check guest_accounts table (and guest_account)
       if (!foundRecord) {
         for (const tbl of [GUEST_TABLE, GUEST_TABLE_ALT]) {
           try {
@@ -449,7 +448,7 @@ export async function loginUserWithSupabase(
 }
 
 /**
- * Change password in guest_account or admin_account table
+ * Change password in guest_accounts or admin_accounts table
  */
 export async function changeUserPasswordInSupabase(
   username: string,
@@ -497,7 +496,7 @@ export async function changeUserPasswordInSupabase(
 }
 
 /**
- * Delete a user from guest_account and admin_account tables
+ * Delete a user from guest_accounts and admin_accounts tables
  */
 export async function deleteUserFromSupabase(username: string): Promise<{ success: boolean; message?: string }> {
   const clean = username.trim().toLowerCase();
@@ -521,7 +520,7 @@ export async function deleteUserFromSupabase(username: string): Promise<{ succes
 }
 
 /**
- * Update user role: move/update between guest_account and admin_account
+ * Update user role: move/update between guest_accounts and admin_accounts
  */
 export async function updateUserRoleInSupabase(
   username: string,

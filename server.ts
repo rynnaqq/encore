@@ -186,12 +186,13 @@ async function startServer() {
 
       const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
       const effectiveRole: 'user' | 'admin' = (role === 'admin' || isRootAdmin) ? 'admin' : 'user';
-      const targetTable = effectiveRole === 'admin' ? 'admin_account' : 'guest_account';
+      const targetTable = effectiveRole === 'admin' ? 'admin_accounts' : 'guest_accounts';
+      const altTable = effectiveRole === 'admin' ? 'admin_account' : 'guest_account';
       const hashedPassword = bcrypt.hashSync(password, 10);
 
       // Check Supabase if configured
       if (supabase) {
-        for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+        for (const tbl of ['admin_accounts', 'guest_accounts', 'admin_account', 'guest_account', 'user_accounts']) {
           try {
             const { data: existingUser } = await supabase
               .from(tbl)
@@ -222,7 +223,7 @@ async function startServer() {
           createdAt: Date.now(),
         };
 
-        // Write to Supabase table (guest_account or admin_account)
+        // Write to Supabase table (guest_accounts or admin_accounts)
         if (supabase) {
           try {
             const { error: insErr } = await supabase.from(targetTable).insert([{
@@ -234,8 +235,7 @@ async function startServer() {
             }]);
 
             if (insErr) {
-              // fallback to plural table name if needed
-              const altTable = effectiveRole === 'admin' ? 'admin_accounts' : 'guest_accounts';
+              // fallback to singular table name if needed
               await supabase.from(altTable).insert([{
                 id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
                 username: cleanUsername,
