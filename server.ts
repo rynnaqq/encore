@@ -187,12 +187,11 @@ async function startServer() {
       const isRootAdmin = cleanUsername.toLowerCase() === 'adminkawaaii';
       const effectiveRole: 'user' | 'admin' = (role === 'admin' || isRootAdmin) ? 'admin' : 'user';
       const targetTable = effectiveRole === 'admin' ? 'admin_accounts' : 'guest_accounts';
-      const altTable = effectiveRole === 'admin' ? 'admin_account' : 'guest_account';
       const hashedPassword = bcrypt.hashSync(password, 10);
 
       // Check Supabase if configured
       if (supabase) {
-        for (const tbl of ['admin_accounts', 'guest_accounts', 'admin_account', 'guest_account', 'user_accounts']) {
+        for (const tbl of ['admin_accounts', 'guest_accounts']) {
           try {
             const { data: existingUser } = await supabase
               .from(tbl)
@@ -226,24 +225,13 @@ async function startServer() {
         // Write to Supabase table (guest_accounts or admin_accounts)
         if (supabase) {
           try {
-            const { error: insErr } = await supabase.from(targetTable).insert([{
+            await supabase.from(targetTable).insert([{
               id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
               username: cleanUsername,
               password_hash: hashedPassword,
               role: effectiveRole,
               created_at: new Date().toISOString()
             }]);
-
-            if (insErr) {
-              // fallback to singular table name if needed
-              await supabase.from(altTable).insert([{
-                id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                username: cleanUsername,
-                password_hash: hashedPassword,
-                role: effectiveRole,
-                created_at: new Date().toISOString()
-              }]);
-            }
           } catch (e) {
             console.error('Failed to write user to supabase:', e);
           }
@@ -286,9 +274,9 @@ async function startServer() {
       let users = await withUsersLock(() => readUsers());
       let account = users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase());
 
-      // If not in local users.json, check Supabase tables (admin_account & guest_account)
+      // If not in local users.json, check Supabase tables (admin_accounts & guest_accounts)
       if (!account && supabase) {
-        for (const [tbl, role] of [['admin_account', 'admin'], ['guest_account', 'user'], ['admin_accounts', 'admin'], ['guest_accounts', 'user'], ['user_accounts', 'user']] as const) {
+        for (const [tbl, role] of [['admin_accounts', 'admin'], ['guest_accounts', 'user']] as const) {
           try {
             const { data: dbUser } = await supabase
               .from(tbl)
@@ -398,7 +386,7 @@ async function startServer() {
         await writeUsers(users);
 
         if (supabase) {
-          for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+          for (const tbl of ['admin_accounts', 'guest_accounts']) {
             try {
               await supabase
                 .from(tbl)
@@ -439,7 +427,7 @@ async function startServer() {
 
       // 2. Fetch from Supabase tables if configured
       if (supabase) {
-        for (const [tbl, defaultRole] of [['admin_account', 'admin'], ['guest_account', 'user'], ['admin_accounts', 'admin'], ['guest_accounts', 'user'], ['user_accounts', 'user']] as const) {
+        for (const [tbl, defaultRole] of [['admin_accounts', 'admin'], ['guest_accounts', 'user']] as const) {
           try {
             const { data, error } = await supabase
               .from(tbl)
@@ -495,7 +483,7 @@ async function startServer() {
       }
 
       if (supabase) {
-        for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+        for (const tbl of ['admin_accounts', 'guest_accounts']) {
           try {
             await supabase.from(tbl).update({ role }).ilike('username', username);
           } catch (e) {}
@@ -531,7 +519,7 @@ async function startServer() {
       }
 
       if (supabase) {
-        for (const tbl of ['admin_account', 'guest_account', 'admin_accounts', 'guest_accounts', 'user_accounts']) {
+        for (const tbl of ['admin_accounts', 'guest_accounts']) {
           try {
             await supabase.from(tbl).delete().ilike('username', username);
           } catch (e) {}
